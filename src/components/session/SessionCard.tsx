@@ -1,49 +1,46 @@
-import { Link } from "react-router-dom";
-import { CalendarDays, Users, BarChart3 } from "lucide-react";
-import type { Session } from "@/store/session-store";
-import { cn } from "@/lib/utils";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Trash2 } from "lucide-react";
+import type { Session } from "@/store/session-store";
 
 interface SessionCardProps {
   session: Session;
-  onExport?: () => void;
+  onDelete: (id: string) => void;
 }
 
-export default function SessionCard({ session, onExport }: SessionCardProps) {
+export default function SessionCard({ session, onDelete }: SessionCardProps) {
+  const navigate = useNavigate();
+
   return (
-    <Link to={`/session/${session.id}`}>
-      <Card
-        className={cn(
-          "transition-colors hover:border-primary/40 hover:shadow-md cursor-pointer"
-        )}
-      >
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">{session.name}</CardTitle>
-            <Badge variant="secondary">
-              <Users className="size-3 mr-1" />
-              {session.children.length}
-            </Badge>
+    <Card
+      className="cursor-pointer transition-colors hover:bg-muted/50"
+      onClick={() => navigate(`/session/${session.id}`)}
+    >
+      <CardHeader className="pb-2">
+        <div className="flex items-start justify-between">
+          <div>
+            <CardTitle className="text-base">{session.name}</CardTitle>
+            <CardDescription>{session.date}</CardDescription>
           </div>
-          <CardDescription className="flex items-center gap-1">
-            <CalendarDays className="size-3" />
-            {session.date}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <BarChart3 className="size-3" />
-            <span>{session.results.length} results</span>
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(session.id);
+            }}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="flex gap-2">
+        <Badge variant="secondary">{session.children.length} Athletes</Badge>
+        <Badge variant="secondary">{session.results.length} Results</Badge>
+      </CardContent>
+    </Card>
   );
 }

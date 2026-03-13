@@ -1,26 +1,13 @@
 import { useState } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Pencil, Play } from "lucide-react";
-import { useSessionStore } from "@/store/session-store";
-import type { DisciplineType } from "@/store/session-store";
-import { DISCIPLINES } from "@/lib/constants";
-import { cn } from "@/lib/utils";
-import AppLayout from "@/components/layout/AppLayout";
-import ChildList from "@/components/session/ChildList";
-import DisciplineSelect from "@/components/session/DisciplineSelect";
-import ResultsTable from "@/components/session/ResultsTable";
+import { useParams, useNavigate } from "react-router-dom";
+import { useSessionStore, type DisciplineType } from "@/store/session-store";
+import { DISCIPLINES, DISCIPLINE_OPTIONS } from "@/lib/constants";
+import { formatTime, formatDistance } from "@/lib/utils";
+import { ROUTES } from "@/routes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -28,203 +15,232 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Trash2, Plus } from "lucide-react";
 
 export default function SessionPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const session = useSessionStore((s) => s.getSession(id ?? ""));
-  const updateSession = useSessionStore((s) => s.updateSession);
+  const session = useSessionStore((s) => s.sessions.find((sess) => sess.id === id));
+  const addChild = useSessionStore((s) => s.addChild);
+  const removeChild = useSessionStore((s) => s.removeChild);
   const addResult = useSessionStore((s) => s.addResult);
 
-  const [activeTab, setActiveTab] = useState("athletes");
-  const [discipline, setDiscipline] = useState<DisciplineType | "">("");
-  const [editOpen, setEditOpen] = useState(false);
-  const [editName, setEditName] = useState("");
-  const [editDate, setEditDate] = useState("");
-
-  // Add result form state
-  const [resultChildId, setResultChildId] = useState("");
+  const [childName, setChildName] = useState("");
+  const [childYear, setChildYear] = useState("");
+  const [discipline, setDiscipline] = useState<DisciplineType>("sprint_60");
+  const [selectedChild, setSelectedChild] = useState("");
   const [resultValue, setResultValue] = useState("");
 
-  if (!session) {
+  if (!session || !id) {
     return (
-      <AppLayout>
-        <div className="py-12 text-center">
-          <p className="text-muted-foreground">Session not found.</p>
-          <Link to="/" className="text-primary underline text-sm mt-2 inline-block">
-            Back to home
-          </Link>
-        </div>
-      </AppLayout>
+      <div className="py-12 text-center text-muted-foreground">
+        Session nicht gefunden.
+      </div>
     );
   }
 
-  const openEdit = () => {
-    setEditName(session.name);
-    setEditDate(session.date);
-    setEditOpen(true);
-  };
+  const disciplineConfig = DISCIPLINES[discipline];
 
-  const handleEdit = () => {
-    if (!editName.trim()) return;
-    updateSession(session.id, editName.trim(), editDate);
-    setEditOpen(false);
-  };
+  function handleAddChild() {
+    if (!childName.trim() || !id) return;
+    const year = childYear ? parseInt(childYear, 10) : undefined;
+    addChild(id, childName.trim(), year);
+    setChildName("");
+    setChildYear("");
+  }
 
-  const handleAddResult = () => {
-    if (!discipline || !resultChildId || !resultValue) return;
-    const config = DISCIPLINES[discipline];
-    const numValue = parseFloat(resultValue);
-    if (isNaN(numValue) || numValue <= 0) return;
-
-    addResult(session.id, {
-      childId: resultChildId,
+  function handleAddResult() {
+    if (!selectedChild || !resultValue || !id) return;
+    const value = parseFloat(resultValue);
+    if (isNaN(value)) return;
+    addResult(id, {
+      childId: selectedChild,
       discipline,
-      value: numValue,
-      unit: config.unit,
+      value,
+      unit: disciplineConfig.unit,
       recordedAt: new Date().toISOString(),
     });
     setResultValue("");
-  };
+  }
+
+  const filteredResults = session.results
+    .filter((r) => r.discipline === discipline)
+    .sort((a, b) =>
+      disciplineConfig.sortAscending ? a.value - b.value : b.value - a.value,
+    );
+
+  const childMap = new Map(session.children.map((c) => [c.id, c]));
 
   return (
-    <AppLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <Link
-            to="/"
-            className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1 mb-3"
-          >
-            <ArrowLeft className="size-3" />
-            Back
-          </Link>
-          <div className="flex items-center gap-3">
-            <div>
-              <h1 className="text-2xl font-bold">{session.name}</h1>
-              <p className="text-sm text-muted-foreground">{session.date}</p>
-            </div>
-            <Button variant="ghost" size="icon" onClick={openEdit}>
-              <Pencil className="size-4" />
-            </Button>
-          </div>
-        </div>
+    <div className="space-y-4">
+      <h1 className="text-2xl font-bold">{session.name}</h1>
+      <p className="text-sm text-muted-foreground">{session.date}</p>
 
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="athletes">Athletes</TabsTrigger>
-            <TabsTrigger value="results">Results</TabsTrigger>
-          </TabsList>
+      <Tabs defaultValue="children">
+        <TabsList className="w-full">
+          <TabsTrigger value="children" className="flex-1">
+            Kinder
+          </TabsTrigger>
+          <TabsTrigger value="results" className="flex-1">
+            Ergebnisse
+          </TabsTrigger>
+        </TabsList>
 
-          <TabsContent value="athletes">
-            <ChildList sessionId={session.id} children={session.children} />
-          </TabsContent>
-
-          <TabsContent value="results">
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                <DisciplineSelect value={discipline} onChange={setDiscipline} />
-
-                <Button asChild size="lg" className={cn(session.children.length === 0 && "pointer-events-none opacity-50")}>
-                  <Link to={`/session/${session.id}/race`}>
-                    <Play className="size-4 mr-1" />
-                    Start Race
-                  </Link>
-                </Button>
-              </div>
-
-              {/* Add individual result */}
-              {discipline && (
-                <div className="rounded-md border p-4 space-y-3">
-                  <h3 className="text-sm font-medium">Add Result</h3>
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <Select
-                      value={resultChildId}
-                      onValueChange={setResultChildId}
-                    >
-                      <SelectTrigger className="flex-1">
-                        <SelectValue placeholder="Select athlete" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {session.children.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>
-                            {c.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Input
-                      className="w-32"
-                      type="number"
-                      placeholder={
-                        DISCIPLINES[discipline].isTimed
-                          ? "Time (ms)"
-                          : "Distance (cm)"
-                      }
-                      value={resultValue}
-                      onChange={(e) => setResultValue(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleAddResult()}
-                    />
-                    <Button
-                      onClick={handleAddResult}
-                      disabled={!resultChildId || !resultValue}
-                    >
-                      Add
-                    </Button>
+        <TabsContent value="children" className="space-y-4 pt-2">
+          {session.children.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Noch keine Kinder hinzugefügt.
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {session.children.map((child) => (
+                <li
+                  key={child.id}
+                  className="flex items-center justify-between rounded-md border px-3 py-2"
+                >
+                  <div>
+                    <span className="font-medium">{child.name}</span>
+                    {child.yearOfBirth && (
+                      <span className="ml-2 text-sm text-muted-foreground">
+                        *{child.yearOfBirth}
+                      </span>
+                    )}
                   </div>
-                </div>
-              )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                    onClick={() => removeChild(id, child.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
 
-              {/* Results table */}
-              {discipline && (
-                <ResultsTable
-                  results={session.results}
-                  children={session.children}
-                  discipline={discipline}
-                />
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
+          <Separator />
 
-        {/* Edit dialog */}
-        <Dialog open={editOpen} onOpenChange={setEditOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit Session</DialogTitle>
-              <DialogDescription>
-                Update the session name and date.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-2">
-              <div className="space-y-2">
-                <Label htmlFor="edit-name">Name</Label>
-                <Input
-                  id="edit-name"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleEdit()}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-date">Date</Label>
-                <Input
-                  id="edit-date"
-                  type="date"
-                  value={editDate}
-                  onChange={(e) => setEditDate(e.target.value)}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button onClick={handleEdit} disabled={!editName.trim()}>
-                Save
+          <div className="space-y-2">
+            <Label>Kind hinzufügen</Label>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Name"
+                value={childName}
+                onChange={(e) => setChildName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAddChild()}
+                className="flex-1"
+              />
+              <Input
+                placeholder="Jahrgang"
+                type="number"
+                value={childYear}
+                onChange={(e) => setChildYear(e.target.value)}
+                className="w-24"
+              />
+              <Button size="icon" onClick={handleAddChild}>
+                <Plus className="h-4 w-4" />
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-    </AppLayout>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="results" className="space-y-4 pt-2">
+          <div className="space-y-2">
+            <Label>Disziplin</Label>
+            <Select
+              value={discipline}
+              onValueChange={(v) => setDiscipline(v as DisciplineType)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DISCIPLINE_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {disciplineConfig.isTimed ? (
+            <Button
+              className="w-full"
+              onClick={() => navigate(ROUTES.RACE(id))}
+              disabled={session.children.length === 0}
+            >
+              Rennen starten
+            </Button>
+          ) : (
+            <div className="space-y-2">
+              <Label>Ergebnis eintragen</Label>
+              <div className="flex gap-2">
+                <Select
+                  value={selectedChild}
+                  onValueChange={(v) => { if (v) setSelectedChild(v); }}
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Kind wählen" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {session.children.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  type="number"
+                  placeholder={disciplineConfig.unit}
+                  value={resultValue}
+                  onChange={(e) => setResultValue(e.target.value)}
+                  className="w-24"
+                />
+                <Button onClick={handleAddResult}>Speichern</Button>
+              </div>
+            </div>
+          )}
+
+          <Separator />
+
+          {filteredResults.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Noch keine Ergebnisse für diese Disziplin.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-left text-muted-foreground">
+                    <th className="pb-2 pr-4">#</th>
+                    <th className="pb-2 pr-4">Name</th>
+                    <th className="pb-2 text-right">Ergebnis</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredResults.map((result, i) => (
+                    <tr key={result.id} className="border-b last:border-0">
+                      <td className="py-2 pr-4 font-medium">{i + 1}</td>
+                      <td className="py-2 pr-4">
+                        {childMap.get(result.childId)?.name ?? "Unbekannt"}
+                      </td>
+                      <td className="py-2 text-right font-mono">
+                        {disciplineConfig.isTimed
+                          ? formatTime(result.value)
+                          : formatDistance(result.value)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }

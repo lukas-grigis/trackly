@@ -1,16 +1,13 @@
 import type { ReactNode } from "react";
 import Navbar from "@/components/layout/Navbar";
-import { cn } from "@/lib/utils";
 
-interface AppLayoutProps {
-  children: ReactNode;
-}
-
-export default function AppLayout({ children }: AppLayoutProps) {
+export default function AppLayout({ children }: { children: ReactNode }) {
   return (
-    <div className={cn("flex min-h-screen flex-col")}>
+    <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="flex-1 container px-4 py-6">{children}</main>
+      <main className="mx-auto max-w-2xl px-4 py-6">
+        {children}
+      </main>
     </div>
   );
 }
