@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useSessionStore } from "@/store/session-store";
 import { DISCIPLINES } from "@/lib/constants";
+import { isTimedDiscipline } from "@/lib/constants";
 import { formatTime, formatStopwatch, cn, getAgeGroup } from "@/lib/utils";
 import { GenderBadgeInline } from "@/components/GenderBadge";
 import { AthleteAvatar } from "@/components/ui/athlete-avatar";
@@ -10,7 +11,7 @@ import { useTranslation } from "@/lib/i18n";
 import { ROUTES } from "@/routes";
 import { Button } from "@/components/ui/button";
 
-type Phase = "setup" | "running" | "finished";
+type Phase = "setup" | "running" | "finished" | "field-entry";
 
 const MEDAL_COLORS = [
   "bg-yellow-400 text-yellow-900",
@@ -52,6 +53,16 @@ export default function RacePage() {
   const [heatId, setHeatId] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Field-entry state: attempts per athlete (up to 3)
+  interface Attempt {
+    value: string; // raw input string
+    foul: boolean;
+  }
+  const [fieldAttempts, setFieldAttempts] = useState<Record<string, Attempt[]>>({});
+  const [fieldUnit, setFieldUnit] = useState<"m" | "cm" | "s" | "ms">("m");
+  const [showSaveWarning, setShowSaveWarning] = useState(false);
+  const [warningAthletes, setWarningAthletes] = useState<string[]>([]);
+
   const stopTimer = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -89,6 +100,27 @@ export default function RacePage() {
       startedAt: nowIso,
     });
     setHeatId(newHeatId);
+
+    if (!isTimedDiscipline(discipline)) {
+      // Field event — go to manual entry
+      // Initialize attempts for each athlete
+      const initial: Record<string, Attempt[]> = {};
+      for (const cid of selectedChildren) {
+        initial[cid] = [{ value: "", foul: false }];
+      }
+      setFieldAttempts(initial);
+      // Set default unit based on discipline
+      if (discipline === "long_jump" || discipline === "shot_put" || discipline === "ball_throw" || discipline === "sling_ball") {
+        setFieldUnit("m"); // displayed as m, stored as cm
+      } else if (discipline === "high_jump") {
+        setFieldUnit("cm");
+      } else {
+        setFieldUnit("m"); // custom default
+      }
+      setPhase("field-entry");
+      return;
+    }
+
     const now = performance.now();
     setStartTime(now);
     setFinishTimes({});
@@ -139,6 +171,9 @@ export default function RacePage() {
     setFinishTimes({});
     setElapsed(0);
     setHeatId(null);
+    setFieldAttempts({});
+    setShowSaveWarning(false);
+    setWarningAthletes([]);
     stopTimer();
   }
 
@@ -203,6 +238,222 @@ export default function RacePage() {
         >
           {t.start}
         </Button>
+      </div>
+    );
+  }
+
+  // FIELD-ENTRY PHASE
+  if (phase === "field-entry") {
+    const isCustom = disciplineConfig.mode === "custom";
+    const displayUnit = isCustom ? fieldUnit : (discipline === "high_jump" ? "cm" : "m");
+    const unitLabel = displayUnit;
+
+    function getStoredUnit(): "cm" | "m" | "s" | "ms" {
+      if (isCustom) return fieldUnit;
+      // long_jump, shot_put, ball_throw, sling_ball, high_jump all store as cm
+      return "cm";
+    }
+
+    function toStoredValue(inputStr: string): number | null {
+      const num = parseFloat(inputStr);
+      if (isNaN(num) || num < 0) return null;
+      const storedUnit = getStoredUnit();
+      // If display is m but stored is cm, convert
+      if (displayUnit === "m" && storedUnit === "cm") {
+        return Math.round(num * 100);
+      }
+      // If display is s and stored is ms
+      if (displayUnit === "s" && storedUnit === "ms") {
+        return Math.round(num * 1000);
+      }
+      return num;
+    }
+
+    function getBestAttemptIdx(attempts: { value: string; foul: boolean }[]): number | null {
+      let bestIdx: number | null = null;
+      let bestVal = -Infinity;
+      for (let i = 0; i < attempts.length; i++) {
+        if (attempts[i].foul) continue;
+        const num = parseFloat(attempts[i].value);
+        if (isNaN(num)) continue;
+        if (num > bestVal) {
+          bestVal = num;
+          bestIdx = i;
+        }
+      }
+      return bestIdx;
+    }
+
+    function updateAttempt(childId: string, idx: number, update: Partial<{ value: string; foul: boolean }>) {
+      setFieldAttempts((prev) => {
+        const attempts = [...(prev[childId] ?? [])];
+        attempts[idx] = { ...attempts[idx], ...update };
+        return { ...prev, [childId]: attempts };
+      });
+    }
+
+    function addAttempt(childId: string) {
+      setFieldAttempts((prev) => {
+        const attempts = prev[childId] ?? [];
+        if (attempts.length >= 3) return prev;
+        return { ...prev, [childId]: [...attempts, { value: "", foul: false }] };
+      });
+    }
+
+    function handleFieldSave() {
+      // Check for athletes with 0 valid attempts
+      const athletesWithNoResults: string[] = [];
+      for (const childId of selectedChildren) {
+        const attempts = fieldAttempts[childId] ?? [];
+        const hasValid = attempts.some((a) => !a.foul && a.value.trim() !== "" && !isNaN(parseFloat(a.value)));
+        if (!hasValid) {
+          athletesWithNoResults.push(childId);
+        }
+      }
+
+      if (athletesWithNoResults.length > 0 && !showSaveWarning) {
+        setWarningAthletes(athletesWithNoResults);
+        setShowSaveWarning(true);
+        return;
+      }
+
+      // Save best result per athlete
+      if (!id || !heatId) return;
+      const now = new Date().toISOString();
+      const storedUnit = getStoredUnit();
+
+      for (const childId of selectedChildren) {
+        const attempts = fieldAttempts[childId] ?? [];
+        const bestIdx = getBestAttemptIdx(attempts);
+        if (bestIdx === null) continue;
+        const stored = toStoredValue(attempts[bestIdx].value);
+        if (stored === null) continue;
+        addHeatResult(id, heatId, {
+          childId,
+          value: stored,
+          unit: storedUnit,
+          recordedAt: now,
+        });
+      }
+
+      toast.success(t.resultsSaved);
+      navigate(ROUTES.SESSION(id));
+    }
+
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold">{t.fieldEntry}</h1>
+          <p className="text-sm text-muted-foreground">{disciplineLabel}</p>
+        </div>
+
+        {isCustom && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">{t.unitLabel}:</span>
+            {(["m", "cm", "s", "ms"] as const).map((u) => (
+              <Button
+                key={u}
+                size="sm"
+                variant={fieldUnit === u ? "default" : "outline"}
+                onClick={() => setFieldUnit(u)}
+              >
+                {u}
+              </Button>
+            ))}
+          </div>
+        )}
+
+        <div className="space-y-4">
+          {selectedChildren.map((childId) => {
+            const athlete = allAthletes.find((a) => a.id === childId);
+            const attempts = fieldAttempts[childId] ?? [];
+            const bestIdx = getBestAttemptIdx(attempts);
+
+            return (
+              <div key={childId} className="rounded-xl border p-3 space-y-2">
+                <div className="flex items-center gap-2 font-semibold">
+                  <AthleteAvatar name={athlete?.name ?? "?"} avatarBase64={athlete?.avatarBase64} size="sm" />
+                  <span>{athlete?.name ?? "—"}</span>
+                </div>
+
+                <div className="space-y-1">
+                  {attempts.map((attempt, idx) => (
+                    <div key={idx} className={cn(
+                      "flex items-center gap-2 rounded-lg px-2 py-1",
+                      bestIdx === idx && !attempt.foul && "bg-primary/10 ring-1 ring-primary",
+                    )}>
+                      <span className="text-xs text-muted-foreground w-4">{idx + 1}.</span>
+                      {attempt.foul ? (
+                        <span className="flex-1 text-sm text-destructive font-medium">{t.foul}</span>
+                      ) : (
+                        <input
+                          type="number"
+                          inputMode="decimal"
+                          step="any"
+                          min="0"
+                          className="flex-1 rounded border bg-background px-2 py-1 text-sm"
+                          placeholder="0.00"
+                          value={attempt.value}
+                          onChange={(e) => updateAttempt(childId, idx, { value: e.target.value })}
+                        />
+                      )}
+                      {!attempt.foul && <span className="text-xs text-muted-foreground">{unitLabel}</span>}
+                      <Button
+                        size="sm"
+                        variant={attempt.foul ? "destructive" : "ghost"}
+                        className="h-7 text-xs px-2"
+                        onClick={() => updateAttempt(childId, idx, { foul: !attempt.foul, value: attempt.foul ? "" : attempt.value })}
+                      >
+                        {attempt.foul ? t.undoFoul : t.foul}
+                      </Button>
+                      {bestIdx === idx && !attempt.foul && (
+                        <span className="text-xs font-bold text-primary">{t.best}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {attempts.length < 3 && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-xs"
+                    onClick={() => addAttempt(childId)}
+                  >
+                    + {t.addAttempt}
+                  </Button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {showSaveWarning && (
+          <div className="rounded-lg border border-yellow-400 bg-yellow-50 dark:bg-yellow-950/30 p-3 space-y-2">
+            <p className="text-sm font-medium">{t.fieldSaveWarning}</p>
+            <ul className="text-sm text-muted-foreground list-disc pl-4">
+              {warningAthletes.map((cid) => {
+                const a = allAthletes.find((ath) => ath.id === cid);
+                return <li key={cid}>{a?.name ?? "—"}</li>;
+              })}
+            </ul>
+            <div className="flex gap-2">
+              <Button size="sm" onClick={handleFieldSave}>{t.saveAll}</Button>
+              <Button size="sm" variant="outline" onClick={() => setShowSaveWarning(false)}>{t.back}</Button>
+            </div>
+          </div>
+        )}
+
+        {!showSaveWarning && (
+          <div className="flex gap-2">
+            <Button className="flex-1" onClick={handleFieldSave}>
+              {t.saveAll}
+            </Button>
+            <Button variant="outline" className="flex-1" onClick={handleReset}>
+              {t.abort}
+            </Button>
+          </div>
+        )}
       </div>
     );
   }

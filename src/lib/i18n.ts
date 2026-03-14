@@ -112,6 +112,14 @@ export interface Translations {
     female: string;
     nonbinary: string;
   };
+  // Field entry
+  fieldEntry: string;
+  foul: string;
+  undoFoul: string;
+  best: string;
+  addAttempt: string;
+  unitLabel: string;
+  fieldSaveWarning: string;
   // Toasts
   sessionCreated: string;
   sessionDeleted: string;
@@ -265,6 +273,14 @@ const de: Translations = {
     female: "Weiblich",
     nonbinary: "Non-binär",
   },
+  // Field entry
+  fieldEntry: "Ergebnisse eintragen",
+  foul: "Fehlversuch",
+  undoFoul: "Rückgängig",
+  best: "Beste",
+  addAttempt: "Versuch hinzufügen",
+  unitLabel: "Einheit",
+  fieldSaveWarning: "Folgende Athleten haben keine gültigen Ergebnisse:",
   // Toasts
   sessionCreated: "Session erstellt",
   sessionDeleted: "Session gelöscht",
@@ -418,6 +434,14 @@ const en: Translations = {
     female: "Female",
     nonbinary: "Non-binary",
   },
+  // Field entry
+  fieldEntry: "Enter results",
+  foul: "Foul",
+  undoFoul: "Undo",
+  best: "Best",
+  addAttempt: "Add attempt",
+  unitLabel: "Unit",
+  fieldSaveWarning: "The following athletes have no valid results:",
   // Toasts
   sessionCreated: "Session created",
   sessionDeleted: "Session deleted",

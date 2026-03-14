@@ -52,6 +52,11 @@ export const DISCIPLINE_CATEGORIES: {
   { key: "games",    icon: "mdi:soccer" },
 ];
 
+export function isTimedDiscipline(discipline: string): boolean {
+  const config = DISCIPLINES[discipline];
+  return config?.mode === "timed";
+}
+
 export function getDisciplinesByCategory(
   cat: DisciplineCategory,
 ): [string, DisciplineConfig][] {
