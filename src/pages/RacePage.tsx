@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useSessionStore } from "@/store/session-store";
 import { DISCIPLINES } from "@/lib/constants";
 import { formatTime, formatStopwatch, cn, getAgeGroup } from "@/lib/utils";
+import { GenderBadgeInline } from "@/components/GenderBadge";
 import { useTranslation } from "@/lib/i18n";
 import { ROUTES } from "@/routes";
 import { Button } from "@/components/ui/button";
@@ -174,11 +175,14 @@ export default function RacePage() {
                   onClick={() => toggleChild(athlete.id)}
                 >
                   <span>{athlete.name}</span>
-                  {athlete.yearOfBirth && (
-                    <span className="text-[10px] font-normal opacity-70">
-                      {getAgeGroup(athlete.yearOfBirth)}
-                    </span>
-                  )}
+                  <span className="flex items-center gap-1">
+                    {athlete.yearOfBirth && (
+                      <span className="text-[10px] font-normal opacity-70">
+                        {getAgeGroup(athlete.yearOfBirth)}
+                      </span>
+                    )}
+                    <GenderBadgeInline gender={athlete.gender} />
+                  </span>
                 </Button>
               );
             })}
@@ -231,11 +235,14 @@ export default function RacePage() {
                   </span>
                   <span className="flex flex-col items-start">
                     <span>{child?.name}</span>
-                    {child?.yearOfBirth && (
-                      <span className="text-xs font-normal opacity-70">
-                        {getAgeGroup(child.yearOfBirth)}
-                      </span>
-                    )}
+                    <span className="flex items-center gap-1">
+                      {child?.yearOfBirth && (
+                        <span className="text-xs font-normal opacity-70">
+                          {getAgeGroup(child.yearOfBirth)}
+                        </span>
+                      )}
+                      <GenderBadgeInline gender={child?.gender} />
+                    </span>
                   </span>
                 </span>
                 {finished && (

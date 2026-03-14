@@ -101,6 +101,12 @@ export interface Translations {
     cm: string;
     m: string;
   };
+  // Gender
+  genderLabels: {
+    male: string;
+    female: string;
+    nonbinary: string;
+  };
   // Toasts
   sessionCreated: string;
   sessionDeleted: string;
@@ -243,6 +249,12 @@ const de: Translations = {
     cm: "cm",
     m: "m",
   },
+  // Gender
+  genderLabels: {
+    male: "Männlich",
+    female: "Weiblich",
+    nonbinary: "Non-binär",
+  },
   // Toasts
   sessionCreated: "Session erstellt",
   sessionDeleted: "Session gelöscht",
@@ -384,6 +396,12 @@ const en: Translations = {
     ms: "ms",
     cm: "cm",
     m: "m",
+  },
+  // Gender
+  genderLabels: {
+    male: "Male",
+    female: "Female",
+    nonbinary: "Non-binary",
   },
   // Toasts
   sessionCreated: "Session created",

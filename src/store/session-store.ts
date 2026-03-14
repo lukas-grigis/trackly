@@ -5,10 +5,13 @@ import { persist } from "zustand/middleware";
 // Types
 // ---------------------------------------------------------------------------
 
+export type Gender = "male" | "female" | "nonbinary";
+
 export interface Athlete {
   id: string;
   name: string;
   yearOfBirth?: number;
+  gender?: Gender;
 }
 
 export interface HeatResult {
@@ -46,8 +49,8 @@ interface StoreState {
   sessions: Session[];
 
   // Global athlete roster
-  addAthlete: (name: string, yearOfBirth?: number) => string;
-  updateAthlete: (id: string, name: string, yearOfBirth?: number) => void;
+  addAthlete: (name: string, yearOfBirth?: number, gender?: Gender) => string;
+  updateAthlete: (id: string, name: string, yearOfBirth?: number, gender?: Gender) => void;
   removeAthlete: (id: string) => void;
 
   // Sessions
@@ -71,18 +74,18 @@ export const useSessionStore = create<StoreState>()(
       athletes: [],
       sessions: [],
 
-      addAthlete(name, yearOfBirth) {
+      addAthlete(name, yearOfBirth, gender) {
         const id = crypto.randomUUID();
         set((state) => ({
-          athletes: [...state.athletes, { id, name, yearOfBirth }],
+          athletes: [...state.athletes, { id, name, yearOfBirth, gender }],
         }));
         return id;
       },
 
-      updateAthlete(id, name, yearOfBirth) {
+      updateAthlete(id, name, yearOfBirth, gender) {
         set((state) => ({
           athletes: state.athletes.map((a) =>
-            a.id === id ? { ...a, name, yearOfBirth } : a,
+            a.id === id ? { ...a, name, yearOfBirth, gender } : a,
           ),
         }));
       },

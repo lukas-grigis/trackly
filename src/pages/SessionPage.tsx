@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useSessionStore } from "@/store/session-store";
 import { DISCIPLINES } from "@/lib/constants";
 import { formatValue, getAgeGroup } from "@/lib/utils";
+import { GenderBadge } from "@/components/GenderBadge";
 import { useTranslation } from "@/lib/i18n";
 import { formatLocalDate } from "@/lib/locale";
 import { ROUTES } from "@/routes";
@@ -182,6 +183,7 @@ export default function SessionPage() {
         childId: r.childId,
         athleteName: athlete?.name ?? r.childId,
         yearOfBirth: athlete?.yearOfBirth,
+        gender: athlete?.gender,
         value: r.value,
         unit: r.unit,
         note: r.note,
@@ -256,6 +258,7 @@ export default function SessionPage() {
                         {getAgeGroup(athlete.yearOfBirth)}
                       </span>
                     )}
+                    <GenderBadge gender={athlete.gender} />
                   </span>
                 ))}
               </div>
@@ -461,6 +464,7 @@ export default function SessionPage() {
                               {getAgeGroup(result.yearOfBirth)}
                             </span>
                           )}
+                          <GenderBadge gender={result.gender} />
                         </span>
                       </td>
                       <td className="py-2 text-right font-mono">

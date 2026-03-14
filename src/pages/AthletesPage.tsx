@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { useSessionStore } from "@/store/session-store";
+import { useSessionStore, type Gender } from "@/store/session-store";
 import { useTranslation } from "@/lib/i18n";
 import { cn, getAgeGroup } from "@/lib/utils";
+import { GenderBadge } from "@/components/GenderBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,6 +41,7 @@ export default function AthletesPage() {
 
   const [name, setName] = useState("");
   const [year, setYear] = useState<number | null>(null);
+  const [gender, setGender] = useState<Gender | undefined>(undefined);
   const [customOpen, setCustomOpen] = useState(false);
   const [customInput, setCustomInput] = useState("");
   const [removeTarget, setRemoveTarget] = useState<string | null>(null);
@@ -57,10 +59,11 @@ export default function AthletesPage() {
 
   function handleAdd() {
     if (!name.trim()) return;
-    addAthlete(name.trim(), year ?? undefined);
+    addAthlete(name.trim(), year ?? undefined, gender);
     toast.success(t.athleteAdded);
     setName("");
     setYear(null);
+    setGender(undefined);
     setCustomOpen(false);
     setCustomInput("");
   }
@@ -96,6 +99,7 @@ export default function AthletesPage() {
                       {getAgeGroup(athlete.yearOfBirth)}
                     </span>
                   )}
+                  <GenderBadge gender={athlete.gender} />
                   {athlete.yearOfBirth && (
                     <span className="text-sm text-muted-foreground">
                       *{athlete.yearOfBirth}
@@ -185,6 +189,27 @@ export default function AthletesPage() {
             </Button>
           </div>
         )}
+
+        {/* Gender toggle */}
+        <div className="flex gap-2">
+          {(["male", "female", "nonbinary"] as const).map((g) => (
+            <button
+              key={g}
+              type="button"
+              onClick={() => setGender(gender === g ? undefined : g)}
+              aria-label={t.genderLabels[g]}
+              title={t.genderLabels[g]}
+              className={cn(
+                "flex-1 rounded-md border py-2 text-base transition-colors",
+                gender === g
+                  ? "border-accent bg-accent text-accent-foreground"
+                  : "border-border bg-transparent text-muted-foreground hover:border-foreground hover:text-foreground",
+              )}
+            >
+              {g === "male" ? "♂" : g === "female" ? "♀" : "⚧"}
+            </button>
+          ))}
+        </div>
       </div>
 
       <AlertDialog
