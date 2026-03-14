@@ -1,34 +1,45 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { useSessionStore } from "@/store/session-store";
 import type { Session } from "@/store/session-store";
-import { DISCIPLINES } from "@/lib/constants";
-import { formatTime, formatDistance } from "@/lib/utils";
+import { formatValue, escapeCsvField } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus, Download, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Plus, Download, Trash2, ClipboardList } from "lucide-react";
 import SessionCard from "@/components/session/SessionCard";
 
-function exportSessionCsv(session: Session) {
-  const childMap = new Map(session.children.map((c) => [c.id, c.name]));
+function exportSessionCsv(session: Session, disciplineLabel: (key: string) => string) {
   const rows = [
-    ["Child", "Discipline", "Value", "Unit", "Date"],
-    ...session.results.map((r) => [
-      childMap.get(r.childId) ?? "Unknown",
-      DISCIPLINES[r.discipline].label,
-      r.unit === "ms" ? formatTime(r.value) : formatDistance(r.value),
-      r.unit,
-      r.recordedAt,
-    ]),
+    ["Athlete", "Discipline", "Value", "Unit", "Date"].map(escapeCsvField),
+    ...session.results.map((r) =>
+      [
+        r.athleteName || "—",
+        disciplineLabel(r.discipline),
+        formatValue(r.value, r.unit),
+        r.unit,
+        r.recordedAt,
+      ].map(escapeCsvField),
+    ),
   ];
   const csv = rows.map((row) => row.join(",")).join("\n");
   const blob = new Blob([csv], { type: "text/csv" });
@@ -45,48 +56,54 @@ export default function HomePage() {
   const addSession = useSessionStore((s) => s.addSession);
   const deleteSession = useSessionStore((s) => s.deleteSession);
   const clearAllData = useSessionStore((s) => s.clearAllData);
+  const { t } = useTranslation();
 
   const [open, setOpen] = useState(false);
-  const [clearOpen, setClearOpen] = useState(false);
   const [name, setName] = useState("");
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
 
   function handleCreate() {
     if (!name.trim()) return;
     addSession(name.trim(), date);
+    toast.success(t.sessionCreated);
     setName("");
     setDate(new Date().toISOString().slice(0, 10));
     setOpen(false);
   }
 
+  function handleDelete(id: string) {
+    deleteSession(id);
+    toast.success(t.sessionDeleted);
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Sessions</h1>
+        <h1 className="text-3xl font-bold heading-tight">{t.sessions}</h1>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              New Session
+              {t.newSession}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create New Session</DialogTitle>
+              <DialogTitle>{t.newSession}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-2">
               <div className="space-y-2">
-                <Label htmlFor="session-name">Name</Label>
+                <Label htmlFor="session-name">{t.sessionName}</Label>
                 <Input
                   id="session-name"
-                  placeholder="e.g. Spring Meet 2026"
+                  placeholder={t.sessionNamePlaceholder}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleCreate()}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="session-date">Date</Label>
+                <Label htmlFor="session-date">{t.sessionDate}</Label>
                 <Input
                   id="session-date"
                   type="date"
@@ -95,7 +112,7 @@ export default function HomePage() {
                 />
               </div>
               <Button className="w-full" onClick={handleCreate}>
-                Create
+                {t.createSession}
               </Button>
             </div>
           </DialogContent>
@@ -103,14 +120,26 @@ export default function HomePage() {
       </div>
 
       {sessions.length === 0 ? (
-        <div className="py-12 text-center text-muted-foreground">
-          No sessions yet. Create a new session to get started.
+        <div className="flex flex-col items-center gap-4 py-16 text-center">
+          <ClipboardList
+            className="h-16 w-16 text-muted-foreground/40 animate-float"
+            strokeWidth={1.25}
+          />
+          <p className="text-muted-foreground max-w-xs">{t.noSessions}</p>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Plus className="mr-2 h-4 w-4" />
+                {t.newSession}
+              </Button>
+            </DialogTrigger>
+          </Dialog>
         </div>
       ) : (
         <div className="space-y-3">
           {sessions.map((session) => (
-            <div key={session.id} className="relative">
-              <SessionCard session={session} onDelete={deleteSession} />
+            <div key={session.id} className="relative animate-card-enter">
+              <SessionCard session={session} onDelete={handleDelete} />
               {session.results.length > 0 && (
                 <Button
                   variant="ghost"
@@ -118,11 +147,13 @@ export default function HomePage() {
                   className="absolute right-2 bottom-2 text-muted-foreground"
                   onClick={(e) => {
                     e.stopPropagation();
-                    exportSessionCsv(session);
+                    exportSessionCsv(session, (key) => t.disciplines[key] ?? key);
+                    toast.success(t.csvExported);
                   }}
+                  aria-label={t.exportCsv}
                 >
                   <Download className="h-3.5 w-3.5 mr-1" />
-                  CSV
+                  {t.exportCsv}
                 </Button>
               )}
             </div>
@@ -132,37 +163,32 @@ export default function HomePage() {
 
       {sessions.length > 0 && (
         <div className="pt-4 border-t">
-          <Dialog open={clearOpen} onOpenChange={setClearOpen}>
-            <DialogTrigger asChild>
-              <Button variant="destructive" size="sm">
-                <Trash2 className="h-4 w-4 mr-1" />
-                Clear All Data
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Clear All Data</DialogTitle>
-                <DialogDescription>
-                  This will permanently delete all sessions, athletes, and
-                  results. This action cannot be undone.
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setClearOpen(false)}>
-                  Cancel
-                </Button>
-                <Button
-                  variant="destructive"
+          <AlertDialog>
+            <AlertDialogTrigger render={<Button variant="destructive" size="sm" />}>
+              <Trash2 className="h-4 w-4 mr-1" />
+              {t.clearAllData}
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{t.clearAllDataConfirm}</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {t.clearAllDataDesc}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                   onClick={() => {
                     clearAllData();
-                    setClearOpen(false);
+                    toast.success(t.allDataCleared);
                   }}
                 >
-                  Delete Everything
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                  {t.deleteEverything}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       )}
     </div>
