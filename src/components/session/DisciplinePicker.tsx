@@ -66,23 +66,25 @@ export default function DisciplinePicker({ value, onChange }: DisciplinePickerPr
 
             {DISCIPLINE_CATEGORIES.map(({ key }) => (
               <TabsContent key={key} value={key} className="mt-3">
-                <p className="mb-2 text-xs font-medium uppercase text-muted-foreground">
-                  {t.categories[key]}
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  {getDisciplinesByCategory(key).map(([dKey]) => (
-                    <Button
-                      key={dKey}
-                      variant="outline"
-                      className={cn(
-                        "tap-target h-11 justify-start text-sm",
-                        value === dKey && "border-primary bg-primary/10 font-semibold",
-                      )}
-                      onClick={() => handleSelect(dKey)}
-                    >
-                      {t.disciplines[dKey] ?? dKey}
-                    </Button>
-                  ))}
+                <div className="h-[272px] overflow-y-auto">
+                  <p className="mb-2 text-xs font-medium uppercase text-muted-foreground">
+                    {t.categories[key]}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {getDisciplinesByCategory(key).map(([dKey]) => (
+                      <Button
+                        key={dKey}
+                        variant="outline"
+                        className={cn(
+                          "tap-target h-11 justify-start text-sm",
+                          value === dKey && "border-primary bg-primary/10 font-semibold",
+                        )}
+                        onClick={() => handleSelect(dKey)}
+                      >
+                        {t.disciplines[dKey] ?? dKey}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
               </TabsContent>
             ))}
