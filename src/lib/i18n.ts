@@ -66,6 +66,8 @@ export interface Translations {
   athleteUpdated: string;
   selectAthletes: string;
   noAthletesInSession: string;
+  selectAll: string;
+  deselectAll: string;
   done: string;
   // Race page
   prepareRace: string;
@@ -169,6 +171,8 @@ const de: Translations = {
   athleteUpdated: "Athlet aktualisiert",
   selectAthletes: "Athleten für Session wählen",
   noAthletesInSession: "Keine Athleten ausgewählt. Wähle Athleten aus der globalen Liste.",
+  selectAll: "Alle auswählen",
+  deselectAll: "Alle abwählen",
   done: "Fertig",
   // Race page
   prepareRace: "Rennen vorbereiten",
@@ -297,6 +301,8 @@ const en: Translations = {
   athleteUpdated: "Athlete updated",
   selectAthletes: "Select athletes for session",
   noAthletesInSession: "No athletes selected. Pick athletes from the global roster.",
+  selectAll: "Select all",
+  deselectAll: "Deselect all",
   done: "Done",
   // Race page
   prepareRace: "Prepare race",

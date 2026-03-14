@@ -25,7 +25,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ChevronDown, ChevronRight, Minus, Plus, Timer, Users, X } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Minus, Plus, Timer, Users, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import DisciplinePicker from "@/components/session/DisciplinePicker";
 
@@ -341,35 +341,89 @@ export default function SessionPage() {
       <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>{t.selectAthletes}</DialogTitle>
+            <div className="flex items-center justify-between pr-6">
+              <DialogTitle>{t.selectAthletes}</DialogTitle>
+              {allAthletes.length > 0 && (
+                <button
+                  onClick={() =>
+                    setPickerSelection(
+                      pickerSelection.length === allAthletes.length
+                        ? []
+                        : allAthletes.map((a) => a.id),
+                    )
+                  }
+                  className="text-xs font-medium text-primary hover:underline"
+                >
+                  {pickerSelection.length === allAthletes.length
+                    ? t.deselectAll
+                    : t.selectAll}
+                </button>
+              )}
+            </div>
           </DialogHeader>
+
           {allAthletes.length === 0 ? (
             <p className="text-sm text-muted-foreground py-4">{t.noAthletes}</p>
           ) : (
-            <div className="grid grid-cols-2 gap-2 py-2">
+            <div className="flex flex-col gap-1.5 py-1 max-h-72 overflow-y-auto">
               {allAthletes.map((athlete) => {
                 const selected = pickerSelection.includes(athlete.id);
+                const initial = athlete.name.trim().charAt(0).toUpperCase();
                 return (
-                  <Button
+                  <button
                     key={athlete.id}
-                    variant="outline"
-                    className={cn(
-                      "tap-target h-11 justify-start",
-                      selected && "border-primary bg-primary/10 font-semibold",
-                    )}
                     onClick={() => togglePickerAthlete(athlete.id)}
+                    className={cn(
+                      "tap-target flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-left transition-colors",
+                      selected
+                        ? "border-primary bg-primary/10"
+                        : "border-border bg-card hover:bg-muted/50",
+                    )}
                   >
-                    {athlete.name}
-                  </Button>
+                    <span
+                      className={cn(
+                        "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold",
+                        selected
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground",
+                      )}
+                    >
+                      {initial}
+                    </span>
+                    <span className="flex-1">
+                      <span className={cn("block text-sm font-medium", selected && "text-primary")}>
+                        {athlete.name}
+                      </span>
+                      {athlete.yearOfBirth && (
+                        <span className="text-xs text-muted-foreground">*{athlete.yearOfBirth}</span>
+                      )}
+                    </span>
+                    <span
+                      className={cn(
+                        "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+                        selected
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border",
+                      )}
+                    >
+                      {selected && <Check className="h-3 w-3" strokeWidth={3} />}
+                    </span>
+                  </button>
                 );
               })}
             </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPickerOpen(false)}>
-              {t.cancel}
-            </Button>
-            <Button onClick={savePicker}>{t.done}</Button>
+
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
+            <span className="text-xs text-muted-foreground self-center">
+              {pickerSelection.length} / {allAthletes.length}
+            </span>
+            <div className="flex gap-2 ml-auto">
+              <Button variant="outline" onClick={() => setPickerOpen(false)}>
+                {t.cancel}
+              </Button>
+              <Button onClick={savePicker}>{t.done}</Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
