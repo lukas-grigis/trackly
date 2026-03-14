@@ -198,7 +198,7 @@ const de: Translations = {
     long_jump: "Weitsprung",
     high_jump: "Hochsprung",
     ball_throw: "Ballwurf",
-    shot_put: "Kugelstoßen",
+    shot_put: "Kugelstossen",
     sling_ball: "Schlagball",
     football: "Fussball",
     basketball: "Basketball",
