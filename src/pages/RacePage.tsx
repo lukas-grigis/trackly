@@ -11,7 +11,48 @@ import { useTranslation } from "@/lib/i18n";
 import { ROUTES } from "@/routes";
 import { Button } from "@/components/ui/button";
 
-type Phase = "setup" | "running" | "finished" | "field-entry";
+type Phase = "setup" | "countdown" | "running" | "finished" | "field-entry";
+
+type CountdownDuration = 0 | 3 | 5 | 10;
+const COUNTDOWN_OPTIONS: CountdownDuration[] = [0, 3, 5, 10];
+const COUNTDOWN_STORAGE_KEY = "trackly-countdown-pref";
+
+function loadCountdownPref(): CountdownDuration {
+  try {
+    const saved = localStorage.getItem(COUNTDOWN_STORAGE_KEY);
+    if (saved !== null) {
+      const num = Number(saved);
+      if (COUNTDOWN_OPTIONS.includes(num as CountdownDuration)) return num as CountdownDuration;
+    }
+  } catch { /* ignore */ }
+  return 5;
+}
+
+function saveCountdownPref(val: CountdownDuration) {
+  try { localStorage.setItem(COUNTDOWN_STORAGE_KEY, String(val)); } catch { /* ignore */ }
+}
+
+/** Play a short beep tone using AudioContext */
+function playBeep(frequency: number, duration: number) {
+  try {
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = frequency;
+    osc.type = "sine";
+    gain.gain.value = 0.3;
+    osc.start();
+    osc.stop(ctx.currentTime + duration / 1000);
+    // Clean up after done
+    osc.onended = () => { ctx.close(); };
+  } catch { /* AudioContext not available */ }
+}
+
+function vibrate(pattern: number | number[]) {
+  try { navigator.vibrate?.(pattern); } catch { /* ignore */ }
+}
 
 const MEDAL_COLORS = [
   "bg-yellow-400 text-yellow-900",
@@ -53,6 +94,13 @@ export default function RacePage() {
   const [heatId, setHeatId] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Countdown state
+  const [countdownDuration, setCountdownDuration] = useState<CountdownDuration>(loadCountdownPref);
+  const [countdownRemaining, setCountdownRemaining] = useState(0);
+  const [countdownPaused, setCountdownPaused] = useState(false);
+  const [showGo, setShowGo] = useState(false);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   // Field-entry state: attempts per athlete (up to 3)
   interface Attempt {
     value: string; // raw input string
@@ -68,11 +116,99 @@ export default function RacePage() {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+      countdownRef.current = null;
+    }
   }, []);
 
   useEffect(() => {
     return () => stopTimer();
   }, [stopTimer]);
+
+  // Visibility change handler for countdown pause/resume
+  useEffect(() => {
+    if (phase !== "countdown") return;
+    function handleVisibility() {
+      if (document.hidden) {
+        // Pause countdown
+        if (countdownRef.current) {
+          clearInterval(countdownRef.current);
+          countdownRef.current = null;
+        }
+        setCountdownPaused(true);
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [phase]);
+
+  const startRunningPhase = useCallback(() => {
+    const now = performance.now();
+    setStartTime(now);
+    setFinishTimes({});
+    setElapsed(0);
+    setPhase("running");
+    intervalRef.current = setInterval(() => {
+      setElapsed(performance.now() - now);
+    }, 100);
+  }, []);
+
+  const startCountdown = useCallback((seconds: number) => {
+    setCountdownRemaining(seconds);
+    setCountdownPaused(false);
+    setShowGo(false);
+
+    // Play initial beep for the first tick
+    const baseFreq = 440;
+    const totalTicks = seconds;
+    const tickIndex = 0;
+    playBeep(baseFreq + (tickIndex / totalTicks) * 440, 100);
+    vibrate(50);
+
+    let remaining = seconds;
+    countdownRef.current = setInterval(() => {
+      remaining -= 1;
+      if (remaining > 0) {
+        setCountdownRemaining(remaining);
+        // Rising pitch: higher as we approach zero
+        const freq = baseFreq + ((totalTicks - remaining) / totalTicks) * 440;
+        playBeep(freq, 100);
+        vibrate(50);
+      } else {
+        // Zero! Start the timer precisely now
+        if (countdownRef.current) {
+          clearInterval(countdownRef.current);
+          countdownRef.current = null;
+        }
+        setCountdownRemaining(0);
+        // "Go!" beep - distinct higher pitch + strong vibration
+        playBeep(1200, 200);
+        vibrate([100, 50, 100]);
+
+        // Start race timer at this precise moment
+        const raceStart = performance.now();
+        setStartTime(raceStart);
+        setFinishTimes({});
+        setElapsed(0);
+        setShowGo(true);
+
+        // Show "Go!" briefly then transition to running
+        setTimeout(() => {
+          setShowGo(false);
+          setPhase("running");
+          intervalRef.current = setInterval(() => {
+            setElapsed(performance.now() - raceStart);
+          }, 100);
+        }, 500);
+      }
+    }, 1000);
+  }, []);
+
+  const resumeCountdown = useCallback(() => {
+    setCountdownPaused(false);
+    startCountdown(countdownRemaining);
+  }, [countdownRemaining, startCountdown]);
 
   if (!session || !id) {
     return (
@@ -121,14 +257,13 @@ export default function RacePage() {
       return;
     }
 
-    const now = performance.now();
-    setStartTime(now);
-    setFinishTimes({});
-    setElapsed(0);
-    setPhase("running");
-    intervalRef.current = setInterval(() => {
-      setElapsed(performance.now() - now);
-    }, 100);
+    // Timed discipline: check countdown preference
+    if (countdownDuration > 0) {
+      setPhase("countdown");
+      startCountdown(countdownDuration);
+    } else {
+      startRunningPhase();
+    }
   }
 
   function handleFinish(childId: string) {
@@ -174,6 +309,9 @@ export default function RacePage() {
     setFieldAttempts({});
     setShowSaveWarning(false);
     setWarningAthletes([]);
+    setCountdownRemaining(0);
+    setCountdownPaused(false);
+    setShowGo(false);
     stopTimer();
   }
 
@@ -231,6 +369,28 @@ export default function RacePage() {
           )}
         </div>
 
+        {isTimedDiscipline(discipline) && (
+          <div className="space-y-2">
+            <p className="text-sm font-medium">{t.countdownLabel}</p>
+            <div className="flex gap-2">
+              {COUNTDOWN_OPTIONS.map((val) => (
+                <Button
+                  key={val}
+                  size="sm"
+                  variant={countdownDuration === val ? "default" : "outline"}
+                  className="flex-1"
+                  onClick={() => {
+                    setCountdownDuration(val);
+                    saveCountdownPref(val);
+                  }}
+                >
+                  {val === 0 ? t.countdownNone : `${val}s`}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <Button
           className="tap-target tap-press h-20 w-full rounded-2xl text-2xl font-display tracking-wide"
           disabled={selectedChildren.length === 0}
@@ -238,6 +398,45 @@ export default function RacePage() {
         >
           {t.start}
         </Button>
+      </div>
+    );
+  }
+
+  // COUNTDOWN PHASE
+  if (phase === "countdown") {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background">
+        {showGo ? (
+          <div className="text-9xl font-display font-bold text-primary animate-pulse">
+            {t.countdownGo}
+          </div>
+        ) : countdownPaused ? (
+          <div className="flex flex-col items-center gap-6">
+            <div className="text-9xl font-display font-bold tabular-nums text-muted-foreground">
+              {countdownRemaining}
+            </div>
+            <p className="text-lg text-muted-foreground">{t.countdownPaused}</p>
+            <Button
+              className="tap-target tap-press h-16 px-12 text-xl font-display"
+              onClick={resumeCountdown}
+            >
+              {t.countdownTapResume}
+            </Button>
+          </div>
+        ) : (
+          <div className="text-[12rem] leading-none font-display font-bold tabular-nums text-primary">
+            {countdownRemaining}
+          </div>
+        )}
+        {!showGo && (
+          <Button
+            variant="ghost"
+            className="absolute bottom-12 text-muted-foreground"
+            onClick={handleReset}
+          >
+            {t.cancel}
+          </Button>
+        )}
       </div>
     );
   }

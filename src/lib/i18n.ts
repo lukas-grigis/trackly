@@ -112,6 +112,12 @@ export interface Translations {
     female: string;
     nonbinary: string;
   };
+  // Countdown
+  countdownLabel: string;
+  countdownNone: string;
+  countdownGo: string;
+  countdownPaused: string;
+  countdownTapResume: string;
   // Field entry
   fieldEntry: string;
   foul: string;
@@ -273,6 +279,12 @@ const de: Translations = {
     female: "Weiblich",
     nonbinary: "Non-binär",
   },
+  // Countdown
+  countdownLabel: "Countdown",
+  countdownNone: "Ohne",
+  countdownGo: "Los!",
+  countdownPaused: "Pausiert",
+  countdownTapResume: "Tippen zum Fortsetzen",
   // Field entry
   fieldEntry: "Ergebnisse eintragen",
   foul: "Fehlversuch",
@@ -434,6 +446,12 @@ const en: Translations = {
     female: "Female",
     nonbinary: "Non-binary",
   },
+  // Countdown
+  countdownLabel: "Countdown",
+  countdownNone: "None",
+  countdownGo: "Go!",
+  countdownPaused: "Paused",
+  countdownTapResume: "Tap to resume",
   // Field entry
   fieldEntry: "Enter results",
   foul: "Foul",
