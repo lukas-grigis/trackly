@@ -1,5 +1,3 @@
-import { Timer, ArrowUpFromLine, Target, Gamepad2 } from "lucide-react";
-
 export type DisciplineMode = "timed" | "distance" | "count";
 export type DisciplineCategory = "running" | "jumping" | "throwing" | "games";
 
@@ -41,14 +39,15 @@ export const DISCIPLINES: Record<string, DisciplineConfig> = {
   jump_rope:  { mode: "count", unit: "count", sortAscending: false, category: "games" },
 };
 
+// MDI (Material Design Icons) sport pictograms via @iconify/react
 export const DISCIPLINE_CATEGORIES: {
   key: DisciplineCategory;
-  icon: typeof Timer;
+  icon: string;
 }[] = [
-  { key: "running",  icon: Timer },
-  { key: "jumping",  icon: ArrowUpFromLine },
-  { key: "throwing", icon: Target },
-  { key: "games",    icon: Gamepad2 },
+  { key: "running",  icon: "mdi:run-fast" },
+  { key: "jumping",  icon: "mdi:human-handsup" },
+  { key: "throwing", icon: "mdi:handball" },
+  { key: "games",    icon: "mdi:soccer" },
 ];
 
 export function getDisciplinesByCategory(

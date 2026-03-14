@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Icon } from "@iconify/react";
 import {
   DISCIPLINE_CATEGORIES,
   getDisciplinesByCategory,
@@ -24,15 +25,13 @@ export default function DisciplinePicker({ value, onChange }: DisciplinePickerPr
   const [open, setOpen] = useState(false);
   const { t } = useTranslation();
 
-  // Determine which category the current value belongs to for default tab
   const currentCat: DisciplineCategory =
     (DISCIPLINE_CATEGORIES.find((cat) =>
       getDisciplinesByCategory(cat.key).some(([k]) => k === value),
     )?.key) ?? "running";
 
+  const currentIcon = DISCIPLINE_CATEGORIES.find((c) => c.key === currentCat)?.icon;
   const currentLabel = t.disciplines[value] ?? value;
-  const CurrentIcon =
-    DISCIPLINE_CATEGORIES.find((c) => c.key === currentCat)?.icon;
 
   function handleSelect(key: string) {
     onChange(key);
@@ -46,7 +45,7 @@ export default function DisciplinePicker({ value, onChange }: DisciplinePickerPr
         className="w-full justify-start gap-2"
         onClick={() => setOpen(true)}
       >
-        {CurrentIcon && <CurrentIcon className="h-4 w-4 shrink-0" />}
+        {currentIcon && <Icon icon={currentIcon} className="h-5 w-5 shrink-0" />}
         <span>{currentLabel}</span>
       </Button>
 
@@ -58,9 +57,9 @@ export default function DisciplinePicker({ value, onChange }: DisciplinePickerPr
 
           <Tabs defaultValue={currentCat}>
             <TabsList className="grid w-full grid-cols-4">
-              {DISCIPLINE_CATEGORIES.map(({ key, icon: Icon }) => (
+              {DISCIPLINE_CATEGORIES.map(({ key, icon }) => (
                 <TabsTrigger key={key} value={key} className="px-1">
-                  <Icon className="h-4 w-4" />
+                  <Icon icon={icon} className="h-5 w-5" />
                 </TabsTrigger>
               ))}
             </TabsList>
