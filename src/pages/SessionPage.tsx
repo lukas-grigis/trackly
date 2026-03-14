@@ -41,9 +41,9 @@ export default function SessionPage() {
   const session = useSessionStore((s) => s.sessions.find((sess) => sess.id === id));
   const allAthletes = useSessionStore((s) => s.athletes);
   const setSessionAthletes = useSessionStore((s) => s.setSessionAthletes);
-  const addResult = useSessionStore((s) => s.addResult);
-  const addResults = useSessionStore((s) => s.addResults);
-  const deleteResult = useSessionStore((s) => s.deleteResult);
+  const addHeat = useSessionStore((s) => s.addHeat);
+  const addHeatResult = useSessionStore((s) => s.addHeatResult);
+  const deleteHeat = useSessionStore((s) => s.deleteHeat);
   const { t } = useTranslation();
 
   const [athletesOpen, setAthletesOpen] = useState(true);
@@ -93,14 +93,18 @@ export default function SessionPage() {
     if (!selectedChildId || !resultValue || !id) return;
     const value = parseFloat(resultValue);
     if (isNaN(value)) return;
-    const athleteName =
-      allAthletes.find((a) => a.id === selectedChildId)?.name ?? selectedChildId;
-    addResult(id, {
-      athleteName,
-      discipline,
+    const now = new Date().toISOString();
+    const heatId = addHeat(id, {
+      sessionId: id,
+      disciplineType: discipline,
+      participantIds: [selectedChildId],
+      startedAt: now,
+    });
+    addHeatResult(id, heatId, {
+      childId: selectedChildId,
       value,
       unit: disciplineConfig.unit,
-      recordedAt: new Date().toISOString(),
+      recordedAt: now,
     });
     toast.success(t.resultSaved);
     setResultValue("");
@@ -113,19 +117,37 @@ export default function SessionPage() {
   function handleSaveScore() {
     if (!id) return;
     const now = new Date().toISOString();
-    addResults(id, [
-      { athleteName: t.teamA, discipline, value: score.a, unit: "count", recordedAt: now },
-      { athleteName: t.teamB, discipline, value: score.b, unit: "count", recordedAt: now },
-    ]);
+    // Use placeholder IDs for team scores (team-a / team-b)
+    const teamAId = "team-a";
+    const teamBId = "team-b";
+    const heatId = addHeat(id, {
+      sessionId: id,
+      disciplineType: discipline,
+      participantIds: [teamAId, teamBId],
+      startedAt: now,
+    });
+    addHeatResult(id, heatId, { childId: teamAId, value: score.a, unit: "count", recordedAt: now });
+    addHeatResult(id, heatId, { childId: teamBId, value: score.b, unit: "count", recordedAt: now });
     toast.success(t.resultsSaved);
     setScore({ a: 0, b: 0 });
   }
 
-  const filteredResults = session.results
-    .filter((r) => r.discipline === discipline)
-    .sort((a, b) =>
-      disciplineConfig.sortAscending ? a.value - b.value : b.value - a.value,
-    );
+  const filteredHeats = session.heats
+    .filter((h) => h.disciplineType === discipline)
+    .sort((a, b) => a.startedAt.localeCompare(b.startedAt) || a.id.localeCompare(b.id));
+
+  const filteredResults = filteredHeats.flatMap((h) =>
+    h.results.map((r) => ({
+      heatId: h.id,
+      childId: r.childId,
+      athleteName: allAthletes.find((a) => a.id === r.childId)?.name ?? r.childId,
+      value: r.value,
+      unit: r.unit,
+      recordedAt: r.recordedAt,
+    })),
+  ).sort((a, b) =>
+    disciplineConfig.sortAscending ? a.value - b.value : b.value - a.value,
+  );
 
   return (
     <div className="space-y-4">
@@ -304,7 +326,7 @@ export default function SessionPage() {
               </thead>
               <tbody>
                 {filteredResults.map((result, i) => (
-                  <tr key={result.id} className={cn("border-b last:border-0", i % 2 === 1 && "bg-muted/30")}>
+                  <tr key={`${result.heatId}-${result.childId}`} className={cn("border-b last:border-0", i % 2 === 1 && "bg-muted/30")}>
                     <td className="py-2 pr-4 font-medium">
                       {i < 3 ? (
                         <span className={cn("inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold", MEDAL_COLORS[i])}>
@@ -323,7 +345,7 @@ export default function SessionPage() {
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                        onClick={() => deleteResult(id, result.id)}
+                        onClick={() => deleteHeat(id, result.heatId)}
                         aria-label={t.deleteResult}
                       >
                         <X className="h-3.5 w-3.5" />

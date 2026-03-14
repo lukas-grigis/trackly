@@ -36,7 +36,8 @@ export default function RacePage() {
   const navigate = useNavigate();
   const session = useSessionStore((s) => s.sessions.find((sess) => sess.id === id));
   const allAthletes = useSessionStore((s) => s.athletes);
-  const addResults = useSessionStore((s) => s.addResults);
+  const addHeat = useSessionStore((s) => s.addHeat);
+  const addHeatResult = useSessionStore((s) => s.addHeatResult);
   const { t } = useTranslation();
 
   const disciplineConfig = DISCIPLINES[discipline] ?? DISCIPLINES["sprint_60"];
@@ -46,6 +47,7 @@ export default function RacePage() {
   const [startTime, setStartTime] = useState<number | null>(null);
   const [finishTimes, setFinishTimes] = useState<Record<string, number>>({});
   const [elapsed, setElapsed] = useState(0);
+  const [heatId, setHeatId] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const stopTimer = useCallback(() => {
@@ -76,7 +78,15 @@ export default function RacePage() {
   }
 
   function handleStart() {
-    if (selectedChildren.length === 0) return;
+    if (selectedChildren.length === 0 || !id) return;
+    const nowIso = new Date().toISOString();
+    const newHeatId = addHeat(id, {
+      sessionId: id,
+      disciplineType: discipline,
+      participantIds: [...selectedChildren],
+      startedAt: nowIso,
+    });
+    setHeatId(newHeatId);
     const now = performance.now();
     setStartTime(now);
     setFinishTimes({});
@@ -107,15 +117,16 @@ export default function RacePage() {
   }
 
   function handleSave() {
-    if (!id || !session) return;
-    const results = Object.entries(finishTimes).map(([childId, value]) => ({
-      athleteName: allAthletes.find((a) => a.id === childId)?.name ?? childId,
-      discipline,
-      value: Math.round(value),
-      unit: disciplineConfig.unit,
-      recordedAt: new Date().toISOString(),
-    }));
-    addResults(id, results);
+    if (!id || !session || !heatId) return;
+    const now = new Date().toISOString();
+    for (const [childId, value] of Object.entries(finishTimes)) {
+      addHeatResult(id, heatId, {
+        childId,
+        value: Math.round(value),
+        unit: disciplineConfig.unit,
+        recordedAt: now,
+      });
+    }
     toast.success(t.resultsSaved);
     navigate(ROUTES.SESSION(id));
   }
@@ -125,6 +136,7 @@ export default function RacePage() {
     setStartTime(null);
     setFinishTimes({});
     setElapsed(0);
+    setHeatId(null);
     stopTimer();
   }
 

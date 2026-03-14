@@ -28,17 +28,23 @@ import {
 import { Plus, Download, Trash2, ClipboardList } from "lucide-react";
 import SessionCard from "@/components/session/SessionCard";
 
-function exportSessionCsv(session: Session, disciplineLabel: (key: string) => string) {
+function exportSessionCsv(
+  session: Session,
+  disciplineLabel: (key: string) => string,
+  athleteName: (id: string) => string,
+) {
   const rows = [
     ["Athlete", "Discipline", "Value", "Unit", "Date"].map(escapeCsvField),
-    ...session.results.map((r) =>
-      [
-        r.athleteName || "—",
-        disciplineLabel(r.discipline),
-        formatValue(r.value, r.unit),
-        r.unit,
-        r.recordedAt,
-      ].map(escapeCsvField),
+    ...session.heats.flatMap((h) =>
+      h.results.map((r) =>
+        [
+          athleteName(r.childId),
+          disciplineLabel(h.disciplineType),
+          formatValue(r.value, r.unit),
+          r.unit,
+          r.recordedAt,
+        ].map(escapeCsvField),
+      ),
     ),
   ];
   const csv = rows.map((row) => row.join(",")).join("\n");
@@ -53,6 +59,7 @@ function exportSessionCsv(session: Session, disciplineLabel: (key: string) => st
 
 export default function HomePage() {
   const sessions = useSessionStore((s) => s.sessions);
+  const allAthletes = useSessionStore((s) => s.athletes);
   const addSession = useSessionStore((s) => s.addSession);
   const deleteSession = useSessionStore((s) => s.deleteSession);
   const clearAllData = useSessionStore((s) => s.clearAllData);
@@ -140,14 +147,18 @@ export default function HomePage() {
           {sessions.map((session) => (
             <div key={session.id} className="relative animate-card-enter">
               <SessionCard session={session} onDelete={handleDelete} />
-              {session.results.length > 0 && (
+              {session.heats.some((h) => h.results.length > 0) && (
                 <Button
                   variant="ghost"
                   size="sm"
                   className="absolute right-2 bottom-2 text-muted-foreground"
                   onClick={(e) => {
                     e.stopPropagation();
-                    exportSessionCsv(session, (key) => t.disciplines[key] ?? key);
+                    exportSessionCsv(
+                      session,
+                      (key) => t.disciplines[key] ?? key,
+                      (id) => allAthletes.find((a) => a.id === id)?.name ?? id,
+                    );
                     toast.success(t.csvExported);
                   }}
                   aria-label={t.exportCsv}

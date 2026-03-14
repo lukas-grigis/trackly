@@ -98,7 +98,7 @@ export default function SessionCard({ session, onDelete }: SessionCardProps) {
             {session.athleteIds.length} {t.athletes}
           </Badge>
           <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20">
-            {session.results.length} {t.results}
+            {session.heats.reduce((sum, h) => sum + h.results.length, 0)} {t.results}
           </Badge>
         </CardContent>
       </Card>
