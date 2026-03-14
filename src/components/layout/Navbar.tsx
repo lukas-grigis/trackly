@@ -31,7 +31,7 @@ export default function Navbar() {
           className="text-lg font-bold tracking-tight flex-1"
           style={{ fontVariationSettings: "'wght' 750", letterSpacing: "-0.025em" }}
         >
-          <span className="text-primary">Track</span><span className="text-accent-foreground">ly</span>
+          <span className="text-primary">Track</span><span className="text-accent">ly</span>
         </Link>
         <Link to={ROUTES.ATHLETES} aria-label={t.athletesNav}>
           <Button variant="ghost" size="icon">
