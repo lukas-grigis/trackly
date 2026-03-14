@@ -7,6 +7,7 @@ import {
 } from "@/lib/constants";
 import { useTranslation } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -18,24 +19,43 @@ import { cn } from "@/lib/utils";
 
 interface DisciplinePickerProps {
   value: string;
-  onChange: (discipline: string) => void;
+  customName?: string;
+  onChange: (discipline: string, customName?: string) => void;
 }
 
-export default function DisciplinePicker({ value, onChange }: DisciplinePickerProps) {
+export default function DisciplinePicker({ value, customName, onChange }: DisciplinePickerProps) {
   const [open, setOpen] = useState(false);
+  const [customInput, setCustomInput] = useState(customName ?? "");
   const { t } = useTranslation();
+
+  const isCustom = value === "custom";
 
   const currentCat: DisciplineCategory =
     (DISCIPLINE_CATEGORIES.find((cat) =>
       getDisciplinesByCategory(cat.key).some(([k]) => k === value),
     )?.key) ?? "running";
 
-  const currentIcon = DISCIPLINE_CATEGORIES.find((c) => c.key === currentCat)?.icon;
-  const currentLabel = t.disciplines[value] ?? value;
+  const currentIcon = isCustom
+    ? "mdi:pencil-outline"
+    : DISCIPLINE_CATEGORIES.find((c) => c.key === currentCat)?.icon;
+  const currentLabel = isCustom
+    ? (customName || t.disciplines.custom)
+    : (t.disciplines[value] ?? value);
 
   function handleSelect(key: string) {
     onChange(key);
     setOpen(false);
+  }
+
+  function handleCustomConfirm() {
+    if (!customInput.trim()) return;
+    onChange("custom", customInput.trim());
+    setOpen(false);
+  }
+
+  function handleOpen() {
+    setCustomInput(customName ?? "");
+    setOpen(true);
   }
 
   return (
@@ -43,7 +63,7 @@ export default function DisciplinePicker({ value, onChange }: DisciplinePickerPr
       <Button
         variant="outline"
         className="w-full justify-start gap-2"
-        onClick={() => setOpen(true)}
+        onClick={handleOpen}
       >
         {currentIcon && <Icon icon={currentIcon} className="h-5 w-5 shrink-0" />}
         <span>{currentLabel}</span>
@@ -89,6 +109,28 @@ export default function DisciplinePicker({ value, onChange }: DisciplinePickerPr
               </TabsContent>
             ))}
           </Tabs>
+
+          {/* Custom / Other section */}
+          <div className="border-t pt-3 space-y-2">
+            <p className="text-xs font-medium uppercase text-muted-foreground">
+              {t.disciplines.custom}
+            </p>
+            <div className="flex gap-2">
+              <Input
+                placeholder={t.customDisciplinePlaceholder}
+                value={customInput}
+                onChange={(e) => setCustomInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handleCustomConfirm(); }}
+                className="flex-1"
+              />
+              <Button
+                onClick={handleCustomConfirm}
+                disabled={!customInput.trim()}
+              >
+                {t.save}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </>

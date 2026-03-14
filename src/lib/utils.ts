@@ -37,9 +37,11 @@ export function formatCount(n: number): string {
   return n.toLocaleString();
 }
 
-export function formatValue(value: number, unit: "ms" | "cm" | "count"): string {
+export function formatValue(value: number, unit: "ms" | "s" | "cm" | "m" | "count"): string {
   if (unit === "ms") return formatTime(value);
+  if (unit === "s") return `${value}s`;
   if (unit === "cm") return formatDistance(value);
+  if (unit === "m") return `${value}m`;
   return formatCount(value);
 }
 

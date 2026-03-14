@@ -14,7 +14,8 @@ export interface Athlete {
 export interface HeatResult {
   childId: string;
   value: number;
-  unit: "ms" | "cm" | "count";
+  unit: "ms" | "s" | "cm" | "m" | "count";
+  note?: string;
   recordedAt: string; // ISO timestamp
 }
 

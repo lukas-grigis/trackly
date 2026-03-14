@@ -35,6 +35,8 @@ const MEDAL_COLORS = [
   "bg-amber-600 text-amber-100",     // bronze
 ];
 
+const CUSTOM_UNITS = ["s", "ms", "cm", "m"] as const;
+
 export default function SessionPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -48,8 +50,11 @@ export default function SessionPage() {
 
   const [athletesOpen, setAthletesOpen] = useState(true);
   const [discipline, setDiscipline] = useState("sprint_60");
+  const [customDisciplineName, setCustomDisciplineName] = useState("");
   const [selectedChildId, setSelectedChildId] = useState("");
   const [resultValue, setResultValue] = useState("");
+  const [customUnit, setCustomUnit] = useState<typeof CUSTOM_UNITS[number]>("s");
+  const [customNote, setCustomNote] = useState("");
   const [score, setScore] = useState({ a: 0, b: 0 });
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerSelection, setPickerSelection] = useState<string[]>([]);
@@ -66,8 +71,9 @@ export default function SessionPage() {
   const disciplineConfig = DISCIPLINES[discipline] ?? DISCIPLINES["sprint_60"];
   const mode = disciplineConfig.mode;
 
-  function handleDisciplineChange(newDiscipline: string) {
+  function handleDisciplineChange(newDiscipline: string, newCustomName?: string) {
     setDiscipline(newDiscipline);
+    if (newCustomName !== undefined) setCustomDisciplineName(newCustomName);
     setScore({ a: 0, b: 0 });
   }
 
@@ -110,6 +116,33 @@ export default function SessionPage() {
     setResultValue("");
   }
 
+  function handleAddCustomResult() {
+    if (!selectedChildId || !id) return;
+    const numValue = resultValue ? parseFloat(resultValue) : NaN;
+    const hasNumeric = !isNaN(numValue) && resultValue !== "";
+    const hasNote = customNote.trim() !== "";
+    if (!hasNumeric && !hasNote) return;
+
+    const now = new Date().toISOString();
+    const heatId = addHeat(id, {
+      sessionId: id,
+      disciplineType: "custom",
+      customDisciplineName,
+      participantIds: [selectedChildId],
+      startedAt: now,
+    });
+    addHeatResult(id, heatId, {
+      childId: selectedChildId,
+      value: hasNumeric ? numValue : 0,
+      unit: customUnit,
+      note: hasNote ? customNote.trim() : undefined,
+      recordedAt: now,
+    });
+    toast.success(t.resultSaved);
+    setResultValue("");
+    setCustomNote("");
+  }
+
   function handleAdjustScore(team: "a" | "b", delta: number) {
     setScore((prev) => ({ ...prev, [team]: Math.max(0, prev[team] + delta) }));
   }
@@ -117,7 +150,6 @@ export default function SessionPage() {
   function handleSaveScore() {
     if (!id) return;
     const now = new Date().toISOString();
-    // Use placeholder IDs for team scores (team-a / team-b)
     const teamAId = "team-a";
     const teamBId = "team-b";
     const heatId = addHeat(id, {
@@ -133,7 +165,13 @@ export default function SessionPage() {
   }
 
   const filteredHeats = session.heats
-    .filter((h) => h.disciplineType === discipline)
+    .filter((h) => {
+      if (discipline === "custom") {
+        return h.disciplineType === "custom" &&
+          (h.customDisciplineName ?? "").toLowerCase() === customDisciplineName.toLowerCase();
+      }
+      return h.disciplineType === discipline;
+    })
     .sort((a, b) => a.startedAt.localeCompare(b.startedAt) || a.id.localeCompare(b.id));
 
   const filteredResults = filteredHeats.flatMap((h) =>
@@ -143,11 +181,22 @@ export default function SessionPage() {
       athleteName: allAthletes.find((a) => a.id === r.childId)?.name ?? r.childId,
       value: r.value,
       unit: r.unit,
+      note: r.note,
       recordedAt: r.recordedAt,
     })),
-  ).sort((a, b) =>
-    disciplineConfig.sortAscending ? a.value - b.value : b.value - a.value,
-  );
+  ).sort((a, b) => {
+    // Note-only results (value 0 with a note) go to the end
+    const aIsNoteOnly = a.value === 0 && a.note;
+    const bIsNoteOnly = b.value === 0 && b.note;
+    if (aIsNoteOnly && !bIsNoteOnly) return 1;
+    if (!aIsNoteOnly && bIsNoteOnly) return -1;
+    return disciplineConfig.sortAscending ? a.value - b.value : b.value - a.value;
+  });
+
+  // For custom disciplines, show the custom name as column header
+  const disciplineDisplayName = discipline === "custom"
+    ? (customDisciplineName || t.disciplines.custom)
+    : (t.disciplines[discipline] ?? discipline);
 
   return (
     <div className="space-y-4">
@@ -215,7 +264,11 @@ export default function SessionPage() {
       <div className="space-y-4">
         <div className="space-y-2">
           <Label>{t.disciplineLabel}</Label>
-          <DisciplinePicker value={discipline} onChange={handleDisciplineChange} />
+          <DisciplinePicker
+            value={discipline}
+            customName={customDisciplineName}
+            onChange={handleDisciplineChange}
+          />
         </div>
 
         {mode === "timed" && (
@@ -257,6 +310,63 @@ export default function SessionPage() {
               />
               <Button onClick={handleAddResult}>{t.save}</Button>
             </div>
+          </div>
+        )}
+
+        {mode === "custom" && (
+          <div className="space-y-3">
+            <Label>{t.enterResult} — {disciplineDisplayName}</Label>
+            <div className="flex gap-2">
+              <Select
+                value={selectedChildId}
+                onValueChange={(v) => { if (v) setSelectedChildId(v); }}
+              >
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder={t.chooseChild} />
+                </SelectTrigger>
+                <SelectContent>
+                  {sessionAthletes.map((a) => (
+                    <SelectItem key={a.id} value={a.id}>
+                      {a.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Input
+                type="number"
+                placeholder={t.unitValue}
+                value={resultValue}
+                onChange={(e) => setResultValue(e.target.value)}
+                className="w-24"
+              />
+              <Select
+                value={customUnit}
+                onValueChange={(v) => setCustomUnit(v as typeof CUSTOM_UNITS[number])}
+              >
+                <SelectTrigger className="w-20">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CUSTOM_UNITS.map((u) => (
+                    <SelectItem key={u} value={u}>
+                      {t.units[u]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Input
+              placeholder={t.notePlaceholder}
+              value={customNote}
+              onChange={(e) => setCustomNote(e.target.value)}
+            />
+            <Button
+              className="w-full"
+              onClick={handleAddCustomResult}
+              disabled={!selectedChildId || (!resultValue && !customNote.trim())}
+            >
+              {t.save}
+            </Button>
           </div>
         )}
 
@@ -319,40 +429,49 @@ export default function SessionPage() {
                   <th className="pb-2 pr-4">{t.rankCol}</th>
                   <th className="pb-2 pr-4">{t.nameCol}</th>
                   <th className="pb-2 text-right">
-                    {mode === "count" ? t.scoreCol : t.resultsTab}
+                    {mode === "count" ? t.scoreCol : disciplineDisplayName}
                   </th>
+                  {mode === "custom" && <th className="pb-2 pl-2 text-right">{t.noteHeader}</th>}
                   <th className="pb-2 pl-2" />
                 </tr>
               </thead>
               <tbody>
-                {filteredResults.map((result, i) => (
-                  <tr key={`${result.heatId}-${result.childId}`} className={cn("border-b last:border-0", i % 2 === 1 && "bg-muted/30")}>
-                    <td className="py-2 pr-4 font-medium">
-                      {i < 3 ? (
-                        <span className={cn("inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold", MEDAL_COLORS[i])}>
-                          {i + 1}
-                        </span>
-                      ) : (
-                        i + 1
+                {filteredResults.map((result, i) => {
+                  const isNoteOnly = result.value === 0 && result.note;
+                  return (
+                    <tr key={`${result.heatId}-${result.childId}`} className={cn("border-b last:border-0", i % 2 === 1 && "bg-muted/30")}>
+                      <td className="py-2 pr-4 font-medium">
+                        {isNoteOnly ? "—" : i < 3 ? (
+                          <span className={cn("inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold", MEDAL_COLORS[i])}>
+                            {i + 1}
+                          </span>
+                        ) : (
+                          i + 1
+                        )}
+                      </td>
+                      <td className="py-2 pr-4">{result.athleteName || "—"}</td>
+                      <td className="py-2 text-right font-mono">
+                        {isNoteOnly ? "—" : formatValue(result.value, result.unit)}
+                      </td>
+                      {mode === "custom" && (
+                        <td className="py-2 pl-2 text-right text-muted-foreground text-xs max-w-32 truncate">
+                          {result.note ?? ""}
+                        </td>
                       )}
-                    </td>
-                    <td className="py-2 pr-4">{result.athleteName || "—"}</td>
-                    <td className="py-2 text-right font-mono">
-                      {formatValue(result.value, result.unit)}
-                    </td>
-                    <td className="py-2 pl-2 text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                        onClick={() => deleteHeat(id, result.heatId)}
-                        aria-label={t.deleteResult}
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
+                      <td className="py-2 pl-2 text-right">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                          onClick={() => deleteHeat(id, result.heatId)}
+                          aria-label={t.deleteResult}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

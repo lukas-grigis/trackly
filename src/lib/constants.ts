@@ -1,4 +1,4 @@
-export type DisciplineMode = "timed" | "distance" | "count";
+export type DisciplineMode = "timed" | "distance" | "count" | "custom";
 export type DisciplineCategory = "running" | "jumping" | "throwing" | "games";
 
 export interface DisciplineConfig {
@@ -37,6 +37,8 @@ export const DISCIPLINES: Record<string, DisciplineConfig> = {
   dodgeball:  { mode: "count", unit: "count", sortAscending: false, category: "games" },
   brennball:  { mode: "count", unit: "count", sortAscending: false, category: "games" },
   jump_rope:  { mode: "count", unit: "count", sortAscending: false, category: "games" },
+  // Custom (manual entry)
+  custom:     { mode: "custom", unit: "cm", sortAscending: false, category: "games" },
 };
 
 // MDI (Material Design Icons) sport pictograms via @iconify/react

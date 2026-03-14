@@ -90,6 +90,17 @@ export interface Translations {
     throwing: string;
     games: string;
   };
+  // Custom discipline
+  customDisciplinePlaceholder: string;
+  unitValue: string;
+  notePlaceholder: string;
+  noteHeader: string;
+  units: {
+    s: string;
+    ms: string;
+    cm: string;
+    m: string;
+  };
   // Toasts
   sessionCreated: string;
   sessionDeleted: string;
@@ -212,6 +223,7 @@ const de: Translations = {
     dodgeball: "Völkerball",
     brennball: "Brennball",
     jump_rope: "Seilspringen",
+    custom: "Eigene / Andere",
   },
   // Categories
   categories: {
@@ -219,6 +231,17 @@ const de: Translations = {
     jumping: "Sprung",
     throwing: "Wurf",
     games: "Spiele",
+  },
+  // Custom discipline
+  customDisciplinePlaceholder: "Disziplinname eingeben",
+  unitValue: "Wert",
+  notePlaceholder: "Optionale Notiz",
+  noteHeader: "Notiz",
+  units: {
+    s: "s",
+    ms: "ms",
+    cm: "cm",
+    m: "m",
   },
   // Toasts
   sessionCreated: "Session erstellt",
@@ -342,6 +365,7 @@ const en: Translations = {
     dodgeball: "Dodgeball",
     brennball: "Brennball",
     jump_rope: "Jump Rope",
+    custom: "Custom / Other",
   },
   // Categories
   categories: {
@@ -349,6 +373,17 @@ const en: Translations = {
     jumping: "Jumping",
     throwing: "Throwing",
     games: "Games",
+  },
+  // Custom discipline
+  customDisciplinePlaceholder: "Enter discipline name",
+  unitValue: "Value",
+  notePlaceholder: "Optional note",
+  noteHeader: "Note",
+  units: {
+    s: "s",
+    ms: "ms",
+    cm: "cm",
+    m: "m",
   },
   // Toasts
   sessionCreated: "Session created",
