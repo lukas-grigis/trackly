@@ -6,6 +6,7 @@ import SessionPage from "@/pages/SessionPage";
 import RacePage from "@/pages/RacePage";
 import NotFoundPage from "@/pages/NotFoundPage";
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const ROUTES = {
   HOME: "/",
   ATHLETES: "/athletes",

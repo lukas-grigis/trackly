@@ -89,6 +89,7 @@ export default function RacePage() {
 
   function handleFinish(childId: string) {
     if (!startTime) return;
+    // eslint-disable-next-line react-hooks/purity -- event handler, not called during render
     const time = performance.now() - startTime;
     setFinishTimes((prev) => {
       const next = { ...prev, [childId]: time };
