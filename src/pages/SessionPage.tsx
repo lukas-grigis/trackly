@@ -5,6 +5,7 @@ import { useSessionStore } from "@/store/session-store";
 import { DISCIPLINES } from "@/lib/constants";
 import { formatValue, getAgeGroup } from "@/lib/utils";
 import { GenderBadge } from "@/components/GenderBadge";
+import { AthleteAvatar } from "@/components/ui/athlete-avatar";
 import { useTranslation } from "@/lib/i18n";
 import { formatLocalDate } from "@/lib/locale";
 import { ROUTES } from "@/routes";
@@ -251,7 +252,7 @@ export default function SessionPage() {
                     key={athlete.id}
                     className="inline-flex items-center gap-1.5 rounded-full border bg-card px-3 py-1 text-sm font-medium"
                   >
-                    <span className="h-2 w-2 rounded-full bg-primary" />
+                    <AthleteAvatar name={athlete.name} avatarBase64={athlete.avatarBase64} size="sm" className="h-5 w-5 text-[8px]" />
                     {athlete.name}
                     {athlete.yearOfBirth && (
                       <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
@@ -526,7 +527,6 @@ export default function SessionPage() {
             <div className="flex flex-col gap-1.5 py-1 max-h-72 overflow-y-auto">
               {allAthletes.map((athlete) => {
                 const selected = pickerSelection.includes(athlete.id);
-                const initial = athlete.name.trim().charAt(0).toUpperCase();
                 return (
                   <button
                     key={athlete.id}
@@ -538,16 +538,15 @@ export default function SessionPage() {
                         : "border-border bg-card hover:bg-muted/50",
                     )}
                   >
-                    <span
+                    <AthleteAvatar
+                      name={athlete.name}
+                      avatarBase64={athlete.avatarBase64}
                       className={cn(
-                        "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold",
-                        selected
+                        !athlete.avatarBase64 && (selected
                           ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground",
+                          : "bg-muted text-muted-foreground"),
                       )}
-                    >
-                      {initial}
-                    </span>
+                    />
                     <span className="flex-1">
                       <span className={cn("block text-sm font-medium", selected && "text-primary")}>
                         {athlete.name}

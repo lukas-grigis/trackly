@@ -5,6 +5,7 @@ import { useSessionStore } from "@/store/session-store";
 import { DISCIPLINES } from "@/lib/constants";
 import { formatTime, formatStopwatch, cn, getAgeGroup } from "@/lib/utils";
 import { GenderBadgeInline } from "@/components/GenderBadge";
+import { AthleteAvatar } from "@/components/ui/athlete-avatar";
 import { useTranslation } from "@/lib/i18n";
 import { ROUTES } from "@/routes";
 import { Button } from "@/components/ui/button";
@@ -171,17 +172,20 @@ export default function RacePage() {
                 <Button
                   key={athlete.id}
                   variant={selected ? "default" : "outline"}
-                  className="tap-target tap-press h-14 font-medium flex-col gap-0"
+                  className="tap-target tap-press h-14 font-medium gap-2"
                   onClick={() => toggleChild(athlete.id)}
                 >
-                  <span>{athlete.name}</span>
-                  <span className="flex items-center gap-1">
-                    {athlete.yearOfBirth && (
-                      <span className="text-[10px] font-normal opacity-70">
-                        {getAgeGroup(athlete.yearOfBirth)}
-                      </span>
-                    )}
-                    <GenderBadgeInline gender={athlete.gender} />
+                  <AthleteAvatar name={athlete.name} avatarBase64={athlete.avatarBase64} size="sm" />
+                  <span className="flex flex-col items-start">
+                    <span>{athlete.name}</span>
+                    <span className="flex items-center gap-1">
+                      {athlete.yearOfBirth && (
+                        <span className="text-[10px] font-normal opacity-70">
+                          {getAgeGroup(athlete.yearOfBirth)}
+                        </span>
+                      )}
+                      <GenderBadgeInline gender={athlete.gender} />
+                    </span>
                   </span>
                 </Button>
               );
@@ -214,7 +218,7 @@ export default function RacePage() {
         </div>
 
         <div className="grid gap-2">
-          {selectedChildren.map((childId, laneIdx) => {
+          {selectedChildren.map((childId) => {
             const child = allAthletes.find((a) => a.id === childId);
             const finished = childId in finishTimes;
             return (
@@ -230,9 +234,7 @@ export default function RacePage() {
                 )}
               >
                 <span className="flex items-center gap-3">
-                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-sm font-bold">
-                    {laneIdx + 1}
-                  </span>
+                  <AthleteAvatar name={child?.name ?? "?"} avatarBase64={child?.avatarBase64} size="sm" />
                   <span className="flex flex-col items-start">
                     <span>{child?.name}</span>
                     <span className="flex items-center gap-1">

@@ -101,6 +101,11 @@ export interface Translations {
     cm: string;
     m: string;
   };
+  // Avatar
+  addPhoto: string;
+  changePhoto: string;
+  removePhoto: string;
+  photoStorageFailed: string;
   // Gender
   genderLabels: {
     male: string;
@@ -249,6 +254,11 @@ const de: Translations = {
     cm: "cm",
     m: "m",
   },
+  // Avatar
+  addPhoto: "Foto hinzufügen",
+  changePhoto: "Foto ändern",
+  removePhoto: "Foto entfernen",
+  photoStorageFailed: "Foto konnte nicht gespeichert werden (Speicher voll?).",
   // Gender
   genderLabels: {
     male: "Männlich",
@@ -397,6 +407,11 @@ const en: Translations = {
     cm: "cm",
     m: "m",
   },
+  // Avatar
+  addPhoto: "Add photo",
+  changePhoto: "Change photo",
+  removePhoto: "Remove photo",
+  photoStorageFailed: "Photo could not be saved (storage full?).",
   // Gender
   genderLabels: {
     male: "Male",

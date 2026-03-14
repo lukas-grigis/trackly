@@ -12,6 +12,7 @@ export interface Athlete {
   name: string;
   yearOfBirth?: number;
   gender?: Gender;
+  avatarBase64?: string;
 }
 
 export interface HeatResult {
@@ -49,8 +50,8 @@ interface StoreState {
   sessions: Session[];
 
   // Global athlete roster
-  addAthlete: (name: string, yearOfBirth?: number, gender?: Gender) => string;
-  updateAthlete: (id: string, name: string, yearOfBirth?: number, gender?: Gender) => void;
+  addAthlete: (name: string, yearOfBirth?: number, gender?: Gender, avatarBase64?: string) => string;
+  updateAthlete: (id: string, name: string, yearOfBirth?: number, gender?: Gender, avatarBase64?: string) => void;
   removeAthlete: (id: string) => void;
 
   // Sessions
@@ -74,18 +75,18 @@ export const useSessionStore = create<StoreState>()(
       athletes: [],
       sessions: [],
 
-      addAthlete(name, yearOfBirth, gender) {
+      addAthlete(name, yearOfBirth, gender, avatarBase64) {
         const id = crypto.randomUUID();
         set((state) => ({
-          athletes: [...state.athletes, { id, name, yearOfBirth, gender }],
+          athletes: [...state.athletes, { id, name, yearOfBirth, gender, avatarBase64 }],
         }));
         return id;
       },
 
-      updateAthlete(id, name, yearOfBirth, gender) {
+      updateAthlete(id, name, yearOfBirth, gender, avatarBase64) {
         set((state) => ({
           athletes: state.athletes.map((a) =>
-            a.id === id ? { ...a, name, yearOfBirth, gender } : a,
+            a.id === id ? { ...a, name, yearOfBirth, gender, avatarBase64 } : a,
           ),
         }));
       },
