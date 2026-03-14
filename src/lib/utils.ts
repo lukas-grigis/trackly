@@ -45,6 +45,18 @@ export function formatValue(value: number, unit: "ms" | "s" | "cm" | "m" | "coun
   return formatCount(value);
 }
 
+export function getAgeGroup(yearOfBirth: number, referenceYear?: number): string {
+  const year = referenceYear ?? new Date().getFullYear();
+  const age = year - yearOfBirth;
+  if (age <= 7) return "U8";
+  if (age <= 9) return "U10";
+  if (age <= 11) return "U12";
+  if (age <= 13) return "U14";
+  if (age <= 15) return "U16";
+  if (age <= 17) return "U18";
+  return "Senior";
+}
+
 /** Escapes a value for safe inclusion in a CSV cell. */
 export function escapeCsvField(value: string): string {
   if (/[",\n\r]/.test(value)) {

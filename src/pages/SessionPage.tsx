@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useSessionStore } from "@/store/session-store";
 import { DISCIPLINES } from "@/lib/constants";
-import { formatValue } from "@/lib/utils";
+import { formatValue, getAgeGroup } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n";
 import { formatLocalDate } from "@/lib/locale";
 import { ROUTES } from "@/routes";
@@ -175,15 +175,19 @@ export default function SessionPage() {
     .sort((a, b) => a.startedAt.localeCompare(b.startedAt) || a.id.localeCompare(b.id));
 
   const filteredResults = filteredHeats.flatMap((h) =>
-    h.results.map((r) => ({
-      heatId: h.id,
-      childId: r.childId,
-      athleteName: allAthletes.find((a) => a.id === r.childId)?.name ?? r.childId,
-      value: r.value,
-      unit: r.unit,
-      note: r.note,
-      recordedAt: r.recordedAt,
-    })),
+    h.results.map((r) => {
+      const athlete = allAthletes.find((a) => a.id === r.childId);
+      return {
+        heatId: h.id,
+        childId: r.childId,
+        athleteName: athlete?.name ?? r.childId,
+        yearOfBirth: athlete?.yearOfBirth,
+        value: r.value,
+        unit: r.unit,
+        note: r.note,
+        recordedAt: r.recordedAt,
+      };
+    }),
   ).sort((a, b) => {
     // Note-only results (value 0 with a note) go to the end
     const aIsNoteOnly = a.value === 0 && a.note;
@@ -248,8 +252,8 @@ export default function SessionPage() {
                     <span className="h-2 w-2 rounded-full bg-primary" />
                     {athlete.name}
                     {athlete.yearOfBirth && (
-                      <span className="text-xs text-muted-foreground">
-                        {athlete.yearOfBirth}
+                      <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                        {getAgeGroup(athlete.yearOfBirth)}
                       </span>
                     )}
                   </span>
@@ -449,7 +453,16 @@ export default function SessionPage() {
                           i + 1
                         )}
                       </td>
-                      <td className="py-2 pr-4">{result.athleteName || "—"}</td>
+                      <td className="py-2 pr-4">
+                        <span className="inline-flex items-center gap-1.5">
+                          {result.athleteName || "—"}
+                          {result.yearOfBirth && (
+                            <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                              {getAgeGroup(result.yearOfBirth)}
+                            </span>
+                          )}
+                        </span>
+                      </td>
                       <td className="py-2 text-right font-mono">
                         {isNoteOnly ? "—" : formatValue(result.value, result.unit)}
                       </td>

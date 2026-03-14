@@ -2,7 +2,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useSessionStore } from "@/store/session-store";
 import { useTranslation } from "@/lib/i18n";
-import { cn } from "@/lib/utils";
+import { cn, getAgeGroup } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -89,10 +89,15 @@ export default function AthletesPage() {
             >
               <div className="flex items-center gap-3">
                 <InitialAvatar name={athlete.name} />
-                <div>
+                <div className="flex items-center gap-2">
                   <span className="font-medium">{athlete.name}</span>
                   {athlete.yearOfBirth && (
-                    <span className="ml-2 text-sm text-muted-foreground">
+                    <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                      {getAgeGroup(athlete.yearOfBirth)}
+                    </span>
+                  )}
+                  {athlete.yearOfBirth && (
+                    <span className="text-sm text-muted-foreground">
                       *{athlete.yearOfBirth}
                     </span>
                   )}

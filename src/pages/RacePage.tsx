@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useSessionStore } from "@/store/session-store";
 import { DISCIPLINES } from "@/lib/constants";
-import { formatTime, formatStopwatch, cn } from "@/lib/utils";
+import { formatTime, formatStopwatch, cn, getAgeGroup } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n";
 import { ROUTES } from "@/routes";
 import { Button } from "@/components/ui/button";
@@ -170,10 +170,15 @@ export default function RacePage() {
                 <Button
                   key={athlete.id}
                   variant={selected ? "default" : "outline"}
-                  className="tap-target tap-press h-14 font-medium"
+                  className="tap-target tap-press h-14 font-medium flex-col gap-0"
                   onClick={() => toggleChild(athlete.id)}
                 >
-                  {athlete.name}
+                  <span>{athlete.name}</span>
+                  {athlete.yearOfBirth && (
+                    <span className="text-[10px] font-normal opacity-70">
+                      {getAgeGroup(athlete.yearOfBirth)}
+                    </span>
+                  )}
                 </Button>
               );
             })}
@@ -224,7 +229,14 @@ export default function RacePage() {
                   <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-sm font-bold">
                     {laneIdx + 1}
                   </span>
-                  {child?.name}
+                  <span className="flex flex-col items-start">
+                    <span>{child?.name}</span>
+                    {child?.yearOfBirth && (
+                      <span className="text-xs font-normal opacity-70">
+                        {getAgeGroup(child.yearOfBirth)}
+                      </span>
+                    )}
+                  </span>
                 </span>
                 {finished && (
                   <span className="font-mono text-base">
