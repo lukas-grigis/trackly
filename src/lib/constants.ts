@@ -1,22 +1,58 @@
-import type { DisciplineType } from '@/store/session-store';
+import { Timer, ArrowUpFromLine, Target, Gamepad2 } from "lucide-react";
 
-interface DisciplineConfig {
-  label: string;
-  unit: 'ms' | 'cm';
-  isTimed: boolean;
-  sortAscending: boolean; // true = lower is better (time), false = higher is better (distance)
+export type DisciplineMode = "timed" | "distance" | "count";
+export type DisciplineCategory = "running" | "jumping" | "throwing" | "games";
+
+export interface DisciplineConfig {
+  mode: DisciplineMode;
+  unit: "ms" | "cm" | "count";
+  sortAscending: boolean; // true = lower is better (time), false = higher is better (distance/count)
+  category: DisciplineCategory;
 }
 
-export const DISCIPLINES: Record<DisciplineType, DisciplineConfig> = {
-  sprint_60: { label: '60m Sprint', unit: 'ms', isTimed: true, sortAscending: true },
-  sprint_80: { label: '80m Sprint', unit: 'ms', isTimed: true, sortAscending: true },
-  sprint_100: { label: '100m Sprint', unit: 'ms', isTimed: true, sortAscending: true },
-  long_jump: { label: 'Long Jump', unit: 'cm', isTimed: false, sortAscending: false },
-  shot_put: { label: 'Shot Put', unit: 'cm', isTimed: false, sortAscending: false },
-  high_jump: { label: 'High Jump', unit: 'cm', isTimed: false, sortAscending: false },
+export const DISCIPLINES: Record<string, DisciplineConfig> = {
+  // Running (timed)
+  sprint_40:  { mode: "timed", unit: "ms", sortAscending: true,  category: "running" },
+  sprint_50:  { mode: "timed", unit: "ms", sortAscending: true,  category: "running" },
+  sprint_60:  { mode: "timed", unit: "ms", sortAscending: true,  category: "running" },
+  sprint_80:  { mode: "timed", unit: "ms", sortAscending: true,  category: "running" },
+  sprint_100: { mode: "timed", unit: "ms", sortAscending: true,  category: "running" },
+  sprint_200: { mode: "timed", unit: "ms", sortAscending: true,  category: "running" },
+  run_400:    { mode: "timed", unit: "ms", sortAscending: true,  category: "running" },
+  run_800:    { mode: "timed", unit: "ms", sortAscending: true,  category: "running" },
+  run_1000:   { mode: "timed", unit: "ms", sortAscending: true,  category: "running" },
+  hurdles:    { mode: "timed", unit: "ms", sortAscending: true,  category: "running" },
+  relay:      { mode: "timed", unit: "ms", sortAscending: true,  category: "running" },
+  // Jumping (distance)
+  long_jump:  { mode: "distance", unit: "cm", sortAscending: false, category: "jumping" },
+  high_jump:  { mode: "distance", unit: "cm", sortAscending: false, category: "jumping" },
+  // Throwing (distance)
+  ball_throw: { mode: "distance", unit: "cm", sortAscending: false, category: "throwing" },
+  shot_put:   { mode: "distance", unit: "cm", sortAscending: false, category: "throwing" },
+  sling_ball: { mode: "distance", unit: "cm", sortAscending: false, category: "throwing" },
+  // Games (count)
+  football:   { mode: "count", unit: "count", sortAscending: false, category: "games" },
+  basketball: { mode: "count", unit: "count", sortAscending: false, category: "games" },
+  handball:   { mode: "count", unit: "count", sortAscending: false, category: "games" },
+  unihockey:  { mode: "count", unit: "count", sortAscending: false, category: "games" },
+  volleyball: { mode: "count", unit: "count", sortAscending: false, category: "games" },
+  dodgeball:  { mode: "count", unit: "count", sortAscending: false, category: "games" },
+  brennball:  { mode: "count", unit: "count", sortAscending: false, category: "games" },
+  jump_rope:  { mode: "count", unit: "count", sortAscending: false, category: "games" },
 };
 
-export const DISCIPLINE_OPTIONS = Object.entries(DISCIPLINES).map(([value, config]) => ({
-  value: value as DisciplineType,
-  label: config.label,
-}));
+export const DISCIPLINE_CATEGORIES: {
+  key: DisciplineCategory;
+  icon: typeof Timer;
+}[] = [
+  { key: "running",  icon: Timer },
+  { key: "jumping",  icon: ArrowUpFromLine },
+  { key: "throwing", icon: Target },
+  { key: "games",    icon: Gamepad2 },
+];
+
+export function getDisciplinesByCategory(
+  cat: DisciplineCategory,
+): [string, DisciplineConfig][] {
+  return Object.entries(DISCIPLINES).filter(([, c]) => c.category === cat);
+}

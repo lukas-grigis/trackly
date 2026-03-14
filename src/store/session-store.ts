@@ -5,15 +5,7 @@ import { persist } from "zustand/middleware";
 // Types
 // ---------------------------------------------------------------------------
 
-export type DisciplineType =
-  | "sprint_60"
-  | "sprint_80"
-  | "sprint_100"
-  | "long_jump"
-  | "shot_put"
-  | "high_jump";
-
-export interface Child {
+export interface Athlete {
   id: string;
   name: string;
   yearOfBirth?: number;
@@ -21,10 +13,10 @@ export interface Child {
 
 export interface Result {
   id: string;
-  childId: string;
-  discipline: DisciplineType;
-  value: number; // ms for time, cm for distance
-  unit: "ms" | "cm";
+  athleteName: string; // free-text snapshot; decoupled from the global roster
+  discipline: string;
+  value: number; // ms for time, cm for distance, raw count for games
+  unit: "ms" | "cm" | "count";
   recordedAt: string; // ISO timestamp
 }
 
@@ -32,7 +24,7 @@ export interface Session {
   id: string;
   name: string;
   date: string; // ISO date
-  children: Child[];
+  athleteIds: string[]; // references global Athlete ids
   results: Result[];
 }
 
@@ -40,30 +32,68 @@ export interface Session {
 // Store
 // ---------------------------------------------------------------------------
 
-interface SessionState {
+interface StoreState {
+  athletes: Athlete[];
   sessions: Session[];
+
+  // Global athlete roster
+  addAthlete: (name: string, yearOfBirth?: number) => string;
+  updateAthlete: (id: string, name: string, yearOfBirth?: number) => void;
+  removeAthlete: (id: string) => void;
+
+  // Sessions
   addSession: (name: string, date: string) => string;
   updateSession: (id: string, name: string, date: string) => void;
   deleteSession: (id: string) => void;
-  getSession: (id: string) => Session | undefined;
-  addChild: (sessionId: string, name: string, yearOfBirth?: number) => void;
-  removeChild: (sessionId: string, childId: string) => void;
+  setSessionAthletes: (sessionId: string, athleteIds: string[]) => void;
+
+  // Results
   addResult: (sessionId: string, result: Omit<Result, "id">) => void;
   addResults: (sessionId: string, results: Omit<Result, "id">[]) => void;
+  deleteResult: (sessionId: string, resultId: string) => void;
+
   clearAllData: () => void;
 }
 
-export const useSessionStore = create<SessionState>()(
+export const useSessionStore = create<StoreState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
+      athletes: [],
       sessions: [],
+
+      addAthlete(name, yearOfBirth) {
+        const id = crypto.randomUUID();
+        set((state) => ({
+          athletes: [...state.athletes, { id, name, yearOfBirth }],
+        }));
+        return id;
+      },
+
+      updateAthlete(id, name, yearOfBirth) {
+        set((state) => ({
+          athletes: state.athletes.map((a) =>
+            a.id === id ? { ...a, name, yearOfBirth } : a,
+          ),
+        }));
+      },
+
+      removeAthlete(id) {
+        set((state) => ({
+          athletes: state.athletes.filter((a) => a.id !== id),
+          // Also remove from any session rosters
+          sessions: state.sessions.map((s) => ({
+            ...s,
+            athleteIds: s.athleteIds.filter((aid) => aid !== id),
+          })),
+        }));
+      },
 
       addSession(name, date) {
         const id = crypto.randomUUID();
         set((state) => ({
           sessions: [
             ...state.sessions,
-            { id, name, date, children: [], results: [] },
+            { id, name, date, athleteIds: [], results: [] },
           ],
         }));
         return id;
@@ -83,37 +113,10 @@ export const useSessionStore = create<SessionState>()(
         }));
       },
 
-      getSession(id) {
-        return get().sessions.find((s) => s.id === id);
-      },
-
-      addChild(sessionId, name, yearOfBirth) {
-        const childId = crypto.randomUUID();
+      setSessionAthletes(sessionId, athleteIds) {
         set((state) => ({
           sessions: state.sessions.map((s) =>
-            s.id === sessionId
-              ? {
-                  ...s,
-                  children: [
-                    ...s.children,
-                    { id: childId, name, yearOfBirth },
-                  ],
-                }
-              : s,
-          ),
-        }));
-      },
-
-      removeChild(sessionId, childId) {
-        set((state) => ({
-          sessions: state.sessions.map((s) =>
-            s.id === sessionId
-              ? {
-                  ...s,
-                  children: s.children.filter((c) => c.id !== childId),
-                  results: s.results.filter((r) => r.childId !== childId),
-                }
-              : s,
+            s.id === sessionId ? { ...s, athleteIds } : s,
           ),
         }));
       },
@@ -130,10 +133,7 @@ export const useSessionStore = create<SessionState>()(
       },
 
       addResults(sessionId, results) {
-        const withIds = results.map((r) => ({
-          ...r,
-          id: crypto.randomUUID(),
-        }));
+        const withIds = results.map((r) => ({ ...r, id: crypto.randomUUID() }));
         set((state) => ({
           sessions: state.sessions.map((s) =>
             s.id === sessionId
@@ -143,10 +143,20 @@ export const useSessionStore = create<SessionState>()(
         }));
       },
 
+      deleteResult(sessionId, resultId) {
+        set((state) => ({
+          sessions: state.sessions.map((s) =>
+            s.id === sessionId
+              ? { ...s, results: s.results.filter((r) => r.id !== resultId) }
+              : s,
+          ),
+        }));
+      },
+
       clearAllData() {
-        set({ sessions: [] });
+        set({ athletes: [], sessions: [] });
       },
     }),
-    { name: "trackly-storage" },
+    { name: "trackly-storage", version: 4 },
   ),
 );

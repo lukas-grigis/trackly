@@ -33,6 +33,20 @@ export function formatStopwatch(elapsedMs: number): string {
   return `${hh}:${mm}:${ss}.${msStr}`;
 }
 
-export function generateId(): string {
-  return crypto.randomUUID();
+export function formatCount(n: number): string {
+  return n.toLocaleString();
+}
+
+export function formatValue(value: number, unit: "ms" | "cm" | "count"): string {
+  if (unit === "ms") return formatTime(value);
+  if (unit === "cm") return formatDistance(value);
+  return formatCount(value);
+}
+
+/** Escapes a value for safe inclusion in a CSV cell. */
+export function escapeCsvField(value: string): string {
+  if (/[",\n\r]/.test(value)) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
 }
