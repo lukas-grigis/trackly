@@ -1,5 +1,6 @@
 import { HashRouter, Route, Routes } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
+import LandingPage from "@/pages/LandingPage";
 import HomePage from "@/pages/HomePage";
 import AthletesPage from "@/pages/AthletesPage";
 import SessionPage from "@/pages/SessionPage";
@@ -10,6 +11,7 @@ import NotFoundPage from "@/pages/NotFoundPage";
 // eslint-disable-next-line react-refresh/only-export-components
 export const ROUTES = {
   HOME: "/",
+  SESSIONS: "/sessions",
   ATHLETES: "/athletes",
   SESSION: (id: string) => `/session/${id}`,
   RACE: (id: string, discipline: string) => `/session/${id}/race/${discipline}`,
@@ -21,7 +23,8 @@ export default function AppRoutes() {
     <HashRouter>
       <AppLayout>
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/sessions" element={<HomePage />} />
           <Route path="/athletes" element={<AthletesPage />} />
           <Route path="/session/:id" element={<SessionPage />} />
           <Route path="/session/:id/race/:discipline" element={<RacePage />} />

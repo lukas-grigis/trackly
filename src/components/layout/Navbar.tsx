@@ -13,7 +13,7 @@ import SaveIndicator from "./SaveIndicator";
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const isHome = location.pathname === "/";
+  const isHome = location.pathname === "/" || location.pathname === "/sessions";
   const { t, lang, setLang } = useTranslation();
   const { toggleTheme, isDark } = useTheme();
 

@@ -164,6 +164,26 @@ export interface Translations {
   tvToggle: string;
   tvWaiting: string;
   tvExitHint: string;
+  // Landing page
+  landingHero: string;
+  landingHeroSub: string;
+  landingOpenApp: string;
+  landingHowTitle: string;
+  landingStep1: string;
+  landingStep2: string;
+  landingStep3: string;
+  landingFeaturesTitle: string;
+  landingFeatureFree: string;
+  landingFeatureOffline: string;
+  landingFeatureNoAccount: string;
+  landingFeatureOpenSource: string;
+  landingFeatureExport: string;
+  landingFeatureLeaderboard: string;
+  landingWhoTitle: string;
+  landingWhoDesc: string;
+  landingViewGithub: string;
+  landingOpenSourceBadge: string;
+  landingFooterPrivacy: string;
   // 404
   notFound: string;
   notFoundDesc: string;
@@ -358,6 +378,26 @@ const de: Translations = {
   tvToggle: "TV-Modus",
   tvWaiting: "Warten auf Ergebnisse…",
   tvExitHint: "Tippen zum Beenden",
+  // Landing page
+  landingHero: "Zeitmessung für Athleten. Einfach.",
+  landingHeroSub: "Stoppuhr, Rangliste und Export — alles in einer App. Kostenlos und offline.",
+  landingOpenApp: "App öffnen",
+  landingHowTitle: "So funktioniert's",
+  landingStep1: "Session erstellen",
+  landingStep2: "Athleten hinzufügen",
+  landingStep3: "Tippen zum Stoppen",
+  landingFeaturesTitle: "Was Trackly bietet",
+  landingFeatureFree: "Komplett kostenlos",
+  landingFeatureOffline: "Funktioniert offline",
+  landingFeatureNoAccount: "Kein Konto nötig",
+  landingFeatureOpenSource: "Open Source",
+  landingFeatureExport: "PDF & CSV Export",
+  landingFeatureLeaderboard: "Rangliste",
+  landingWhoTitle: "Für alle, die Athleten stoppen",
+  landingWhoDesc: "Ob Leichtathletikverein, Schulsporttag, Trainingslager oder Eltern am Sportfest — Trackly passt überall hin.",
+  landingViewGithub: "Auf GitHub ansehen",
+  landingOpenSourceBadge: "Open Source",
+  landingFooterPrivacy: "Kein Tracking · Kein Konto nötig · Deine Daten bleiben auf deinem Gerät",
   // 404
   notFound: "Seite nicht gefunden",
   notFoundDesc: "Diese Seite existiert leider nicht.",
@@ -552,6 +592,26 @@ const en: Translations = {
   tvToggle: "TV Mode",
   tvWaiting: "Waiting for results…",
   tvExitHint: "Tap anywhere to exit",
+  // Landing page
+  landingHero: "Time athletes. Dead simple.",
+  landingHeroSub: "Stopwatch, leaderboard, and export — all in one app. Free and offline.",
+  landingOpenApp: "Open App",
+  landingHowTitle: "How it works",
+  landingStep1: "Create a session",
+  landingStep2: "Add athletes",
+  landingStep3: "Tap to time",
+  landingFeaturesTitle: "What you get",
+  landingFeatureFree: "Completely free",
+  landingFeatureOffline: "Works offline",
+  landingFeatureNoAccount: "No account needed",
+  landingFeatureOpenSource: "Open source",
+  landingFeatureExport: "PDF & CSV export",
+  landingFeatureLeaderboard: "Leaderboard",
+  landingWhoTitle: "For anyone who times athletes",
+  landingWhoDesc: "Youth athletics clubs, school sports days, training sessions, or parents at the track — Trackly fits anywhere.",
+  landingViewGithub: "View on GitHub",
+  landingOpenSourceBadge: "Open Source",
+  landingFooterPrivacy: "No tracking · No account needed · Your data stays on your device",
   // 404
   notFound: "Page not found",
   notFoundDesc: "This page does not exist.",
