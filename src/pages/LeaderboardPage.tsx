@@ -3,7 +3,11 @@ import { useParams, Link } from "react-router-dom";
 import { useSessionStore } from "@/store/session-store";
 import { DISCIPLINES } from "@/lib/constants";
 import { formatValue } from "@/lib/utils";
-import { useLeaderboard } from "@/hooks/useLeaderboard";
+import {
+  useLeaderboard,
+  AGE_GROUP_OPTIONS,
+  type AgeGroupFilter,
+} from "@/hooks/useLeaderboard";
 import { useTranslation } from "@/lib/i18n";
 import { AthleteAvatar } from "@/components/ui/athlete-avatar";
 import { ROUTES } from "@/routes";
@@ -48,9 +52,31 @@ export default function LeaderboardPage() {
   const [discipline, setDiscipline] = useState(() =>
     availableDisciplines.length > 0 ? availableDisciplines[0] : "sprint_60",
   );
+  const [ageGroupFilter, setAgeGroupFilter] = useState<AgeGroupFilter>("All");
+  const [heatFilter, setHeatFilter] = useState("all");
 
-  const entries = useLeaderboard(session, discipline, allAthletes);
+  // Get heats for current discipline (for heat selector)
+  const disciplineHeats = session
+    ? session.heats.filter((h) => h.disciplineType === discipline)
+    : [];
+
+  const { entries, hasYobData } = useLeaderboard(
+    session,
+    discipline,
+    allAthletes,
+    ageGroupFilter,
+    heatFilter,
+  );
   const config = DISCIPLINES[discipline];
+
+  // Reset heat filter when discipline changes (via effect-free approach: check validity)
+  const validHeatFilter =
+    heatFilter === "all" || disciplineHeats.some((h) => h.id === heatFilter)
+      ? heatFilter
+      : "all";
+  if (validHeatFilter !== heatFilter) {
+    setHeatFilter(validHeatFilter);
+  }
 
   if (!session || !id) {
     return (
@@ -59,6 +85,8 @@ export default function LeaderboardPage() {
       </div>
     );
   }
+
+  const isFiltered = ageGroupFilter !== "All" || heatFilter !== "all";
 
   return (
     <div className="space-y-4">
@@ -78,21 +106,63 @@ export default function LeaderboardPage() {
         </div>
       </div>
 
-      {/* Discipline selector */}
-      <div className="space-y-2">
-        <Label>{t.leaderboardDiscipline}</Label>
-        <Select value={discipline} onValueChange={setDiscipline}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {availableDisciplines.map((d) => (
-              <SelectItem key={d} value={d}>
-                {t.disciplines[d] ?? d}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      {/* Filters toolbar */}
+      <div className="flex flex-wrap gap-3">
+        {/* Discipline selector */}
+        <div className="space-y-1 min-w-[160px] flex-1">
+          <Label>{t.leaderboardDiscipline}</Label>
+          <Select value={discipline} onValueChange={(d) => { setDiscipline(d); setHeatFilter("all"); }}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {availableDisciplines.map((d) => (
+                <SelectItem key={d} value={d}>
+                  {t.disciplines[d] ?? d}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Heat filter */}
+        {disciplineHeats.length > 1 && (
+          <div className="space-y-1 min-w-[140px] flex-1">
+            <Label>{t.leaderboardHeatFilter}</Label>
+            <Select value={heatFilter} onValueChange={setHeatFilter}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t.leaderboardAllHeats}</SelectItem>
+                {disciplineHeats.map((h, idx) => (
+                  <SelectItem key={h.id} value={h.id}>
+                    {t.leaderboardHeatLabel} {idx + 1}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {/* Age group filter — hidden when no athletes have YoB */}
+        {hasYobData && (
+          <div className="space-y-1 min-w-[140px] flex-1">
+            <Label>{t.leaderboardAgeGroupFilter}</Label>
+            <Select value={ageGroupFilter} onValueChange={(v) => setAgeGroupFilter(v as AgeGroupFilter)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {AGE_GROUP_OPTIONS.map((ag) => (
+                  <SelectItem key={ag} value={ag}>
+                    {ag === "All" ? t.leaderboardAllAgeGroups : ag}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
 
       {/* Leaderboard table */}
@@ -100,7 +170,9 @@ export default function LeaderboardPage() {
         <div className="py-12 text-center text-muted-foreground">
           {availableDisciplines.length === 0
             ? t.leaderboardNoResults
-            : t.leaderboardNoDisciplineResults}
+            : isFiltered
+              ? t.leaderboardNoFilterResults
+              : t.leaderboardNoDisciplineResults}
         </div>
       ) : (
         <div className="overflow-x-auto">

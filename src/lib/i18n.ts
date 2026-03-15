@@ -142,6 +142,12 @@ export interface Translations {
   leaderboardBest: string;
   leaderboardNoResults: string;
   leaderboardNoDisciplineResults: string;
+  leaderboardNoFilterResults: string;
+  leaderboardAgeGroupFilter: string;
+  leaderboardAllAgeGroups: string;
+  leaderboardHeatFilter: string;
+  leaderboardAllHeats: string;
+  leaderboardHeatLabel: string;
   // 404
   notFound: string;
   notFoundDesc: string;
@@ -315,6 +321,12 @@ const de: Translations = {
   leaderboardBest: "Bestleistung",
   leaderboardNoResults: "Noch keine Ergebnisse in dieser Session.",
   leaderboardNoDisciplineResults: "Keine Ergebnisse für diese Disziplin.",
+  leaderboardNoFilterResults: "Keine Athleten für die gewählten Filter.",
+  leaderboardAgeGroupFilter: "Altersklasse",
+  leaderboardAllAgeGroups: "Alle Altersklassen",
+  leaderboardHeatFilter: "Lauf",
+  leaderboardAllHeats: "Alle Läufe",
+  leaderboardHeatLabel: "Lauf",
   // 404
   notFound: "Seite nicht gefunden",
   notFoundDesc: "Diese Seite existiert leider nicht.",
@@ -488,6 +500,12 @@ const en: Translations = {
   leaderboardBest: "Personal best",
   leaderboardNoResults: "No results in this session yet.",
   leaderboardNoDisciplineResults: "No results for this discipline.",
+  leaderboardNoFilterResults: "No athletes match the selected filters.",
+  leaderboardAgeGroupFilter: "Age group",
+  leaderboardAllAgeGroups: "All age groups",
+  leaderboardHeatFilter: "Heat",
+  leaderboardAllHeats: "All heats",
+  leaderboardHeatLabel: "Heat",
   // 404
   notFound: "Page not found",
   notFoundDesc: "This page does not exist.",
