@@ -184,6 +184,19 @@ export interface Translations {
   landingViewGithub: string;
   landingOpenSourceBadge: string;
   landingFooterPrivacy: string;
+  // How-to guide
+  howToTitle: string;
+  howToSubtitle: string;
+  howToStep1Title: string;
+  howToStep1Desc: string;
+  howToStep2Title: string;
+  howToStep2Desc: string;
+  howToStep3Title: string;
+  howToStep3Desc: string;
+  howToStep4Title: string;
+  howToStep4Desc: string;
+  howToStep5Title: string;
+  howToStep5Desc: string;
   // 404
   notFound: string;
   notFoundDesc: string;
@@ -398,6 +411,19 @@ const de: Translations = {
   landingViewGithub: "Auf GitHub ansehen",
   landingOpenSourceBadge: "Open Source",
   landingFooterPrivacy: "Kein Tracking · Kein Konto nötig · Deine Daten bleiben auf deinem Gerät",
+  // How-to guide
+  howToTitle: "Schnellstart",
+  howToSubtitle: "In 5 Schritten zur ersten Zeitmessung.",
+  howToStep1Title: "Session erstellen",
+  howToStep1Desc: "Tippe auf «Neue Session» und gib einen Namen und ein Datum ein. Eine Session fasst alle Läufe und Ergebnisse eines Anlasses zusammen.",
+  howToStep2Title: "Athleten hinzufügen",
+  howToStep2Desc: "Füge Athleten mit Name hinzu. Jahrgang, Geschlecht und Foto sind optional, helfen aber bei Ranglisten und Export.",
+  howToStep3Title: "Lauf starten",
+  howToStep3Desc: "Wähle eine Disziplin, wähle die Athleten aus und starte den Countdown. Tippe auf einen Namen, sobald die Person im Ziel ist.",
+  howToStep4Title: "Rangliste & TV-Modus",
+  howToStep4Desc: "Öffne die Rangliste, um Bestleistungen pro Disziplin zu sehen. Im TV-Modus wird die Rangliste grossformatig für Zuschauer angezeigt.",
+  howToStep5Title: "Ergebnisse exportieren",
+  howToStep5Desc: "Exportiere die Ergebnisse als PDF oder CSV. Der Export enthält Rang, Name, Altersklasse und Ergebnis pro Disziplin.",
   // 404
   notFound: "Seite nicht gefunden",
   notFoundDesc: "Diese Seite existiert leider nicht.",
@@ -612,6 +638,19 @@ const en: Translations = {
   landingViewGithub: "View on GitHub",
   landingOpenSourceBadge: "Open Source",
   landingFooterPrivacy: "No tracking · No account needed · Your data stays on your device",
+  // How-to guide
+  howToTitle: "Quick Start",
+  howToSubtitle: "Get timing in 5 simple steps.",
+  howToStep1Title: "Create a session",
+  howToStep1Desc: "Tap \"New Session\" and enter a name and date. A session groups all heats and results for one event.",
+  howToStep2Title: "Add athletes",
+  howToStep2Desc: "Add athletes by name. Year of birth, gender, and photo are optional but help with leaderboards and exports.",
+  howToStep3Title: "Start a heat",
+  howToStep3Desc: "Pick a discipline, select the athletes, and start the countdown. Tap a name as soon as they cross the finish line.",
+  howToStep4Title: "View leaderboard & TV mode",
+  howToStep4Desc: "Open the leaderboard to see personal bests per discipline. TV mode shows the leaderboard in large format for spectators.",
+  howToStep5Title: "Export results",
+  howToStep5Desc: "Export results as PDF or CSV. The export includes rank, name, age group, and result per discipline.",
   // 404
   notFound: "Page not found",
   notFoundDesc: "This page does not exist.",

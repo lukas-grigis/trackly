@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Sun, Moon, Users } from "lucide-react";
+import { ArrowLeft, Sun, Moon, Users, CircleHelp } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "@/lib/i18n";
 import { useTheme } from "@/hooks/use-theme";
@@ -57,6 +57,13 @@ export default function Navbar() {
           <span className="text-primary">Track</span><span className="text-foreground/70">ly</span>
         </Link>
         <SaveIndicator />
+        {location.pathname !== "/" && (
+          <Link to={ROUTES.HOW_TO} aria-label={t.howToTitle}>
+            <Button variant="ghost" size="icon">
+              <CircleHelp className="h-4 w-4" />
+            </Button>
+          </Link>
+        )}
         <Link to={ROUTES.ATHLETES} aria-label={t.athletesNav}>
           <Button variant="ghost" size="icon">
             <Users className="h-4 w-4" />
