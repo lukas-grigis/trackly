@@ -48,6 +48,9 @@ export interface Session {
 interface StoreState {
   athletes: Athlete[];
   sessions: Session[];
+  lastSavedAt: number | null;
+  _heatJustSaved: boolean;
+  _saveError: boolean;
 
   // Global athlete roster
   addAthlete: (name: string, yearOfBirth?: number, gender?: Gender, avatarBase64?: string) => string;
@@ -74,6 +77,9 @@ export const useSessionStore = create<StoreState>()(
     (set) => ({
       athletes: [],
       sessions: [],
+      lastSavedAt: null,
+      _heatJustSaved: false,
+      _saveError: false,
 
       addAthlete(name, yearOfBirth, gender, avatarBase64) {
         const id = crypto.randomUUID();
@@ -149,6 +155,7 @@ export const useSessionStore = create<StoreState>()(
 
       addHeatResult(sessionId, heatId, result) {
         set((state) => ({
+          _heatJustSaved: true,
           sessions: state.sessions.map((s) =>
             s.id === sessionId
               ? {
@@ -199,9 +206,43 @@ export const useSessionStore = create<StoreState>()(
       },
 
       clearAllData() {
-        set({ athletes: [], sessions: [] });
+        try { localStorage.removeItem("trackly-save-tooltip-dismissed"); } catch { /* ignore */ }
+        set({ athletes: [], sessions: [], lastSavedAt: null, _heatJustSaved: false, _saveError: false });
       },
     }),
-    { name: "trackly-storage", version: 5 },
+    {
+      name: "trackly-storage",
+      version: 5,
+      storage: {
+        getItem: (name) => {
+          try {
+            const str = localStorage.getItem(name);
+            return str ? JSON.parse(str) : null;
+          } catch {
+            return null;
+          }
+        },
+        setItem: (name, value) => {
+          try {
+            localStorage.setItem(name, JSON.stringify(value));
+            // Update lastSavedAt directly in the stored state and in-memory
+            useSessionStore.setState({ lastSavedAt: Date.now(), _saveError: false });
+          } catch {
+            useSessionStore.setState({ _saveError: true });
+          }
+        },
+        removeItem: (name) => {
+          try {
+            localStorage.removeItem(name);
+          } catch {
+            // ignore
+          }
+        },
+      },
+      partialize: (state) => ({
+        athletes: state.athletes,
+        sessions: state.sessions,
+      }),
+    },
   ),
 );

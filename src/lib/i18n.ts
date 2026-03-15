@@ -156,6 +156,10 @@ export interface Translations {
   leaderboardHeatFilter: string;
   leaderboardAllHeats: string;
   leaderboardHeatLabel: string;
+  // Save indicator
+  savedAgo: string;
+  saveError: string;
+  autoSaveTooltip: string;
   // TV Mode
   tvToggle: string;
   tvWaiting: string;
@@ -346,6 +350,10 @@ const de: Translations = {
   leaderboardHeatFilter: "Lauf",
   leaderboardAllHeats: "Alle Läufe",
   leaderboardHeatLabel: "Lauf",
+  // Save indicator
+  savedAgo: "Gespeichert vor {time}",
+  saveError: "Speichern fehlgeschlagen",
+  autoSaveTooltip: "Deine Daten werden automatisch auf diesem Gerät gespeichert. Du musst nichts manuell speichern.",
   // TV Mode
   tvToggle: "TV-Modus",
   tvWaiting: "Warten auf Ergebnisse…",
@@ -536,6 +544,10 @@ const en: Translations = {
   leaderboardHeatFilter: "Heat",
   leaderboardAllHeats: "All heats",
   leaderboardHeatLabel: "Heat",
+  // Save indicator
+  savedAgo: "Saved {time} ago",
+  saveError: "Save failed",
+  autoSaveTooltip: "Your data is automatically saved on this device. No need to save manually.",
   // TV Mode
   tvToggle: "TV Mode",
   tvWaiting: "Waiting for results…",
