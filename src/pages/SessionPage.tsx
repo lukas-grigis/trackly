@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useSessionStore } from "@/store/session-store";
 import { DISCIPLINES } from "@/lib/constants";
@@ -27,7 +27,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Check, ChevronDown, ChevronRight, Minus, Plus, Timer, Users, X } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Minus, Plus, Timer, Trophy, Users, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import DisciplinePicker from "@/components/session/DisciplinePicker";
 
@@ -208,11 +208,19 @@ export default function SessionPage() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold">{session.name}</h1>
-        <span className="inline-block mt-1 rounded-full bg-secondary px-3 py-0.5 text-xs font-medium text-secondary-foreground">
-          {formatLocalDate(session.date)}
-        </span>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">{session.name}</h1>
+          <span className="inline-block mt-1 rounded-full bg-secondary px-3 py-0.5 text-xs font-medium text-secondary-foreground">
+            {formatLocalDate(session.date)}
+          </span>
+        </div>
+        <Button variant="outline" size="sm" className="gap-1.5" asChild>
+          <Link to={ROUTES.LEADERBOARD(id)}>
+            <Trophy className="h-4 w-4" />
+            {t.leaderboard}
+          </Link>
+        </Button>
       </div>
 
       {/* ── Collapsible athletes panel ── */}

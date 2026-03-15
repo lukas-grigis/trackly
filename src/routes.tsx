@@ -4,6 +4,7 @@ import HomePage from "@/pages/HomePage";
 import AthletesPage from "@/pages/AthletesPage";
 import SessionPage from "@/pages/SessionPage";
 import RacePage from "@/pages/RacePage";
+import LeaderboardPage from "@/pages/LeaderboardPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -12,6 +13,7 @@ export const ROUTES = {
   ATHLETES: "/athletes",
   SESSION: (id: string) => `/session/${id}`,
   RACE: (id: string, discipline: string) => `/session/${id}/race/${discipline}`,
+  LEADERBOARD: (id: string) => `/session/${id}/leaderboard`,
 } as const;
 
 export default function AppRoutes() {
@@ -23,6 +25,7 @@ export default function AppRoutes() {
           <Route path="/athletes" element={<AthletesPage />} />
           <Route path="/session/:id" element={<SessionPage />} />
           <Route path="/session/:id/race/:discipline" element={<RacePage />} />
+          <Route path="/session/:id/leaderboard" element={<LeaderboardPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </AppLayout>

@@ -136,6 +136,12 @@ export interface Translations {
   resultsSaved: string;
   csvExported: string;
   allDataCleared: string;
+  // Leaderboard
+  leaderboard: string;
+  leaderboardDiscipline: string;
+  leaderboardBest: string;
+  leaderboardNoResults: string;
+  leaderboardNoDisciplineResults: string;
   // 404
   notFound: string;
   notFoundDesc: string;
@@ -303,6 +309,12 @@ const de: Translations = {
   resultsSaved: "Ergebnisse gespeichert",
   csvExported: "CSV exportiert",
   allDataCleared: "Alle Daten gelöscht",
+  // Leaderboard
+  leaderboard: "Rangliste",
+  leaderboardDiscipline: "Disziplin wählen",
+  leaderboardBest: "Bestleistung",
+  leaderboardNoResults: "Noch keine Ergebnisse in dieser Session.",
+  leaderboardNoDisciplineResults: "Keine Ergebnisse für diese Disziplin.",
   // 404
   notFound: "Seite nicht gefunden",
   notFoundDesc: "Diese Seite existiert leider nicht.",
@@ -470,6 +482,12 @@ const en: Translations = {
   resultsSaved: "Results saved",
   csvExported: "CSV exported",
   allDataCleared: "All data cleared",
+  // Leaderboard
+  leaderboard: "Leaderboard",
+  leaderboardDiscipline: "Select discipline",
+  leaderboardBest: "Personal best",
+  leaderboardNoResults: "No results in this session yet.",
+  leaderboardNoDisciplineResults: "No results for this discipline.",
   // 404
   notFound: "Page not found",
   notFoundDesc: "This page does not exist.",
