@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useState, useCallback } from "react";
+import { useParams, Link, useSearchParams } from "react-router-dom";
 import { useSessionStore } from "@/store/session-store";
 import { DISCIPLINES } from "@/lib/constants";
 import { formatValue } from "@/lib/utils";
@@ -20,8 +20,9 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Trophy } from "lucide-react";
+import { ArrowLeft, Trophy, Monitor } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TVMode } from "@/components/session/TVMode";
 
 const PODIUM_STYLES = [
   "bg-yellow-400 text-yellow-900",   // gold
@@ -38,9 +39,30 @@ function getPodiumStyle(rank: number): string | undefined {
 
 export default function LeaderboardPage() {
   const { id } = useParams<{ id: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const session = useSessionStore((s) => s.sessions.find((sess) => sess.id === id));
   const allAthletes = useSessionStore((s) => s.athletes);
   const { t } = useTranslation();
+
+  const [tvMode, setTvMode] = useState(() => searchParams.get("tv") === "1");
+
+  const exitTvMode = useCallback(() => {
+    setTvMode(false);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete("tv");
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  const enterTvMode = useCallback(() => {
+    setTvMode(true);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("tv", "1");
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
 
   // Find disciplines that have results in this session
   const availableDisciplines = session
@@ -88,6 +110,12 @@ export default function LeaderboardPage() {
 
   const isFiltered = ageGroupFilter !== "All" || heatFilter !== "all";
 
+  if (tvMode) {
+    return (
+      <TVMode entries={entries} discipline={discipline} onExit={exitTvMode} />
+    );
+  }
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -97,13 +125,17 @@ export default function LeaderboardPage() {
             <ArrowLeft className="h-5 w-5" />
           </Link>
         </Button>
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Trophy className="h-5 w-5" />
             {t.leaderboard}
           </h1>
           <p className="text-sm text-muted-foreground">{session.name}</p>
         </div>
+        <Button variant="outline" size="sm" onClick={enterTvMode}>
+          <Monitor className="h-4 w-4 mr-1.5" />
+          {t.tvToggle}
+        </Button>
       </div>
 
       {/* Filters toolbar */}

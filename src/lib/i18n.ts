@@ -148,6 +148,10 @@ export interface Translations {
   leaderboardHeatFilter: string;
   leaderboardAllHeats: string;
   leaderboardHeatLabel: string;
+  // TV Mode
+  tvToggle: string;
+  tvWaiting: string;
+  tvExitHint: string;
   // 404
   notFound: string;
   notFoundDesc: string;
@@ -327,6 +331,10 @@ const de: Translations = {
   leaderboardHeatFilter: "Lauf",
   leaderboardAllHeats: "Alle Läufe",
   leaderboardHeatLabel: "Lauf",
+  // TV Mode
+  tvToggle: "TV-Modus",
+  tvWaiting: "Warten auf Ergebnisse…",
+  tvExitHint: "Tippen zum Beenden",
   // 404
   notFound: "Seite nicht gefunden",
   notFoundDesc: "Diese Seite existiert leider nicht.",
@@ -506,6 +514,10 @@ const en: Translations = {
   leaderboardHeatFilter: "Heat",
   leaderboardAllHeats: "All heats",
   leaderboardHeatLabel: "Heat",
+  // TV Mode
+  tvToggle: "TV Mode",
+  tvWaiting: "Waiting for results…",
+  tvExitHint: "Tap anywhere to exit",
   // 404
   notFound: "Page not found",
   notFoundDesc: "This page does not exist.",
