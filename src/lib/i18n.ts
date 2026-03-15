@@ -24,6 +24,13 @@ export interface Translations {
   deleteEverything: string;
   cancel: string;
   exportCsv: string;
+  exportPdf: string;
+  // PDF table headers
+  pdfRank: string;
+  pdfName: string;
+  pdfAgeGroup: string;
+  pdfResult: string;
+  pdfHeat: string;
   // Session card
   athletes: string;
   results: string;
@@ -135,6 +142,7 @@ export interface Translations {
   resultSaved: string;
   resultsSaved: string;
   csvExported: string;
+  pdfExported: string;
   allDataCleared: string;
   // Leaderboard
   leaderboard: string;
@@ -180,6 +188,12 @@ const de: Translations = {
   deleteEverything: "Alles löschen",
   cancel: "Abbrechen",
   exportCsv: "CSV",
+  exportPdf: "PDF",
+  pdfRank: "Rang",
+  pdfName: "Name",
+  pdfAgeGroup: "Altersklasse",
+  pdfResult: "Ergebnis",
+  pdfHeat: "Lauf",
   // Session card
   athletes: "Athleten",
   results: "Ergebnisse",
@@ -318,6 +332,7 @@ const de: Translations = {
   resultSaved: "Ergebnis gespeichert",
   resultsSaved: "Ergebnisse gespeichert",
   csvExported: "CSV exportiert",
+  pdfExported: "PDF exportiert",
   allDataCleared: "Alle Daten gelöscht",
   // Leaderboard
   leaderboard: "Rangliste",
@@ -363,6 +378,12 @@ const en: Translations = {
   deleteEverything: "Delete Everything",
   cancel: "Cancel",
   exportCsv: "CSV",
+  exportPdf: "PDF",
+  pdfRank: "Rank",
+  pdfName: "Name",
+  pdfAgeGroup: "Age group",
+  pdfResult: "Result",
+  pdfHeat: "Heat",
   // Session card
   athletes: "Athletes",
   results: "Results",
@@ -501,6 +522,7 @@ const en: Translations = {
   resultSaved: "Result saved",
   resultsSaved: "Results saved",
   csvExported: "CSV exported",
+  pdfExported: "PDF exported",
   allDataCleared: "All data cleared",
   // Leaderboard
   leaderboard: "Leaderboard",

@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { useSessionStore } from "@/store/session-store";
 import type { Session } from "@/store/session-store";
 import { formatValue, escapeCsvField } from "@/lib/utils";
+import { exportSessionPdf } from "@/lib/pdfExport";
 import { useTranslation } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +26,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Plus, Download, Trash2, ClipboardList } from "lucide-react";
+import { Plus, Download, FileText, Trash2, ClipboardList } from "lucide-react";
 import SessionCard from "@/components/session/SessionCard";
 
 function exportSessionCsv(
@@ -147,26 +148,50 @@ export default function HomePage() {
           {sessions.map((session) => (
             <div key={session.id} className="relative animate-card-enter">
               <SessionCard session={session} onDelete={handleDelete} />
-              {session.heats.some((h) => h.results.length > 0) && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-2 bottom-2 text-muted-foreground"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    exportSessionCsv(
-                      session,
-                      (key) => t.disciplines[key] ?? key,
-                      (id) => allAthletes.find((a) => a.id === id)?.name ?? id,
-                    );
-                    toast.success(t.csvExported);
-                  }}
-                  aria-label={t.exportCsv}
-                >
-                  <Download className="h-3.5 w-3.5 mr-1" />
-                  {t.exportCsv}
-                </Button>
-              )}
+              <div className="absolute right-2 bottom-2 flex gap-1">
+                {session.athleteIds.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-muted-foreground"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      exportSessionPdf(
+                        session,
+                        allAthletes,
+                        (key) => t.disciplines[key] ?? key,
+                        t,
+                      );
+                      toast.success(t.pdfExported);
+                    }}
+                    aria-label={t.exportPdf}
+                  >
+                    <FileText className="h-3.5 w-3.5 mr-1" />
+                    {t.exportPdf}
+                  </Button>
+                )}
+                {session.heats.some((h) => h.results.length > 0) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-muted-foreground"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      exportSessionCsv(
+                        session,
+                        (key) => t.disciplines[key] ?? key,
+                        (id) =>
+                          allAthletes.find((a) => a.id === id)?.name ?? id,
+                      );
+                      toast.success(t.csvExported);
+                    }}
+                    aria-label={t.exportCsv}
+                  >
+                    <Download className="h-3.5 w-3.5 mr-1" />
+                    {t.exportCsv}
+                  </Button>
+                )}
+              </div>
             </div>
           ))}
         </div>
