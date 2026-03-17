@@ -225,10 +225,14 @@ export const useSessionStore = create<StoreState>()(
         setItem: (name, value) => {
           try {
             localStorage.setItem(name, JSON.stringify(value));
-            // Update lastSavedAt directly in the stored state and in-memory
-            useSessionStore.setState({ lastSavedAt: Date.now(), _saveError: false });
+            // Defer so we don't trigger another persist cycle synchronously
+            queueMicrotask(() => {
+              useSessionStore.setState({ lastSavedAt: Date.now(), _saveError: false });
+            });
           } catch {
-            useSessionStore.setState({ _saveError: true });
+            queueMicrotask(() => {
+              useSessionStore.setState({ _saveError: true });
+            });
           }
         },
         removeItem: (name) => {
@@ -242,7 +246,7 @@ export const useSessionStore = create<StoreState>()(
       partialize: (state) => ({
         athletes: state.athletes,
         sessions: state.sessions,
-      }),
+      }) as unknown as StoreState,
     },
   ),
 );

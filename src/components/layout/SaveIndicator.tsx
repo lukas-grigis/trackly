@@ -13,7 +13,7 @@ function isTooltipDismissed(): boolean {
   }
 }
 
-function useRelativeTime(timestamp: number | null) {
+function useRelativeTime(timestamp: number | null, lang: string) {
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -24,16 +24,19 @@ function useRelativeTime(timestamp: number | null) {
 
   if (timestamp == null) return null;
   const diffSec = Math.round((now - timestamp) / 1000);
-  if (diffSec < 60) return `${diffSec} Sek.`;
-  const diffMin = Math.floor(diffSec / 60);
-  return `${diffMin} Min.`;
+  if (lang === "de") {
+    if (diffSec < 60) return `${diffSec} Sek.`;
+    return `${Math.floor(diffSec / 60)} Min.`;
+  }
+  if (diffSec < 60) return `${diffSec}s`;
+  return `${Math.floor(diffSec / 60)}m`;
 }
 
 export default function SaveIndicator() {
   const lastSavedAt = useSessionStore((s) => s.lastSavedAt);
   const saveError = useSessionStore((s) => s._saveError);
-  const { t } = useTranslation();
-  const relative = useRelativeTime(lastSavedAt);
+  const { t, lang } = useTranslation();
+  const relative = useRelativeTime(lastSavedAt, lang);
 
   const [showTooltip, setShowTooltip] = useState(() => !isTooltipDismissed());
   const tooltipRef = useRef<HTMLDivElement>(null);

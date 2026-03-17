@@ -22,21 +22,27 @@ export default function HowToPage() {
         <p className="text-sm text-muted-foreground">{t.howToSubtitle}</p>
       </div>
 
-      <div className="space-y-4">
-        {STEPS.map(({ num, titleKey, descKey }) => (
+      <div className="relative space-y-0">
+        {/* Timeline line */}
+        <div className="absolute left-[19px] top-4 bottom-4 w-0.5 bg-border" />
+
+        {STEPS.map(({ num, titleKey, descKey }, i) => (
           <div
             key={titleKey}
-            className="rounded-xl border p-4 space-y-1"
+            className="animate-card-enter-stagger relative flex gap-4 py-4"
+            style={{ animationDelay: `${i * 80}ms` }}
           >
-            <div className="flex items-center gap-3">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-bold">
-                {num}
-              </span>
-              <h2 className="font-semibold">{t[titleKey]}</h2>
+            {/* Timeline dot */}
+            <div className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold shadow-sm">
+              {num}
             </div>
-            <p className="text-sm text-muted-foreground pl-11">
-              {t[descKey]}
-            </p>
+            {/* Content */}
+            <div className="flex-1 rounded-xl border bg-card p-4 space-y-1">
+              <h2 className="font-semibold">{t[titleKey] as string}</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {t[descKey] as string}
+              </p>
+            </div>
           </div>
         ))}
       </div>

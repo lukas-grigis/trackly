@@ -23,10 +23,21 @@ import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Check, ChevronDown, ChevronRight, Minus, Plus, Timer, Trophy, Users, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import DisciplinePicker from "@/components/session/DisciplinePicker";
@@ -60,6 +71,7 @@ export default function SessionPage() {
   const [score, setScore] = useState({ a: 0, b: 0 });
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerSelection, setPickerSelection] = useState<string[]>([]);
+  const [deleteHeatTarget, setDeleteHeatTarget] = useState<string | null>(null);
 
   if (!session || !id) {
     return (
@@ -201,6 +213,37 @@ export default function SessionPage() {
   });
 
   // For custom disciplines, show the custom name as column header
+  // Compute competition ranking (1,1,3 for ties)
+  const ranks: (number | null)[] = [];
+  for (let i = 0; i < filteredResults.length; i++) {
+    const result = filteredResults[i];
+    const isNoteOnly = result.value === 0 && result.note;
+    if (isNoteOnly) {
+      ranks.push(null);
+      continue;
+    }
+    // Count non-note results before this one
+    let pos = 0;
+    for (let j = 0; j < i; j++) {
+      const r = filteredResults[j];
+      if (!(r.value === 0 && r.note)) pos++;
+    }
+    // Check if previous non-note result has same value (tie)
+    if (i > 0) {
+      const prev = filteredResults[i - 1];
+      const prevIsNoteOnly = prev.value === 0 && prev.note;
+      if (!prevIsNoteOnly && prev.value === result.value) {
+        ranks.push(ranks[i - 1]);
+        continue;
+      }
+    }
+    ranks.push(pos + 1);
+  }
+  const rankedResults = filteredResults.map((result, i) => ({
+    ...result,
+    rank: ranks[i],
+  }));
+
   const disciplineDisplayName = discipline === "custom"
     ? (customDisciplineName || t.disciplines.custom)
     : (t.disciplines[discipline] ?? discipline);
@@ -215,11 +258,9 @@ export default function SessionPage() {
             {formatLocalDate(session.date)}
           </span>
         </div>
-        <Button variant="outline" size="sm" className="gap-1.5" asChild>
-          <Link to={ROUTES.LEADERBOARD(id)}>
-            <Trophy className="h-4 w-4" />
-            {t.leaderboard}
-          </Link>
+        <Button variant="outline" size="sm" className="gap-1.5" render={<Link to={ROUTES.LEADERBOARD(id)} />}>
+          <Trophy className="h-4 w-4" />
+          {t.leaderboard}
         </Button>
       </div>
 
@@ -289,7 +330,7 @@ export default function SessionPage() {
 
         {mode === "timed" && (
           <Button
-            className="w-full h-14 text-base gap-2"
+            className="w-full h-14 text-base gap-2 rounded-xl btn-shimmer"
             onClick={() => navigate(ROUTES.RACE(id, discipline))}
             disabled={sessionAthletes.length === 0}
           >
@@ -452,17 +493,17 @@ export default function SessionPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredResults.map((result, i) => {
-                  const isNoteOnly = result.value === 0 && result.note;
+                {rankedResults.map((result, i) => {
+                  const rank = result.rank;
                   return (
                     <tr key={`${result.heatId}-${result.childId}`} className={cn("border-b last:border-0", i % 2 === 1 && "bg-muted/30")}>
                       <td className="py-2 pr-4 font-medium">
-                        {isNoteOnly ? "—" : i < 3 ? (
-                          <span className={cn("inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold", MEDAL_COLORS[i])}>
-                            {i + 1}
+                        {rank == null ? "—" : rank <= 3 ? (
+                          <span className={cn("inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold", MEDAL_COLORS[rank - 1])}>
+                            {rank}
                           </span>
                         ) : (
-                          i + 1
+                          rank
                         )}
                       </td>
                       <td className="py-2 pr-4">
@@ -477,7 +518,7 @@ export default function SessionPage() {
                         </span>
                       </td>
                       <td className="py-2 text-right font-mono">
-                        {isNoteOnly ? "—" : formatValue(result.value, result.unit)}
+                        {rank == null ? "—" : formatValue(result.value, result.unit)}
                       </td>
                       {mode === "custom" && (
                         <td className="py-2 pl-2 text-right text-muted-foreground text-xs max-w-32 truncate">
@@ -489,7 +530,7 @@ export default function SessionPage() {
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                          onClick={() => deleteHeat(id, result.heatId)}
+                          onClick={() => setDeleteHeatTarget(result.heatId)}
                           aria-label={t.deleteResult}
                         >
                           <X className="h-3.5 w-3.5" />
@@ -504,10 +545,42 @@ export default function SessionPage() {
         )}
       </div>
 
+      {/* Delete result confirmation */}
+      <AlertDialog
+        open={deleteHeatTarget !== null}
+        onOpenChange={(open) => !open && setDeleteHeatTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t.deleteResult}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t.deleteResultDesc}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (deleteHeatTarget) {
+                  deleteHeat(id, deleteHeatTarget);
+                  setDeleteHeatTarget(null);
+                }
+              }}
+            >
+              {t.deleteResult}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Athlete picker dialog */}
       <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
+            <DialogDescription className="sr-only">
+              {t.selectAthletes}
+            </DialogDescription>
             <div className="flex items-center justify-between pr-6">
               <DialogTitle>{t.selectAthletes}</DialogTitle>
               {allAthletes.length > 0 && (

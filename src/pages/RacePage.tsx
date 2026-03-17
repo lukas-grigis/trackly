@@ -392,7 +392,7 @@ export default function RacePage() {
         )}
 
         <Button
-          className="tap-target tap-press h-20 w-full rounded-2xl text-2xl font-display tracking-wide"
+          className="tap-target tap-press h-20 w-full rounded-2xl text-2xl font-display tracking-wide btn-shimmer shadow-lg"
           disabled={selectedChildren.length === 0}
           onClick={handleStart}
         >
@@ -659,12 +659,17 @@ export default function RacePage() {
 
   // RUNNING PHASE
   if (phase === "running") {
+    const finishedCount = Object.keys(finishTimes).length;
+    const totalCount = selectedChildren.length;
     return (
       <div className="space-y-4">
-        <div className="rounded-xl bg-primary p-8 text-center text-primary-foreground animate-pulse-ring">
-          <div className="font-display text-7xl tabular-nums">
+        <div className="rounded-2xl bg-primary p-8 text-center text-primary-foreground animate-pulse-ring shadow-lg">
+          <div className="font-display text-7xl sm:text-8xl tabular-nums">
             <StopwatchDisplay value={formatStopwatch(elapsed)} />
           </div>
+          <p className="mt-2 text-sm opacity-70 font-medium">
+            {finishedCount} / {totalCount}
+          </p>
         </div>
 
         <div className="grid gap-2">
@@ -677,10 +682,10 @@ export default function RacePage() {
                 disabled={finished}
                 onClick={() => handleFinish(childId)}
                 className={cn(
-                  "tap-target tap-press flex w-full items-center justify-between rounded-xl px-4 py-3 text-lg font-semibold transition-colors min-h-[4rem]",
+                  "tap-target tap-press flex w-full items-center justify-between rounded-2xl px-5 py-4 text-lg font-semibold transition-all min-h-[4.5rem]",
                   finished
-                    ? "bg-muted text-muted-foreground"
-                    : "bg-primary text-primary-foreground",
+                    ? "bg-muted text-muted-foreground scale-[0.98]"
+                    : "bg-primary text-primary-foreground shadow-md active:shadow-none",
                 )}
               >
                 <span className="flex items-center gap-3">
@@ -698,7 +703,7 @@ export default function RacePage() {
                   </span>
                 </span>
                 {finished && (
-                  <span className="font-mono text-base">
+                  <span className="font-mono text-base animate-celebrate">
                     {formatTime(finishTimes[childId])}
                   </span>
                 )}
@@ -722,7 +727,9 @@ export default function RacePage() {
   // FINISHED PHASE
   return (
     <div className="space-y-6">
-      <h1 className="text-center text-2xl font-bold heading-tight text-primary">{t.raceFinished}</h1>
+      <div className="animate-celebrate text-center">
+        <h1 className="text-2xl font-bold heading-tight text-primary">{t.raceFinished}</h1>
+      </div>
 
       {rankedResults.length > 0 ? (
         <div className="overflow-x-auto">
@@ -735,19 +742,23 @@ export default function RacePage() {
               </tr>
             </thead>
             <tbody>
-              {rankedResults.map((r) => (
-                <tr key={r.childId} className="border-b last:border-0">
-                  <td className="py-2 pr-4 font-medium">
+              {rankedResults.map((r, i) => (
+                <tr
+                  key={r.childId}
+                  className={cn("border-b last:border-0 animate-card-enter-stagger")}
+                  style={{ animationDelay: `${i * 80}ms` }}
+                >
+                  <td className="py-3 pr-4 font-medium">
                     {r.rank <= 3 ? (
-                      <span className={cn("inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold", MEDAL_COLORS[r.rank - 1])}>
+                      <span className={cn("inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold", MEDAL_COLORS[r.rank - 1])}>
                         {r.rank}
                       </span>
                     ) : (
                       r.rank
                     )}
                   </td>
-                  <td className="py-2 pr-4">{r.name}</td>
-                  <td className="py-2 text-right font-mono">
+                  <td className="py-3 pr-4 font-medium">{r.name}</td>
+                  <td className="py-3 text-right font-mono font-semibold">
                     {formatTime(r.time)}
                   </td>
                 </tr>
@@ -762,10 +773,10 @@ export default function RacePage() {
       )}
 
       <div className="flex gap-2">
-        <Button className="flex-1" onClick={handleSave}>
+        <Button className="flex-1 h-12 text-base rounded-xl" onClick={handleSave}>
           {t.save}
         </Button>
-        <Button variant="outline" className="flex-1" onClick={handleReset}>
+        <Button variant="outline" className="flex-1 h-12 text-base rounded-xl" onClick={handleReset}>
           {t.repeat}
         </Button>
       </div>

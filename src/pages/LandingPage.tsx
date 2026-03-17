@@ -10,6 +10,8 @@ import {
   FileDown,
   Trophy,
   ExternalLink,
+  Timer,
+  ArrowRight,
 } from "lucide-react";
 import { ROUTES } from "@/routes";
 
@@ -36,71 +38,88 @@ export default function LandingPage() {
   const { t } = useTranslation();
 
   return (
-    <div className="space-y-16 py-8">
+    <div className="space-y-20 py-8">
       {/* Hero */}
-      <section className="flex flex-col items-center text-center gap-6 py-12">
-        <h1 className="text-4xl sm:text-5xl font-black tracking-tight">
+      <section className="flex flex-col items-center text-center gap-6 py-16">
+        <div className="flex items-center gap-2 rounded-full border bg-primary/5 px-4 py-1.5 text-xs font-medium text-primary">
+          <Timer className="h-3.5 w-3.5" />
+          <span>Free &middot; Offline &middot; Open Source</span>
+        </div>
+        <h1 className="text-gradient text-5xl sm:text-6xl font-black tracking-tight leading-[1.1] max-w-lg">
           {t.landingHero}
         </h1>
-        <p className="text-lg text-muted-foreground max-w-md">
+        <p className="text-lg text-muted-foreground max-w-md leading-relaxed">
           {t.landingHeroSub}
         </p>
-        <Button size="lg" render={<Link to={ROUTES.SESSIONS} />}>
-          {t.landingOpenApp}
-        </Button>
+        <div className="flex items-center gap-3 pt-2">
+          <Button size="lg" className="btn-shimmer gap-2 h-12 px-8 text-base rounded-xl" nativeButton={false} render={<Link to={ROUTES.SESSIONS} />}>
+            {t.landingOpenApp}
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </div>
       </section>
 
       {/* How it works */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-bold text-center">{t.landingHowTitle}</h2>
+      <section className="space-y-8">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold tracking-tight">{t.landingHowTitle}</h2>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {STEPS.map((step, i) => (
             <div
               key={step.key}
-              className="flex flex-col items-center gap-3 text-center p-4"
+              className="animate-card-enter-stagger flex flex-col items-center gap-4 text-center p-6 rounded-2xl border bg-card"
             >
-              <div className="flex items-center justify-center h-14 w-14 rounded-2xl bg-primary/10 text-primary">
-                <Icon icon={step.icon} width={28} height={28} />
+              <div className="relative">
+                <div className="flex items-center justify-center h-16 w-16 rounded-2xl bg-primary/10 text-primary">
+                  <Icon icon={step.icon} width={32} height={32} />
+                </div>
+                <span className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold shadow-sm">
+                  {i + 1}
+                </span>
               </div>
-              <div className="text-sm font-bold text-muted-foreground">
-                {i + 1}
-              </div>
-              <p className="font-semibold">{t[step.key]}</p>
+              <p className="font-semibold text-lg">{t[step.key] as string}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* Features */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-bold text-center">
-          {t.landingFeaturesTitle}
-        </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          {FEATURES.map(({ icon: FeatureIcon, key }) => (
+      <section className="space-y-8">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold tracking-tight">
+            {t.landingFeaturesTitle}
+          </h2>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {FEATURES.map(({ icon: FeatureIcon, key }, i) => (
             <div
               key={key}
-              className="flex flex-col items-center gap-2 rounded-xl border p-4 text-center"
+              className="animate-card-enter-stagger group flex flex-col items-center gap-3 rounded-2xl border p-5 text-center transition-all hover:border-primary/30 hover:bg-primary/5 hover:shadow-sm"
+              style={{ animationDelay: `${i * 60}ms` }}
             >
-              <FeatureIcon className="h-6 w-6 text-primary" />
-              <p className="text-sm font-medium">{t[key]}</p>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                <FeatureIcon className="h-5 w-5" />
+              </div>
+              <p className="text-sm font-medium">{t[key] as string}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* Who is it for */}
-      <section className="space-y-4 text-center">
-        <h2 className="text-2xl font-bold">{t.landingWhoTitle}</h2>
-        <p className="text-muted-foreground max-w-lg mx-auto">
+      <section className="rounded-2xl border bg-card p-8 sm:p-10 text-center space-y-4">
+        <h2 className="text-2xl font-bold tracking-tight">{t.landingWhoTitle}</h2>
+        <p className="text-muted-foreground max-w-lg mx-auto leading-relaxed">
           {t.landingWhoDesc}
         </p>
       </section>
 
       {/* CTA */}
-      <section className="flex flex-col items-center gap-4 py-8">
-        <Button size="lg" render={<Link to={ROUTES.SESSIONS} />}>
+      <section className="flex flex-col items-center gap-5 py-4">
+        <Button size="lg" className="btn-shimmer gap-2 h-12 px-8 text-base rounded-xl" nativeButton={false} render={<Link to={ROUTES.SESSIONS} />}>
           {t.landingOpenApp}
+          <ArrowRight className="h-4 w-4" />
         </Button>
         <a
           href="https://github.com/lukas-grigis/trackly"

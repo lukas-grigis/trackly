@@ -30,6 +30,7 @@ function processImage(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
+      URL.revokeObjectURL(img.src);
       const size = Math.min(img.width, img.height);
       const sx = (img.width - size) / 2;
       const sy = (img.height - size) / 2;
@@ -42,7 +43,7 @@ function processImage(file: File): Promise<string> {
       ctx.drawImage(img, sx, sy, size, size, 0, 0, dim, dim);
       resolve(canvas.toDataURL("image/jpeg", 0.85));
     };
-    img.onerror = () => reject(new Error("load"));
+    img.onerror = () => { URL.revokeObjectURL(img.src); reject(new Error("load")); };
     img.src = URL.createObjectURL(file);
   });
 }
@@ -130,16 +131,17 @@ export default function AthletesPage() {
       <h1 className="text-3xl font-bold heading-tight">{t.athletesNav}</h1>
 
       {athletes.length === 0 ? (
-        <div className="flex flex-col items-center gap-4 py-12 text-center">
-          <Users className="h-14 w-14 text-muted-foreground/40 animate-float" strokeWidth={1.25} />
+        <div className="flex flex-col items-center gap-4 py-16 text-center">
+          <Users className="h-16 w-16 text-muted-foreground/40 animate-float" strokeWidth={1.25} />
           <p className="text-sm text-muted-foreground max-w-xs">{t.noAthletes}</p>
         </div>
       ) : (
         <ul className="space-y-2">
-          {athletes.map((athlete) => (
+          {athletes.map((athlete, i) => (
             <li
               key={athlete.id}
-              className="flex items-center justify-between rounded-md border px-3 py-2"
+              className="animate-card-enter-stagger flex items-center justify-between rounded-xl border bg-card px-4 py-3 transition-colors hover:bg-muted/30"
+              style={{ animationDelay: `${Math.min(i, 5) * 40}ms` }}
             >
               <div className="flex items-center gap-3">
                 <button
@@ -217,8 +219,8 @@ export default function AthletesPage() {
           </Button>
         </div>
 
-        {/* Birth year chips — 2 rows × 10 */}
-        <div className="grid grid-cols-10 gap-1">
+        {/* Birth year chips — responsive grid */}
+        <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5">
           {YEAR_OPTIONS.map((y) => (
             <button
               key={y}

@@ -62,6 +62,7 @@ export interface Translations {
   noAthletesForCounting: string;
   enterTimeManually: string;
   deleteResult: string;
+  deleteResultDesc: string;
   teamA: string;
   teamB: string;
   saveScore: string;
@@ -263,6 +264,7 @@ const de: Translations = {
   noAthletesForCounting: "Füge zuerst Athleten zur Session hinzu.",
   enterTimeManually: "Zeit manuell eintragen",
   deleteResult: "Ergebnis löschen",
+  deleteResultDesc: "Dieses Ergebnis wird unwiderruflich gelöscht.",
   teamA: "Team A",
   teamB: "Team B",
   saveScore: "Ergebnis speichern",
@@ -490,6 +492,7 @@ const en: Translations = {
   noAthletesForCounting: "Add athletes to the session first.",
   enterTimeManually: "Enter time manually",
   deleteResult: "Delete result",
+  deleteResultDesc: "This result will be permanently deleted.",
   teamA: "Team A",
   teamB: "Team B",
   saveScore: "Save score",

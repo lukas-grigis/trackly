@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { useSessionStore } from "@/store/session-store";
 import type { Session } from "@/store/session-store";
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -59,7 +60,11 @@ function exportSessionCsv(
 }
 
 export default function HomePage() {
-  const sessions = useSessionStore((s) => s.sessions);
+  const rawSessions = useSessionStore((s) => s.sessions);
+  const sessions = useMemo(
+    () => [...rawSessions].sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id)),
+    [rawSessions],
+  );
   const allAthletes = useSessionStore((s) => s.athletes);
   const addSession = useSessionStore((s) => s.addSession);
   const deleteSession = useSessionStore((s) => s.deleteSession);
@@ -98,6 +103,9 @@ export default function HomePage() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>{t.newSession}</DialogTitle>
+              <DialogDescription className="sr-only">
+                {t.createSession}
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 pt-2">
               <div className="space-y-2">

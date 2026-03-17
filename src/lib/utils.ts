@@ -39,9 +39,15 @@ export function formatCount(n: number): string {
 
 export function formatValue(value: number, unit: "ms" | "s" | "cm" | "m" | "count"): string {
   if (unit === "ms") return formatTime(value);
-  if (unit === "s") return `${value}s`;
+  if (unit === "s") {
+    const rounded = Math.round(value * 100) / 100;
+    return `${rounded.toFixed(2)}s`;
+  }
   if (unit === "cm") return formatDistance(value);
-  if (unit === "m") return `${value}m`;
+  if (unit === "m") {
+    const rounded = Math.round(value * 100) / 100;
+    return `${rounded.toFixed(2)}m`;
+  }
   return formatCount(value);
 }
 

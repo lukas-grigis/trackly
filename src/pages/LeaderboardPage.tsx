@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import { useSessionStore } from "@/store/session-store";
 import { DISCIPLINES } from "@/lib/constants";
-import { formatValue } from "@/lib/utils";
+import { formatValue, getAgeGroup } from "@/lib/utils";
 import {
   useLeaderboard,
   AGE_GROUP_OPTIONS,
@@ -120,10 +120,8 @@ export default function LeaderboardPage() {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" asChild>
-          <Link to={ROUTES.SESSION(id)}>
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
+        <Button variant="ghost" size="icon" render={<Link to={ROUTES.SESSION(id)} />}>
+          <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">
           <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -143,7 +141,7 @@ export default function LeaderboardPage() {
         {/* Discipline selector */}
         <div className="space-y-1 min-w-[160px] flex-1">
           <Label>{t.leaderboardDiscipline}</Label>
-          <Select value={discipline} onValueChange={(d) => { setDiscipline(d); setHeatFilter("all"); }}>
+          <Select value={discipline} onValueChange={(d) => { if (d) { setDiscipline(d); setHeatFilter("all"); } }}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -161,7 +159,7 @@ export default function LeaderboardPage() {
         {disciplineHeats.length > 1 && (
           <div className="space-y-1 min-w-[140px] flex-1">
             <Label>{t.leaderboardHeatFilter}</Label>
-            <Select value={heatFilter} onValueChange={setHeatFilter}>
+            <Select value={heatFilter} onValueChange={(v) => { if (v) setHeatFilter(v); }}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -199,12 +197,15 @@ export default function LeaderboardPage() {
 
       {/* Leaderboard table */}
       {entries.length === 0 ? (
-        <div className="py-12 text-center text-muted-foreground">
-          {availableDisciplines.length === 0
-            ? t.leaderboardNoResults
-            : isFiltered
-              ? t.leaderboardNoFilterResults
-              : t.leaderboardNoDisciplineResults}
+        <div className="flex flex-col items-center gap-4 py-16 text-center">
+          <Trophy className="h-14 w-14 text-muted-foreground/30 animate-float" strokeWidth={1.25} />
+          <p className="text-muted-foreground max-w-xs">
+            {availableDisciplines.length === 0
+              ? t.leaderboardNoResults
+              : isFiltered
+                ? t.leaderboardNoFilterResults
+                : t.leaderboardNoDisciplineResults}
+          </p>
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -251,6 +252,11 @@ export default function LeaderboardPage() {
                           size="sm"
                         />
                         {entry.athlete?.name ?? entry.athleteId}
+                        {entry.athlete?.yearOfBirth && (
+                          <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                            {getAgeGroup(entry.athlete.yearOfBirth)}
+                          </span>
+                        )}
                       </span>
                     </td>
                     <td className="py-2.5 text-right font-mono">

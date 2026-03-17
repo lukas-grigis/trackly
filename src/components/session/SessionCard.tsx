@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Pencil } from "lucide-react";
+import { Trash2, Pencil, Users, Timer } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,6 +17,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -59,7 +60,7 @@ export default function SessionCard({ session, onDelete }: SessionCardProps) {
   return (
     <>
       <Card
-        className="cursor-pointer border-l-4 border-l-primary transition-all hover:shadow-md hover:-translate-y-0.5"
+        className="cursor-pointer border-l-4 border-l-primary transition-all hover:shadow-md hover:-translate-y-0.5 hover:border-l-accent"
         onClick={() => navigate(`/session/${session.id}`)}
       >
         <CardHeader className="pb-2">
@@ -93,13 +94,30 @@ export default function SessionCard({ session, onDelete }: SessionCardProps) {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="flex gap-2">
-          <Badge className="bg-accent/20 text-accent-foreground border-accent/30 hover:bg-accent/30">
+        <CardContent className="flex flex-wrap gap-2">
+          <Badge className="bg-accent/20 text-accent-foreground border-accent/30 hover:bg-accent/30 gap-1">
+            <Users className="h-3 w-3" />
             {session.athleteIds.length} {t.athletes}
           </Badge>
-          <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20">
+          <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 gap-1">
+            <Timer className="h-3 w-3" />
             {session.heats.reduce((sum, h) => sum + h.results.length, 0)} {t.results}
           </Badge>
+          {(() => {
+            const disciplines = [...new Set(session.heats.map((h) => h.disciplineType))];
+            if (disciplines.length === 0) return null;
+            const shown = disciplines.slice(0, 3);
+            const remaining = disciplines.length - shown.length;
+            return shown.map((d) => (
+              <Badge key={d} variant="outline" className="text-muted-foreground text-[10px]">
+                {t.disciplines[d] ?? d}
+              </Badge>
+            )).concat(remaining > 0 ? [
+              <Badge key="more" variant="outline" className="text-muted-foreground text-[10px]">
+                +{remaining}
+              </Badge>
+            ] : []);
+          })()}
         </CardContent>
       </Card>
 
@@ -129,6 +147,9 @@ export default function SessionCard({ session, onDelete }: SessionCardProps) {
         <DialogContent onClick={(e) => e.stopPropagation()}>
           <DialogHeader>
             <DialogTitle>{t.editSession}</DialogTitle>
+            <DialogDescription className="sr-only">
+              {t.editSession}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="space-y-2">
