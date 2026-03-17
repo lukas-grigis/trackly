@@ -183,8 +183,8 @@ export default function SessionPage() {
     })
     .sort((a, b) => a.startedAt.localeCompare(b.startedAt) || a.id.localeCompare(b.id));
 
-  // Flatten all results across heats, then keep personal best per athlete
-  const allResults = filteredHeats.flatMap((h) =>
+  // Flatten all results across heats, sorted by performance (best first)
+  const filteredResults = filteredHeats.flatMap((h) =>
     h.results.map((r) => {
       const athlete = allAthletes.find((a) => a.id === r.childId);
       return {
@@ -199,30 +199,7 @@ export default function SessionPage() {
         recordedAt: r.recordedAt,
       };
     }),
-  );
-
-  // Group by athlete: keep best result per person (or first note-only if no value)
-  const bestByAthlete = new Map<string, typeof allResults[0]>();
-  for (const result of allResults) {
-    const existing = bestByAthlete.get(result.childId);
-    if (!existing) {
-      bestByAthlete.set(result.childId, result);
-      continue;
-    }
-    const isNoteOnly = result.value === 0 && result.note;
-    const existingIsNoteOnly = existing.value === 0 && existing.note;
-    if (!isNoteOnly && existingIsNoteOnly) {
-      // Prefer any result with a real value
-      bestByAthlete.set(result.childId, result);
-    } else if (!isNoteOnly && !existingIsNoteOnly) {
-      const isBetter = disciplineConfig.sortAscending
-        ? result.value < existing.value
-        : result.value > existing.value;
-      if (isBetter) bestByAthlete.set(result.childId, result);
-    }
-  }
-
-  const filteredResults = Array.from(bestByAthlete.values()).sort((a, b) => {
+  ).sort((a, b) => {
     // Note-only results (value 0 with a note) go to the end
     const aIsNoteOnly = a.value === 0 && a.note;
     const bIsNoteOnly = b.value === 0 && b.note;
