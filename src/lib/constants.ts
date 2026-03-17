@@ -17,7 +17,7 @@ export const DISCIPLINES: Record<string, DisciplineConfig> = {
   sprint_80:    { mode: "timed", unit: "ms", sortAscending: true,  category: "sprint", icon: "mdi:lightning-bolt" },
   sprint_100:   { mode: "timed", unit: "ms", sortAscending: true,  category: "sprint", icon: "mdi:lightning-bolt" },
   sprint_200:   { mode: "timed", unit: "ms", sortAscending: true,  category: "sprint", icon: "mdi:run-fast" },
-  hurdles:      { mode: "timed", unit: "ms", sortAscending: true,  category: "sprint", icon: "mdi:hurdle" },
+  hurdles:      { mode: "timed", unit: "ms", sortAscending: true,  category: "sprint", icon: "mdi:fence" },
   relay:        { mode: "timed", unit: "ms", sortAscending: true,  category: "sprint", icon: "mdi:account-switch" },
   // Endurance (timed, longer)
   run_400:      { mode: "timed", unit: "ms", sortAscending: true,  category: "endurance", icon: "mdi:run" },
@@ -40,7 +40,7 @@ export const DISCIPLINES: Record<string, DisciplineConfig> = {
   shot_put:     { mode: "distance", unit: "cm", sortAscending: false, category: "throwing", icon: "mdi:circle" },
   sling_ball:   { mode: "distance", unit: "cm", sortAscending: false, category: "throwing", icon: "mdi:baseball-bat" },
   discus:       { mode: "distance", unit: "cm", sortAscending: false, category: "throwing", icon: "mdi:disc" },
-  javelin:      { mode: "distance", unit: "cm", sortAscending: false, category: "throwing", icon: "mdi:spear" },
+  javelin:      { mode: "distance", unit: "cm", sortAscending: false, category: "throwing", icon: "mdi:arrow-top-right" },
   vortex:       { mode: "distance", unit: "cm", sortAscending: false, category: "throwing", icon: "mdi:rocket-launch" },
   // Games (count/score)
   football:     { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:soccer" },
@@ -50,9 +50,9 @@ export const DISCIPLINES: Record<string, DisciplineConfig> = {
   volleyball:   { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:volleyball" },
   dodgeball:    { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:bullseye" },
   brennball:    { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:fire" },
-  jump_rope:    { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:jump-rope" },
+  jump_rope:    { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:rotate-right" },
   capture_flag: { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:flag-variant" },
-  tug_of_war:   { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:rope" },
+  tug_of_war:   { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:link-variant" },
   obstacle_run: { mode: "timed", unit: "ms", sortAscending: true,  category: "games", icon: "mdi:forest" },
   // Custom (manual entry)
   custom:       { mode: "custom", unit: "cm", sortAscending: false, category: "games", icon: "mdi:pencil-outline" },

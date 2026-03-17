@@ -25,7 +25,9 @@ const FAVORITES_KEY = "trackly-fav-disciplines";
 function loadFavorites(): string[] {
   try {
     const raw = localStorage.getItem(FAVORITES_KEY);
-    return raw ? JSON.parse(raw) : [];
+    if (!raw) return [];
+    const parsed: string[] = JSON.parse(raw);
+    return parsed.filter((key) => key in DISCIPLINES);
   } catch { return []; }
 }
 

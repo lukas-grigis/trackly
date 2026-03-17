@@ -238,13 +238,13 @@ export default function RacePage() {
         initial[cid] = [{ value: "", foul: false }];
       }
       setFieldAttempts(initial);
-      // Set default unit based on discipline
-      if (discipline === "long_jump" || discipline === "shot_put" || discipline === "ball_throw" || discipline === "sling_ball") {
-        setFieldUnit("m"); // displayed as m, stored as cm
-      } else if (discipline === "high_jump") {
-        setFieldUnit("cm");
+      // Set display unit based on discipline config
+      const cfg = DISCIPLINES[discipline];
+      if (cfg?.unit === "cm") {
+        // cm-stored disciplines: display as m (except high_jump which stays cm)
+        setFieldUnit(discipline === "high_jump" || discipline === "pole_vault" ? "cm" : "m");
       } else {
-        setFieldUnit("m"); // custom default
+        setFieldUnit("m");
       }
       setPhase("field-entry");
       return;

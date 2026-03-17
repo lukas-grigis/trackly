@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import { useSessionStore } from "@/store/session-store";
 import { DISCIPLINES, getMedalStyle } from "@/lib/constants";
@@ -66,9 +66,10 @@ export default function LeaderboardPage() {
   const [heatFilter, setHeatFilter] = useState("all");
 
   // Get heats for current discipline (for heat selector)
-  const disciplineHeats = session
-    ? session.heats.filter((h) => h.disciplineType === discipline)
-    : [];
+  const disciplineHeats = useMemo(
+    () => session ? session.heats.filter((h) => h.disciplineType === discipline) : [],
+    [session, discipline],
+  );
 
   const { entries, hasYobData } = useLeaderboard(
     session,
@@ -79,14 +80,11 @@ export default function LeaderboardPage() {
   );
   const config = DISCIPLINES[discipline];
 
-  // Reset heat filter when discipline changes (via effect-free approach: check validity)
-  const validHeatFilter =
-    heatFilter === "all" || disciplineHeats.some((h) => h.id === heatFilter)
-      ? heatFilter
-      : "all";
-  if (validHeatFilter !== heatFilter) {
-    setHeatFilter(validHeatFilter);
-  }
+  useEffect(() => {
+    if (heatFilter !== "all" && !disciplineHeats.some((h) => h.id === heatFilter)) {
+      setHeatFilter("all");
+    }
+  }, [discipline, disciplineHeats, heatFilter]);
 
   if (!session || !id) {
     return (

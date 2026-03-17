@@ -261,11 +261,12 @@ export default function SessionPage() {
 
       {/* ── Collapsible athletes panel ── */}
       <div className="rounded-lg border overflow-hidden">
-        <button
-          className="flex w-full items-center justify-between bg-secondary/50 px-4 py-3 text-sm font-semibold"
-          onClick={() => setAthletesOpen((v) => !v)}
-        >
-          <span className="flex items-center gap-2">
+        <div className="flex w-full items-center justify-between bg-secondary/50 px-4 py-3 text-sm font-semibold">
+          <button
+            className="flex flex-1 items-center gap-2 text-left"
+            onClick={() => setAthletesOpen((v) => !v)}
+            aria-expanded={athletesOpen}
+          >
             {athletesOpen
               ? <ChevronDown className="h-4 w-4 text-muted-foreground" />
               : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
@@ -273,17 +274,17 @@ export default function SessionPage() {
             <span className="ml-1 text-muted-foreground font-normal">
               ({sessionAthletes.length})
             </span>
-          </span>
+          </button>
           <Button
             variant="ghost"
             size="sm"
             className="h-7 gap-1 px-2 text-xs text-muted-foreground"
-            onClick={(e) => { e.stopPropagation(); openPicker(); }}
+            onClick={openPicker}
           >
             <Users className="h-3.5 w-3.5" />
             {t.selectAthletes}
           </Button>
-        </button>
+        </div>
 
         {athletesOpen && (
           <div className="border-t px-4 py-3">

@@ -13,10 +13,11 @@ const MEDAL_COLORS = [
 interface TVModeProps {
   entries: LeaderboardEntry[];
   discipline: string;
+  customDisciplineName?: string;
   onExit: () => void;
 }
 
-export function TVMode({ entries, discipline, onExit }: TVModeProps) {
+export function TVMode({ entries, discipline, customDisciplineName, onExit }: TVModeProps) {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
@@ -115,7 +116,7 @@ export function TVMode({ entries, discipline, onExit }: TVModeProps) {
       {/* Discipline title */}
       <div className="shrink-0 px-6 pt-6 pb-2 text-center">
         <h1 className="text-3xl font-bold text-slate-300 sm:text-4xl">
-          {t.disciplines[discipline] ?? discipline}
+          {discipline === "custom" && customDisciplineName ? customDisciplineName : (t.disciplines[discipline] ?? discipline)}
         </h1>
       </div>
 
