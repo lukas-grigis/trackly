@@ -208,6 +208,12 @@ export interface Translations {
   notFound: string;
   notFoundDesc: string;
   goHome: string;
+  // Athlete profile
+  athleteNotFound: string;
+  personalBests: string;
+  sessionHistory: string;
+  noResultsAthlete: string;
+  pbAchievedIn: string;
 }
 
 const de: Translations = {
@@ -457,6 +463,12 @@ const de: Translations = {
   notFound: "Seite nicht gefunden",
   notFoundDesc: "Diese Seite existiert leider nicht.",
   goHome: "Zur Startseite",
+  // Athlete profile
+  athleteNotFound: "Athlet nicht gefunden",
+  personalBests: "Persönliche Bestleistungen",
+  sessionHistory: "Sessionverlauf",
+  noResultsAthlete: "Noch keine Ergebnisse für diesen Athleten.",
+  pbAchievedIn: "in",
 };
 
 const en: Translations = {
@@ -706,6 +718,12 @@ const en: Translations = {
   notFound: "Page not found",
   notFoundDesc: "This page does not exist.",
   goHome: "Go home",
+  // Athlete profile
+  athleteNotFound: "Athlete not found",
+  personalBests: "Personal Bests",
+  sessionHistory: "Session History",
+  noResultsAthlete: "No results for this athlete yet.",
+  pbAchievedIn: "in",
 };
 
 const translations: Record<Language, Translations> = { de, en };

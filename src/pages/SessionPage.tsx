@@ -317,15 +317,16 @@ export default function SessionPage() {
             ) : (
               <div className="flex flex-wrap gap-2">
                 {sessionAthletes.map((athlete) => (
-                  <span
+                  <Link
                     key={athlete.id}
-                    className="inline-flex items-center gap-1.5 rounded-full border bg-card px-3 py-1 text-sm font-medium"
+                    to={ROUTES.ATHLETE(athlete.id)}
+                    className="inline-flex items-center gap-1.5 rounded-full border bg-card px-3 py-1 text-sm font-medium hover:border-primary/40 hover:bg-primary/5 transition-colors"
                   >
                     <AthleteAvatar name={athlete.name} avatarBase64={athlete.avatarBase64} size="sm" className="h-5 w-5 text-[8px]" />
                     {athlete.name}
                     <AgeGroupBadge yearOfBirth={athlete.yearOfBirth} />
                     <GenderBadge gender={athlete.gender} />
-                  </span>
+                  </Link>
                 ))}
               </div>
             )}

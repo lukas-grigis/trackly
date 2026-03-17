@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from "react";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useSessionStore, type Gender } from "@/store/session-store";
 import { useTranslation } from "@/lib/i18n";
@@ -10,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { ROUTES } from "@/routes";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -159,7 +161,10 @@ export default function AthletesPage() {
                     <Camera className="h-3.5 w-3.5" />
                   </span>
                 </button>
-                <div className="flex items-center gap-2">
+                <Link
+                  to={ROUTES.ATHLETE(athlete.id)}
+                  className="flex items-center gap-2 hover:underline underline-offset-2"
+                >
                   <span className="font-medium">{athlete.name}</span>
                   <AgeGroupBadge yearOfBirth={athlete.yearOfBirth} />
                   <GenderBadge gender={athlete.gender} />
@@ -168,7 +173,7 @@ export default function AthletesPage() {
                       *{athlete.yearOfBirth}
                     </span>
                   )}
-                </div>
+                </Link>
               </div>
               <div className="flex items-center gap-1">
                 {athlete.avatarBase64 && (
