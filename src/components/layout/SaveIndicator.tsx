@@ -1,17 +1,10 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useSessionStore } from "@/store/session-store";
 import { useTranslation } from "@/lib/i18n";
-import { CloudOff, X } from "lucide-react";
+import { CloudOff } from "lucide-react";
 
 const TOOLTIP_DISMISSED_KEY = "trackly-save-tooltip-dismissed";
-
-function isTooltipDismissed(): boolean {
-  try {
-    return localStorage.getItem(TOOLTIP_DISMISSED_KEY) === "true";
-  } catch {
-    return true;
-  }
-}
 
 function useRelativeTime(timestamp: number | null, lang: string) {
   const [now, setNow] = useState(() => Date.now());
@@ -23,7 +16,7 @@ function useRelativeTime(timestamp: number | null, lang: string) {
   }, [timestamp]);
 
   if (timestamp == null) return null;
-  const diffSec = Math.round((now - timestamp) / 1000);
+  const diffSec = Math.max(0, Math.round((now - timestamp) / 1000));
   if (lang === "de") {
     if (diffSec < 60) return `${diffSec} Sek.`;
     return `${Math.floor(diffSec / 60)} Min.`;
@@ -38,17 +31,21 @@ export default function SaveIndicator() {
   const { t, lang } = useTranslation();
   const relative = useRelativeTime(lastSavedAt, lang);
 
-  const [showTooltip, setShowTooltip] = useState(() => !isTooltipDismissed());
-  const tooltipRef = useRef<HTMLDivElement>(null);
-
-  const dismissTooltip = useCallback(() => {
-    setShowTooltip(false);
+  // Show a one-time toast on first visit instead of a floating tooltip
+  useEffect(() => {
     try {
-      localStorage.setItem(TOOLTIP_DISMISSED_KEY, "true");
+      if (localStorage.getItem(TOOLTIP_DISMISSED_KEY) !== "true") {
+        // Small delay so it appears after the page has loaded
+        const timer = setTimeout(() => {
+          toast.info(t.autoSaveTooltip, { duration: 6000 });
+          localStorage.setItem(TOOLTIP_DISMISSED_KEY, "true");
+        }, 1500);
+        return () => clearTimeout(timer);
+      }
     } catch {
       // ignore
     }
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (saveError) {
     return (
@@ -60,26 +57,11 @@ export default function SaveIndicator() {
   }
 
   return (
-    <span className="relative flex items-center text-xs text-muted-foreground">
+    <span className="flex items-center text-xs text-muted-foreground">
       {relative ? (
         <span>{t.savedAgo.replace("{time}", relative)}</span>
       ) : (
         <span>—</span>
-      )}
-      {showTooltip && (
-        <div
-          ref={tooltipRef}
-          className="absolute right-0 top-full mt-2 z-50 w-56 rounded-md border bg-popover p-3 text-xs text-popover-foreground shadow-md"
-        >
-          <button
-            onClick={dismissTooltip}
-            className="absolute right-1 top-1 rounded-sm p-0.5 text-muted-foreground hover:text-foreground"
-            aria-label="dismiss"
-          >
-            <X className="h-3 w-3" />
-          </button>
-          <p>{t.autoSaveTooltip}</p>
-        </div>
       )}
     </span>
   );

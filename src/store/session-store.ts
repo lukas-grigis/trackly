@@ -213,36 +213,44 @@ export const useSessionStore = create<StoreState>()(
     {
       name: "trackly-storage",
       version: 5,
-      storage: {
-        getItem: (name) => {
-          try {
-            const str = localStorage.getItem(name);
-            return str ? JSON.parse(str) : null;
-          } catch {
-            return null;
-          }
-        },
-        setItem: (name, value) => {
-          try {
-            localStorage.setItem(name, JSON.stringify(value));
-            // Defer so we don't trigger another persist cycle synchronously
-            queueMicrotask(() => {
-              useSessionStore.setState({ lastSavedAt: Date.now(), _saveError: false });
-            });
-          } catch {
-            queueMicrotask(() => {
-              useSessionStore.setState({ _saveError: true });
-            });
-          }
-        },
-        removeItem: (name) => {
-          try {
-            localStorage.removeItem(name);
-          } catch {
-            // ignore
-          }
-        },
-      },
+      storage: (() => {
+        // Re-entry guard: updating lastSavedAt triggers persist, which calls
+        // setItem again, which would schedule another setState — infinite loop.
+        let _writing = false;
+        return {
+          getItem: (name: string) => {
+            try {
+              const str = localStorage.getItem(name);
+              return str ? JSON.parse(str) : null;
+            } catch {
+              return null;
+            }
+          },
+          setItem: (name: string, value: unknown) => {
+            if (_writing) return;
+            _writing = true;
+            try {
+              localStorage.setItem(name, JSON.stringify(value));
+              queueMicrotask(() => {
+                useSessionStore.setState({ lastSavedAt: Date.now(), _saveError: false });
+                _writing = false;
+              });
+            } catch {
+              queueMicrotask(() => {
+                useSessionStore.setState({ _saveError: true });
+                _writing = false;
+              });
+            }
+          },
+          removeItem: (name: string) => {
+            try {
+              localStorage.removeItem(name);
+            } catch {
+              // ignore
+            }
+          },
+        };
+      })(),
       partialize: (state) => ({
         athletes: state.athletes,
         sessions: state.sessions,
