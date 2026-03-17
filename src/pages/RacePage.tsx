@@ -437,13 +437,17 @@ export default function RacePage() {
   // FIELD-ENTRY PHASE
   if (phase === "field-entry") {
     const isCustom = disciplineConfig.mode === "custom";
-    const displayUnit = isCustom ? fieldUnit : (discipline === "high_jump" ? "cm" : "m");
-    const unitLabel = displayUnit;
+    // For cm-stored disciplines display as "m" (easier to enter) except vertical jumps
+    const displayUnit = isCustom
+      ? fieldUnit
+      : disciplineConfig.unit === "cm"
+        ? (discipline === "high_jump" || discipline === "pole_vault" ? "cm" : "m")
+        : disciplineConfig.unit as "m" | "cm" | "s" | "ms" | "count";
+    const unitLabel = displayUnit === "count" ? "#" : displayUnit;
 
-    function getStoredUnit(): "cm" | "m" | "s" | "ms" {
+    function getStoredUnit(): "cm" | "m" | "s" | "ms" | "count" {
       if (isCustom) return fieldUnit;
-      // long_jump, shot_put, ball_throw, sling_ball, high_jump all store as cm
-      return "cm";
+      return disciplineConfig.unit as "cm" | "m" | "s" | "ms" | "count";
     }
 
     function toStoredValue(inputStr: string): number | null {

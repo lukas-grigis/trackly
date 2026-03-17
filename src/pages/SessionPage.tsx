@@ -352,7 +352,7 @@ export default function SessionPage() {
               </Select>
               <Input
                 type="number"
-                placeholder={disciplineConfig.unit}
+                placeholder={disciplineConfig.unit === "count" ? "#" : disciplineConfig.unit}
                 value={resultValue}
                 onChange={(e) => setResultValue(e.target.value)}
                 className="w-24"

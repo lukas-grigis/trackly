@@ -3,7 +3,7 @@ export type DisciplineCategory = "sprint" | "endurance" | "jumping" | "throwing"
 
 export interface DisciplineConfig {
   mode: DisciplineMode;
-  unit: "ms" | "cm" | "count";
+  unit: "ms" | "s" | "cm" | "m" | "count";
   sortAscending: boolean;
   category: DisciplineCategory;
   icon: string; // MDI icon name for @iconify/react
@@ -27,7 +27,7 @@ export const DISCIPLINES: Record<string, DisciplineConfig> = {
   run_2000:     { mode: "timed", unit: "ms", sortAscending: true,  category: "endurance", icon: "mdi:timer-sand" },
   run_3000:     { mode: "timed", unit: "ms", sortAscending: true,  category: "endurance", icon: "mdi:timer-sand" },
   run_5000:     { mode: "timed", unit: "ms", sortAscending: true,  category: "endurance", icon: "mdi:timer-sand" },
-  cooper_test:  { mode: "distance", unit: "cm", sortAscending: false, category: "endurance", icon: "mdi:heart-pulse" },
+  cooper_test:  { mode: "distance", unit: "m",  sortAscending: false, category: "endurance", icon: "mdi:heart-pulse" },
   shuttle_run:  { mode: "timed", unit: "ms", sortAscending: true,  category: "endurance", icon: "mdi:swap-horizontal" },
   // Jumping (distance)
   long_jump:    { mode: "distance", unit: "cm", sortAscending: false, category: "jumping", icon: "mdi:arrow-right-bold" },
@@ -50,7 +50,7 @@ export const DISCIPLINES: Record<string, DisciplineConfig> = {
   volleyball:   { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:volleyball" },
   dodgeball:    { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:bullseye" },
   brennball:    { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:fire" },
-  jump_rope:    { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:rotate-right" },
+  jump_rope:    { mode: "distance", unit: "count", sortAscending: false, category: "games", icon: "mdi:rotate-right" },
   capture_flag: { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:flag-variant" },
   tug_of_war:   { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:link-variant" },
   obstacle_run: { mode: "timed", unit: "ms", sortAscending: true,  category: "games", icon: "mdi:forest" },

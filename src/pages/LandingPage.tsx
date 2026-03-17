@@ -10,7 +10,7 @@ import {
   FileDown,
   Trophy,
   ExternalLink,
-  Timer,
+  Medal,
   ArrowRight,
 } from "lucide-react";
 import { ROUTES } from "@/routes";
@@ -22,7 +22,7 @@ type TranslationKey = keyof Translations;
 const STEPS: { icon: string; key: TranslationKey }[] = [
   { icon: "mdi:clipboard-text-outline", key: "landingStep1" },
   { icon: "mdi:account-plus-outline", key: "landingStep2" },
-  { icon: "mdi:timer-outline", key: "landingStep3" },
+  { icon: "mdi:checkbox-marked-circle-outline", key: "landingStep3" },
 ];
 
 const FEATURES: { icon: typeof Zap; key: TranslationKey }[] = [
@@ -42,7 +42,7 @@ export default function LandingPage() {
       {/* Hero */}
       <section className="flex flex-col items-center text-center gap-6 py-16">
         <div className="flex items-center gap-2 rounded-full border bg-primary/5 px-4 py-1.5 text-xs font-medium text-primary">
-          <Timer className="h-3.5 w-3.5" />
+          <Medal className="h-3.5 w-3.5" />
           <span>Free &middot; Offline &middot; Open Source</span>
         </div>
         <h1 className="text-gradient text-5xl sm:text-6xl font-black tracking-tight leading-[1.1] max-w-lg">
