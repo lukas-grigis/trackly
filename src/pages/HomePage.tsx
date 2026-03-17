@@ -27,7 +27,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Plus, Download, FileText, Trash2, ClipboardList } from "lucide-react";
+import { Plus, Download, FileText, Trash2, ClipboardList, Check } from "lucide-react";
+import { AthleteAvatar } from "@/components/ui/athlete-avatar";
+import { cn } from "@/lib/utils";
 import SessionCard from "@/components/session/SessionCard";
 
 function exportSessionCsv(
@@ -74,13 +76,27 @@ export default function HomePage() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [selectedAthleteIds, setSelectedAthleteIds] = useState<string[]>([]);
+
+  function handleOpenCreate() {
+    // Pre-select all athletes by default (presence = everyone unless unchecked)
+    setSelectedAthleteIds(allAthletes.map((a) => a.id));
+    setOpen(true);
+  }
+
+  function toggleAthlete(id: string) {
+    setSelectedAthleteIds((prev) =>
+      prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id],
+    );
+  }
 
   function handleCreate() {
     if (!name.trim()) return;
-    addSession(name.trim(), date);
+    addSession(name.trim(), date, selectedAthleteIds);
     toast.success(t.sessionCreated);
     setName("");
     setDate(new Date().toISOString().slice(0, 10));
+    setSelectedAthleteIds([]);
     setOpen(false);
   }
 
@@ -95,12 +111,12 @@ export default function HomePage() {
         <h1 className="text-3xl font-bold heading-tight">{t.sessions}</h1>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button onClick={handleOpenCreate}>
               <Plus className="mr-2 h-4 w-4" />
               {t.newSession}
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-sm sm:max-w-md">
             <DialogHeader>
               <DialogTitle>{t.newSession}</DialogTitle>
               <DialogDescription className="sr-only">
@@ -127,6 +143,70 @@ export default function HomePage() {
                   onChange={(e) => setDate(e.target.value)}
                 />
               </div>
+
+              {/* Athlete presence check */}
+              {allAthletes.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>{t.presenceLabel}</Label>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedAthleteIds(
+                          selectedAthleteIds.length === allAthletes.length
+                            ? []
+                            : allAthletes.map((a) => a.id),
+                        )
+                      }
+                      className="text-xs font-medium text-primary hover:underline"
+                    >
+                      {selectedAthleteIds.length === allAthletes.length
+                        ? t.deselectAll
+                        : t.selectAll}
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5 max-h-40 overflow-y-auto">
+                    {allAthletes.map((athlete) => {
+                      const selected = selectedAthleteIds.includes(athlete.id);
+                      return (
+                        <button
+                          key={athlete.id}
+                          type="button"
+                          onClick={() => toggleAthlete(athlete.id)}
+                          className={cn(
+                            "flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-sm transition-colors",
+                            selected
+                              ? "border-primary bg-primary/10 text-foreground"
+                              : "border-border bg-card text-muted-foreground hover:bg-muted/50",
+                          )}
+                        >
+                          <AthleteAvatar
+                            name={athlete.name}
+                            avatarBase64={athlete.avatarBase64}
+                            size="sm"
+                            className="h-6 w-6 text-[8px]"
+                          />
+                          <span className="flex-1 truncate text-xs font-medium">{athlete.name}</span>
+                          <span
+                            className={cn(
+                              "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors",
+                              selected
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "border-border",
+                            )}
+                          >
+                            {selected && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {selectedAthleteIds.length} / {allAthletes.length}
+                  </p>
+                </div>
+              )}
+
               <Button className="w-full" onClick={handleCreate}>
                 {t.createSession}
               </Button>
@@ -144,7 +224,7 @@ export default function HomePage() {
           <p className="text-muted-foreground max-w-xs">{t.noSessions}</p>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline">
+              <Button variant="outline" onClick={handleOpenCreate}>
                 <Plus className="mr-2 h-4 w-4" />
                 {t.newSession}
               </Button>

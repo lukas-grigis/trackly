@@ -58,7 +58,7 @@ interface StoreState {
   removeAthlete: (id: string) => void;
 
   // Sessions
-  addSession: (name: string, date: string) => string;
+  addSession: (name: string, date: string, athleteIds?: string[]) => string;
   updateSession: (id: string, name: string, date: string) => void;
   deleteSession: (id: string) => void;
   setSessionAthletes: (sessionId: string, athleteIds: string[]) => void;
@@ -108,12 +108,12 @@ export const useSessionStore = create<StoreState>()(
         }));
       },
 
-      addSession(name, date) {
+      addSession(name, date, athleteIds) {
         const id = crypto.randomUUID();
         set((state) => ({
           sessions: [
             ...state.sessions,
-            { id, name, date, athleteIds: [], heats: [] },
+            { id, name, date, athleteIds: athleteIds ?? [], heats: [] },
           ],
         }));
         return id;

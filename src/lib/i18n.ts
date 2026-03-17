@@ -73,6 +73,7 @@ export interface Translations {
   athleteRemoved: string;
   athleteUpdated: string;
   selectAthletes: string;
+  presenceLabel: string;
   noAthletesInSession: string;
   selectAll: string;
   deselectAll: string;
@@ -280,6 +281,7 @@ const de: Translations = {
   athleteRemoved: "Athlet entfernt",
   athleteUpdated: "Athlet aktualisiert",
   selectAthletes: "Athleten für Session wählen",
+  presenceLabel: "Wer ist dabei?",
   noAthletesInSession: "Keine Athleten ausgewählt. Wähle Athleten aus der globalen Liste.",
   selectAll: "Alle auswählen",
   deselectAll: "Alle abwählen",
@@ -528,6 +530,7 @@ const en: Translations = {
   athleteRemoved: "Athlete removed",
   athleteUpdated: "Athlete updated",
   selectAthletes: "Select athletes for session",
+  presenceLabel: "Who's here?",
   noAthletesInSession: "No athletes selected. Pick athletes from the global roster.",
   selectAll: "Select all",
   deselectAll: "Deselect all",
