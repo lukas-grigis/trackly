@@ -28,7 +28,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Plus, Download, FileText, Trash2, ClipboardList, Check } from "lucide-react";
-import { AthleteAvatar } from "@/components/ui/athlete-avatar";
 import { cn } from "@/lib/utils";
 import SessionCard from "@/components/session/SessionCard";
 
@@ -165,7 +164,7 @@ export default function HomePage() {
                         : t.selectAll}
                     </button>
                   </div>
-                  <div className="grid grid-cols-2 gap-1.5 max-h-40 overflow-y-auto">
+                  <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto">
                     {allAthletes.map((athlete) => {
                       const selected = selectedAthleteIds.includes(athlete.id);
                       return (
@@ -174,29 +173,14 @@ export default function HomePage() {
                           type="button"
                           onClick={() => toggleAthlete(athlete.id)}
                           className={cn(
-                            "flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-sm transition-colors",
+                            "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
                             selected
-                              ? "border-primary bg-primary/10 text-foreground"
-                              : "border-border bg-card text-muted-foreground hover:bg-muted/50",
+                              ? "border-primary bg-primary/10 text-primary"
+                              : "border-border text-muted-foreground hover:border-foreground hover:text-foreground",
                           )}
                         >
-                          <AthleteAvatar
-                            name={athlete.name}
-                            avatarBase64={athlete.avatarBase64}
-                            size="sm"
-                            className="h-6 w-6 text-[8px]"
-                          />
-                          <span className="flex-1 truncate text-xs font-medium">{athlete.name}</span>
-                          <span
-                            className={cn(
-                              "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors",
-                              selected
-                                ? "border-primary bg-primary text-primary-foreground"
-                                : "border-border",
-                            )}
-                          >
-                            {selected && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
-                          </span>
+                          {athlete.name}
+                          {selected && <Check className="h-3 w-3" strokeWidth={3} />}
                         </button>
                       );
                     })}
