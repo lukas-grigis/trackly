@@ -1,62 +1,80 @@
 export type DisciplineMode = "timed" | "distance" | "count" | "custom";
-export type DisciplineCategory = "running" | "jumping" | "throwing" | "games";
+export type DisciplineCategory = "sprint" | "endurance" | "jumping" | "throwing" | "games";
 
 export interface DisciplineConfig {
   mode: DisciplineMode;
   unit: "ms" | "cm" | "count";
-  sortAscending: boolean; // true = lower is better (time), false = higher is better (distance/count)
+  sortAscending: boolean;
   category: DisciplineCategory;
+  icon: string; // MDI icon name for @iconify/react
 }
 
 export const DISCIPLINES: Record<string, DisciplineConfig> = {
-  // Running (timed)
-  sprint_40:  { mode: "timed", unit: "ms", sortAscending: true,  category: "running" },
-  sprint_50:  { mode: "timed", unit: "ms", sortAscending: true,  category: "running" },
-  sprint_60:  { mode: "timed", unit: "ms", sortAscending: true,  category: "running" },
-  sprint_80:  { mode: "timed", unit: "ms", sortAscending: true,  category: "running" },
-  sprint_100: { mode: "timed", unit: "ms", sortAscending: true,  category: "running" },
-  sprint_200: { mode: "timed", unit: "ms", sortAscending: true,  category: "running" },
-  run_400:    { mode: "timed", unit: "ms", sortAscending: true,  category: "running" },
-  run_800:    { mode: "timed", unit: "ms", sortAscending: true,  category: "running" },
-  run_1000:   { mode: "timed", unit: "ms", sortAscending: true,  category: "running" },
-  hurdles:    { mode: "timed", unit: "ms", sortAscending: true,  category: "running" },
-  relay:      { mode: "timed", unit: "ms", sortAscending: true,  category: "running" },
+  // Sprint (timed, short)
+  sprint_40:    { mode: "timed", unit: "ms", sortAscending: true,  category: "sprint", icon: "mdi:lightning-bolt" },
+  sprint_50:    { mode: "timed", unit: "ms", sortAscending: true,  category: "sprint", icon: "mdi:lightning-bolt" },
+  sprint_60:    { mode: "timed", unit: "ms", sortAscending: true,  category: "sprint", icon: "mdi:lightning-bolt" },
+  sprint_80:    { mode: "timed", unit: "ms", sortAscending: true,  category: "sprint", icon: "mdi:lightning-bolt" },
+  sprint_100:   { mode: "timed", unit: "ms", sortAscending: true,  category: "sprint", icon: "mdi:lightning-bolt" },
+  sprint_200:   { mode: "timed", unit: "ms", sortAscending: true,  category: "sprint", icon: "mdi:run-fast" },
+  hurdles:      { mode: "timed", unit: "ms", sortAscending: true,  category: "sprint", icon: "mdi:hurdle" },
+  relay:        { mode: "timed", unit: "ms", sortAscending: true,  category: "sprint", icon: "mdi:account-switch" },
+  // Endurance (timed, longer)
+  run_400:      { mode: "timed", unit: "ms", sortAscending: true,  category: "endurance", icon: "mdi:run" },
+  run_800:      { mode: "timed", unit: "ms", sortAscending: true,  category: "endurance", icon: "mdi:run" },
+  run_1000:     { mode: "timed", unit: "ms", sortAscending: true,  category: "endurance", icon: "mdi:run" },
+  run_1500:     { mode: "timed", unit: "ms", sortAscending: true,  category: "endurance", icon: "mdi:run" },
+  run_2000:     { mode: "timed", unit: "ms", sortAscending: true,  category: "endurance", icon: "mdi:timer-sand" },
+  run_3000:     { mode: "timed", unit: "ms", sortAscending: true,  category: "endurance", icon: "mdi:timer-sand" },
+  run_5000:     { mode: "timed", unit: "ms", sortAscending: true,  category: "endurance", icon: "mdi:timer-sand" },
+  cooper_test:  { mode: "distance", unit: "cm", sortAscending: false, category: "endurance", icon: "mdi:heart-pulse" },
+  shuttle_run:  { mode: "timed", unit: "ms", sortAscending: true,  category: "endurance", icon: "mdi:swap-horizontal" },
   // Jumping (distance)
-  long_jump:  { mode: "distance", unit: "cm", sortAscending: false, category: "jumping" },
-  high_jump:  { mode: "distance", unit: "cm", sortAscending: false, category: "jumping" },
+  long_jump:    { mode: "distance", unit: "cm", sortAscending: false, category: "jumping", icon: "mdi:arrow-right-bold" },
+  high_jump:    { mode: "distance", unit: "cm", sortAscending: false, category: "jumping", icon: "mdi:arrow-up-bold" },
+  triple_jump:  { mode: "distance", unit: "cm", sortAscending: false, category: "jumping", icon: "mdi:debug-step-over" },
+  standing_jump:{ mode: "distance", unit: "cm", sortAscending: false, category: "jumping", icon: "mdi:human-handsup" },
+  pole_vault:   { mode: "distance", unit: "cm", sortAscending: false, category: "jumping", icon: "mdi:arrow-up-bold-circle" },
   // Throwing (distance)
-  ball_throw: { mode: "distance", unit: "cm", sortAscending: false, category: "throwing" },
-  shot_put:   { mode: "distance", unit: "cm", sortAscending: false, category: "throwing" },
-  sling_ball: { mode: "distance", unit: "cm", sortAscending: false, category: "throwing" },
-  // Games (count)
-  football:   { mode: "count", unit: "count", sortAscending: false, category: "games" },
-  basketball: { mode: "count", unit: "count", sortAscending: false, category: "games" },
-  handball:   { mode: "count", unit: "count", sortAscending: false, category: "games" },
-  unihockey:  { mode: "count", unit: "count", sortAscending: false, category: "games" },
-  volleyball: { mode: "count", unit: "count", sortAscending: false, category: "games" },
-  dodgeball:  { mode: "count", unit: "count", sortAscending: false, category: "games" },
-  brennball:  { mode: "count", unit: "count", sortAscending: false, category: "games" },
-  jump_rope:  { mode: "count", unit: "count", sortAscending: false, category: "games" },
+  ball_throw:   { mode: "distance", unit: "cm", sortAscending: false, category: "throwing", icon: "mdi:baseball" },
+  shot_put:     { mode: "distance", unit: "cm", sortAscending: false, category: "throwing", icon: "mdi:circle" },
+  sling_ball:   { mode: "distance", unit: "cm", sortAscending: false, category: "throwing", icon: "mdi:baseball-bat" },
+  discus:       { mode: "distance", unit: "cm", sortAscending: false, category: "throwing", icon: "mdi:disc" },
+  javelin:      { mode: "distance", unit: "cm", sortAscending: false, category: "throwing", icon: "mdi:spear" },
+  vortex:       { mode: "distance", unit: "cm", sortAscending: false, category: "throwing", icon: "mdi:rocket-launch" },
+  // Games (count/score)
+  football:     { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:soccer" },
+  basketball:   { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:basketball" },
+  handball:     { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:handball" },
+  unihockey:    { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:hockey-sticks" },
+  volleyball:   { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:volleyball" },
+  dodgeball:    { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:bullseye" },
+  brennball:    { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:fire" },
+  jump_rope:    { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:jump-rope" },
+  capture_flag: { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:flag-variant" },
+  tug_of_war:   { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:rope" },
+  obstacle_run: { mode: "timed", unit: "ms", sortAscending: true,  category: "games", icon: "mdi:forest" },
   // Custom (manual entry)
-  custom:     { mode: "custom", unit: "cm", sortAscending: false, category: "games" },
+  custom:       { mode: "custom", unit: "cm", sortAscending: false, category: "games", icon: "mdi:pencil-outline" },
 };
 
-// MDI (Material Design Icons) sport pictograms via @iconify/react
 export const DISCIPLINE_CATEGORIES: {
   key: DisciplineCategory;
   icon: string;
+  label: string; // fallback label for the tab (not used for i18n, just for the key)
 }[] = [
-  { key: "running",  icon: "mdi:run-fast" },
-  { key: "jumping",  icon: "mdi:human-handsup" },
-  { key: "throwing", icon: "mdi:handball" },
-  { key: "games",    icon: "mdi:soccer" },
+  { key: "sprint",    icon: "mdi:lightning-bolt", label: "Sprint" },
+  { key: "endurance", icon: "mdi:run",            label: "Endurance" },
+  { key: "jumping",   icon: "mdi:human-handsup",  label: "Jump" },
+  { key: "throwing",  icon: "mdi:handball",        label: "Throw" },
+  { key: "games",     icon: "mdi:soccer",          label: "Games" },
 ];
 
-// Medal/podium colors — single source of truth (used in SessionPage, RacePage, LeaderboardPage, TVMode)
+// Medal/podium colors
 export const MEDAL_STYLES = [
-  "bg-yellow-400 text-yellow-900",   // gold
-  "bg-slate-300 text-slate-700",     // silver
-  "bg-amber-600 text-amber-100",     // bronze
+  "bg-yellow-400 text-yellow-900",
+  "bg-slate-300 text-slate-700",
+  "bg-amber-600 text-amber-100",
 ] as const;
 
 export function getMedalStyle(rank: number): string | undefined {

@@ -93,6 +93,8 @@ export interface Translations {
   disciplines: Record<string, string>;
   // Categories
   categories: {
+    sprint: string;
+    endurance: string;
     running: string;
     jumping: string;
     throwing: string;
@@ -134,6 +136,9 @@ export interface Translations {
   addAttempt: string;
   unitLabel: string;
   fieldSaveWarning: string;
+  favorites: string;
+  addFavorite: string;
+  removeFavorite: string;
   // Toasts
   sessionCreated: string;
   sessionDeleted: string;
@@ -302,13 +307,25 @@ const de: Translations = {
     run_400: "400m Lauf",
     run_800: "800m Lauf",
     run_1000: "1000m Lauf",
+    run_1500: "1500m Lauf",
+    run_2000: "2000m Lauf",
+    run_3000: "3000m Lauf",
+    run_5000: "5000m Lauf",
+    cooper_test: "Cooper-Test",
+    shuttle_run: "Pendellauf",
     hurdles: "Hürdenlauf",
     relay: "Staffellauf",
     long_jump: "Weitsprung",
     high_jump: "Hochsprung",
+    triple_jump: "Dreisprung",
+    standing_jump: "Standweitsprung",
+    pole_vault: "Stabhochsprung",
     ball_throw: "Ballwurf",
     shot_put: "Kugelstossen",
     sling_ball: "Schlagball",
+    discus: "Diskuswurf",
+    javelin: "Speerwurf",
+    vortex: "Vortexwurf",
     football: "Fussball",
     basketball: "Basketball",
     handball: "Handball",
@@ -317,10 +334,15 @@ const de: Translations = {
     dodgeball: "Völkerball",
     brennball: "Brennball",
     jump_rope: "Seilspringen",
+    capture_flag: "Capture the Flag",
+    tug_of_war: "Seilziehen",
+    obstacle_run: "Hindernislauf",
     custom: "Eigene / Andere",
   },
   // Categories
   categories: {
+    sprint: "Sprint",
+    endurance: "Ausdauer",
     running: "Laufen",
     jumping: "Sprung",
     throwing: "Wurf",
@@ -362,6 +384,9 @@ const de: Translations = {
   addAttempt: "Versuch hinzufügen",
   unitLabel: "Einheit",
   fieldSaveWarning: "Folgende Athleten haben keine gültigen Ergebnisse:",
+  favorites: "Favoriten",
+  addFavorite: "Zu Favoriten",
+  removeFavorite: "Aus Favoriten",
   // Toasts
   sessionCreated: "Session erstellt",
   sessionDeleted: "Session gelöscht",
@@ -530,13 +555,25 @@ const en: Translations = {
     run_400: "400m Run",
     run_800: "800m Run",
     run_1000: "1000m Run",
+    run_1500: "1500m Run",
+    run_2000: "2000m Run",
+    run_3000: "3000m Run",
+    run_5000: "5000m Run",
+    cooper_test: "Cooper Test",
+    shuttle_run: "Shuttle Run",
     hurdles: "Hurdles",
     relay: "Relay",
     long_jump: "Long Jump",
     high_jump: "High Jump",
+    triple_jump: "Triple Jump",
+    standing_jump: "Standing Jump",
+    pole_vault: "Pole Vault",
     ball_throw: "Ball Throw",
     shot_put: "Shot Put",
     sling_ball: "Sling Ball",
+    discus: "Discus",
+    javelin: "Javelin",
+    vortex: "Vortex Throw",
     football: "Football",
     basketball: "Basketball",
     handball: "Handball",
@@ -545,10 +582,15 @@ const en: Translations = {
     dodgeball: "Dodgeball",
     brennball: "Brennball",
     jump_rope: "Jump Rope",
+    capture_flag: "Capture the Flag",
+    tug_of_war: "Tug of War",
+    obstacle_run: "Obstacle Run",
     custom: "Custom / Other",
   },
   // Categories
   categories: {
+    sprint: "Sprint",
+    endurance: "Endurance",
     running: "Running",
     jumping: "Jumping",
     throwing: "Throwing",
@@ -590,6 +632,9 @@ const en: Translations = {
   addAttempt: "Add attempt",
   unitLabel: "Unit",
   fieldSaveWarning: "The following athletes have no valid results:",
+  favorites: "Favorites",
+  addFavorite: "Add to favorites",
+  removeFavorite: "Remove from favorites",
   // Toasts
   sessionCreated: "Session created",
   sessionDeleted: "Session deleted",
