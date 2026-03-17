@@ -208,6 +208,7 @@ export interface Translations {
   notFound: string;
   notFoundDesc: string;
   goHome: string;
+  allRuns: string;
   // Athlete profile
   athleteNotFound: string;
   personalBests: string;
@@ -463,6 +464,7 @@ const de: Translations = {
   notFound: "Seite nicht gefunden",
   notFoundDesc: "Diese Seite existiert leider nicht.",
   goHome: "Zur Startseite",
+  allRuns: "Alle Läufe",
   // Athlete profile
   athleteNotFound: "Athlet nicht gefunden",
   personalBests: "Persönliche Bestleistungen",
@@ -718,6 +720,7 @@ const en: Translations = {
   notFound: "Page not found",
   notFoundDesc: "This page does not exist.",
   goHome: "Go home",
+  allRuns: "All Runs",
   // Athlete profile
   athleteNotFound: "Athlete not found",
   personalBests: "Personal Bests",

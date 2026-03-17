@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useSessionStore } from "@/store/session-store";
 import { DISCIPLINES, getMedalStyle } from "@/lib/constants";
+import { computeLeaderboard } from "@/hooks/useLeaderboard";
 import { formatValue } from "@/lib/utils";
 import { GenderBadge } from "@/components/GenderBadge";
 import { AthleteAvatar } from "@/components/ui/athlete-avatar";
@@ -67,6 +68,7 @@ export default function SessionPage() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerSelection, setPickerSelection] = useState<string[]>([]);
   const [deleteHeatTarget, setDeleteHeatTarget] = useState<string | null>(null);
+  const [resultsView, setResultsView] = useState<"rankings" | "all">("rankings");
 
   if (!session || !id) {
     return (
@@ -84,6 +86,7 @@ export default function SessionPage() {
     setDiscipline(newDiscipline);
     if (newCustomName !== undefined) setCustomDisciplineName(newCustomName);
     setScore({ a: 0, b: 0 });
+    setResultsView("rankings");
   }
 
   function openPicker() {
@@ -239,6 +242,24 @@ export default function SessionPage() {
     ...result,
     rank: ranks[i],
   }));
+
+  // Rankings view: personal best per athlete (for timed/distance modes)
+  const rankingEntries = useMemo(() => {
+    if (!session || mode === "count" || mode === "custom") return [];
+    return computeLeaderboard(session, discipline, allAthletes).entries;
+  }, [session, discipline, allAthletes, mode]);
+
+  // Attempt counts per athlete (shown in rankings view)
+  const attemptCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const r of filteredResults) {
+      counts.set(r.childId, (counts.get(r.childId) ?? 0) + 1);
+    }
+    return counts;
+  }, [filteredResults]);
+
+  // Whether to show the toggle (only when multiple modes are meaningful)
+  const showViewToggle = (mode === "timed" || mode === "distance") && filteredResults.length > 0;
 
   const disciplineDisplayName = discipline === "custom"
     ? (customDisciplineName || t.disciplines.custom)
@@ -473,64 +494,114 @@ export default function SessionPage() {
         {filteredResults.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t.noResults}</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b text-left text-muted-foreground">
-                  <th className="pb-2 pr-4">{t.rankCol}</th>
-                  <th className="pb-2 pr-4">{t.nameCol}</th>
-                  <th className="pb-2 text-right">
-                    {mode === "count" ? t.scoreCol : disciplineDisplayName}
-                  </th>
-                  {mode === "custom" && <th className="pb-2 pl-2 text-right">{t.noteHeader}</th>}
-                  <th className="pb-2 pl-2" />
-                </tr>
-              </thead>
-              <tbody>
-                {rankedResults.map((result, i) => {
-                  const rank = result.rank;
-                  return (
-                    <tr key={`${result.heatId}-${result.childId}`} className={cn("border-b last:border-0", i % 2 === 1 && "bg-muted/30")}>
-                      <td className="py-2 pr-4 font-medium">
-                        {rank == null ? "—" : getMedalStyle(rank) ? (
-                          <span className={cn("inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold", getMedalStyle(rank))}>
-                            {rank}
-                          </span>
-                        ) : (
-                          rank
-                        )}
-                      </td>
-                      <td className="py-2 pr-4">
-                        <span className="inline-flex items-center gap-1.5">
-                          {result.athleteName || "—"}
-                          <AgeGroupBadge yearOfBirth={result.yearOfBirth} />
-                          <GenderBadge gender={result.gender} />
-                        </span>
-                      </td>
-                      <td className="py-2 text-right font-mono">
-                        {rank == null ? "—" : formatValue(result.value, result.unit)}
-                      </td>
-                      {mode === "custom" && (
-                        <td className="py-2 pl-2 text-right text-muted-foreground text-xs max-w-32 truncate">
-                          {result.note ?? ""}
-                        </td>
-                      )}
-                      <td className="py-2 pl-2 text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                          onClick={() => setDeleteHeatTarget(result.heatId)}
-                          aria-label={t.deleteResult}
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </Button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="space-y-3">
+            {/* View toggle */}
+            {showViewToggle && (
+              <div className="inline-flex rounded-lg border p-0.5 bg-muted/50 gap-0.5">
+                {(["rankings", "all"] as const).map((view) => (
+                  <button
+                    key={view}
+                    type="button"
+                    onClick={() => setResultsView(view)}
+                    className={cn(
+                      "rounded-md px-3 py-1 text-xs font-medium transition-colors",
+                      resultsView === view
+                        ? "bg-background shadow-sm text-foreground"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {view === "rankings" ? t.leaderboard : t.allRuns}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-left text-muted-foreground">
+                    <th className="pb-2 pr-4">{t.rankCol}</th>
+                    <th className="pb-2 pr-4">{t.nameCol}</th>
+                    <th className="pb-2 text-right">
+                      {mode === "count" ? t.scoreCol : disciplineDisplayName}
+                    </th>
+                    {mode === "custom" && <th className="pb-2 pl-2 text-right">{t.noteHeader}</th>}
+                    {resultsView === "all" && <th className="pb-2 pl-2" />}
+                  </tr>
+                </thead>
+                <tbody>
+                  {resultsView === "rankings"
+                    ? rankingEntries.map((entry, i) => {
+                        const medalStyle = getMedalStyle(entry.rank);
+                        const attempts = attemptCounts.get(entry.athleteId) ?? 1;
+                        return (
+                          <tr key={entry.athleteId} className={cn("border-b last:border-0", i % 2 === 1 && "bg-muted/30")}>
+                            <td className="py-2 pr-4 font-medium">
+                              {medalStyle ? (
+                                <span className={cn("inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold", medalStyle)}>
+                                  {entry.rank}
+                                </span>
+                              ) : entry.rank}
+                            </td>
+                            <td className="py-2 pr-4">
+                              <span className="inline-flex items-center gap-1.5">
+                                {entry.athlete?.name ?? entry.athleteId}
+                                <AgeGroupBadge yearOfBirth={entry.athlete?.yearOfBirth} />
+                                <GenderBadge gender={entry.athlete?.gender} />
+                                {attempts > 1 && (
+                                  <span className="text-[10px] text-muted-foreground">×{attempts}</span>
+                                )}
+                              </span>
+                            </td>
+                            <td className="py-2 text-right font-mono">
+                              {formatValue(entry.bestValue, disciplineConfig.unit)}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    : rankedResults.map((result, i) => {
+                        const rank = result.rank;
+                        return (
+                          <tr key={`${result.heatId}-${result.childId}-${i}`} className={cn("border-b last:border-0", i % 2 === 1 && "bg-muted/30")}>
+                            <td className="py-2 pr-4 font-medium">
+                              {rank == null ? "—" : getMedalStyle(rank) ? (
+                                <span className={cn("inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold", getMedalStyle(rank))}>
+                                  {rank}
+                                </span>
+                              ) : rank}
+                            </td>
+                            <td className="py-2 pr-4">
+                              <span className="inline-flex items-center gap-1.5">
+                                {result.athleteName || "—"}
+                                <AgeGroupBadge yearOfBirth={result.yearOfBirth} />
+                                <GenderBadge gender={result.gender} />
+                              </span>
+                            </td>
+                            <td className="py-2 text-right font-mono">
+                              {rank == null ? "—" : formatValue(result.value, result.unit)}
+                            </td>
+                            {mode === "custom" && (
+                              <td className="py-2 pl-2 text-right text-muted-foreground text-xs max-w-32 truncate">
+                                {result.note ?? ""}
+                              </td>
+                            )}
+                            <td className="py-2 pl-2 text-right">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                                onClick={() => setDeleteHeatTarget(result.heatId)}
+                                aria-label={t.deleteResult}
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </Button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
