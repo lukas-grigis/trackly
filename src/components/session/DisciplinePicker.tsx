@@ -91,7 +91,7 @@ export default function DisciplinePicker({ value, customName, onChange }: Discip
                     {t.categories[key]}
                   </p>
                   <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
-                    {getDisciplinesByCategory(key).map(([dKey]) => (
+                    {getDisciplinesByCategory(key).filter(([dKey]) => dKey !== "custom").map(([dKey]) => (
                       <Button
                         key={dKey}
                         variant="outline"

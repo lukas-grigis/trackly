@@ -56,13 +56,12 @@ export default function SaveIndicator() {
     );
   }
 
+  // Don't show anything if we haven't saved yet
+  if (!relative) return null;
+
   return (
     <span className="flex items-center text-xs text-muted-foreground">
-      {relative ? (
-        <span>{t.savedAgo.replace("{time}", relative)}</span>
-      ) : (
-        <span>—</span>
-      )}
+      {t.savedAgo.replace("{time}", relative)}
     </span>
   );
 }
