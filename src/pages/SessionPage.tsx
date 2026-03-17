@@ -1,9 +1,12 @@
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useSessionStore } from "@/store/session-store";
-import { DISCIPLINES } from "@/lib/constants";
+import { DISCIPLINES, getMedalStyle } from "@/lib/constants";
 import { formatValue } from "@/lib/utils";
+import { GenderBadge } from "@/components/GenderBadge";
+import { AthleteAvatar } from "@/components/ui/athlete-avatar";
+import { AgeGroupBadge } from "@/components/AgeGroupBadge";
 import { useTranslation } from "@/lib/i18n";
 import { formatLocalDate } from "@/lib/locale";
 import { ROUTES } from "@/routes";
@@ -21,19 +24,26 @@ import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Check, ChevronDown, ChevronRight, Minus, Plus, Timer, Users, X } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Check, ChevronDown, ChevronRight, Minus, Plus, Timer, Trophy, Users, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import DisciplinePicker from "@/components/session/DisciplinePicker";
 
-const MEDAL_COLORS = [
-  "bg-yellow-400 text-yellow-900",   // gold
-  "bg-slate-300 text-slate-700",     // silver
-  "bg-amber-600 text-amber-100",     // bronze
-];
+const CUSTOM_UNITS = ["s", "ms", "cm", "m"] as const;
 
 export default function SessionPage() {
   const { id } = useParams<{ id: string }>();
@@ -41,18 +51,22 @@ export default function SessionPage() {
   const session = useSessionStore((s) => s.sessions.find((sess) => sess.id === id));
   const allAthletes = useSessionStore((s) => s.athletes);
   const setSessionAthletes = useSessionStore((s) => s.setSessionAthletes);
-  const addResult = useSessionStore((s) => s.addResult);
-  const addResults = useSessionStore((s) => s.addResults);
-  const deleteResult = useSessionStore((s) => s.deleteResult);
+  const addHeat = useSessionStore((s) => s.addHeat);
+  const addHeatResult = useSessionStore((s) => s.addHeatResult);
+  const deleteHeat = useSessionStore((s) => s.deleteHeat);
   const { t } = useTranslation();
 
   const [athletesOpen, setAthletesOpen] = useState(true);
   const [discipline, setDiscipline] = useState("sprint_60");
+  const [customDisciplineName, setCustomDisciplineName] = useState("");
   const [selectedChildId, setSelectedChildId] = useState("");
   const [resultValue, setResultValue] = useState("");
+  const [customUnit, setCustomUnit] = useState<typeof CUSTOM_UNITS[number]>("s");
+  const [customNote, setCustomNote] = useState("");
   const [score, setScore] = useState({ a: 0, b: 0 });
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerSelection, setPickerSelection] = useState<string[]>([]);
+  const [deleteHeatTarget, setDeleteHeatTarget] = useState<string | null>(null);
 
   if (!session || !id) {
     return (
@@ -66,8 +80,9 @@ export default function SessionPage() {
   const disciplineConfig = DISCIPLINES[discipline] ?? DISCIPLINES["sprint_60"];
   const mode = disciplineConfig.mode;
 
-  function handleDisciplineChange(newDiscipline: string) {
+  function handleDisciplineChange(newDiscipline: string, newCustomName?: string) {
     setDiscipline(newDiscipline);
+    if (newCustomName !== undefined) setCustomDisciplineName(newCustomName);
     setScore({ a: 0, b: 0 });
   }
 
@@ -93,17 +108,48 @@ export default function SessionPage() {
     if (!selectedChildId || !resultValue || !id) return;
     const value = parseFloat(resultValue);
     if (isNaN(value)) return;
-    const athleteName =
-      allAthletes.find((a) => a.id === selectedChildId)?.name ?? selectedChildId;
-    addResult(id, {
-      athleteName,
-      discipline,
+    const now = new Date().toISOString();
+    const heatId = addHeat(id, {
+      sessionId: id,
+      disciplineType: discipline,
+      participantIds: [selectedChildId],
+      startedAt: now,
+    });
+    addHeatResult(id, heatId, {
+      childId: selectedChildId,
       value,
       unit: disciplineConfig.unit,
-      recordedAt: new Date().toISOString(),
+      recordedAt: now,
     });
     toast.success(t.resultSaved);
     setResultValue("");
+  }
+
+  function handleAddCustomResult() {
+    if (!selectedChildId || !id) return;
+    const numValue = resultValue ? parseFloat(resultValue) : NaN;
+    const hasNumeric = !isNaN(numValue) && resultValue !== "";
+    const hasNote = customNote.trim() !== "";
+    if (!hasNumeric && !hasNote) return;
+
+    const now = new Date().toISOString();
+    const heatId = addHeat(id, {
+      sessionId: id,
+      disciplineType: "custom",
+      customDisciplineName,
+      participantIds: [selectedChildId],
+      startedAt: now,
+    });
+    addHeatResult(id, heatId, {
+      childId: selectedChildId,
+      value: hasNumeric ? numValue : 0,
+      unit: customUnit,
+      note: hasNote ? customNote.trim() : undefined,
+      recordedAt: now,
+    });
+    toast.success(t.resultSaved);
+    setResultValue("");
+    setCustomNote("");
   }
 
   function handleAdjustScore(team: "a" | "b", delta: number) {
@@ -113,28 +159,104 @@ export default function SessionPage() {
   function handleSaveScore() {
     if (!id) return;
     const now = new Date().toISOString();
-    addResults(id, [
-      { athleteName: t.teamA, discipline, value: score.a, unit: "count", recordedAt: now },
-      { athleteName: t.teamB, discipline, value: score.b, unit: "count", recordedAt: now },
-    ]);
+    const teamAId = "team-a";
+    const teamBId = "team-b";
+    const heatId = addHeat(id, {
+      sessionId: id,
+      disciplineType: discipline,
+      participantIds: [teamAId, teamBId],
+      startedAt: now,
+    });
+    addHeatResult(id, heatId, { childId: teamAId, value: score.a, unit: "count", recordedAt: now });
+    addHeatResult(id, heatId, { childId: teamBId, value: score.b, unit: "count", recordedAt: now });
     toast.success(t.resultsSaved);
     setScore({ a: 0, b: 0 });
   }
 
-  const filteredResults = session.results
-    .filter((r) => r.discipline === discipline)
-    .sort((a, b) =>
-      disciplineConfig.sortAscending ? a.value - b.value : b.value - a.value,
-    );
+  const filteredHeats = session.heats
+    .filter((h) => {
+      if (discipline === "custom") {
+        return h.disciplineType === "custom" &&
+          (h.customDisciplineName ?? "").toLowerCase() === customDisciplineName.toLowerCase();
+      }
+      return h.disciplineType === discipline;
+    })
+    .sort((a, b) => a.startedAt.localeCompare(b.startedAt) || a.id.localeCompare(b.id));
+
+  const filteredResults = filteredHeats.flatMap((h) =>
+    h.results.map((r) => {
+      const athlete = allAthletes.find((a) => a.id === r.childId);
+      return {
+        heatId: h.id,
+        childId: r.childId,
+        athleteName: athlete?.name ?? r.childId,
+        yearOfBirth: athlete?.yearOfBirth,
+        gender: athlete?.gender,
+        value: r.value,
+        unit: r.unit,
+        note: r.note,
+        recordedAt: r.recordedAt,
+      };
+    }),
+  ).sort((a, b) => {
+    // Note-only results (value 0 with a note) go to the end
+    const aIsNoteOnly = a.value === 0 && a.note;
+    const bIsNoteOnly = b.value === 0 && b.note;
+    if (aIsNoteOnly && !bIsNoteOnly) return 1;
+    if (!aIsNoteOnly && bIsNoteOnly) return -1;
+    return disciplineConfig.sortAscending ? a.value - b.value : b.value - a.value;
+  });
+
+  // For custom disciplines, show the custom name as column header
+  // Compute competition ranking (1,1,3 for ties)
+  const ranks: (number | null)[] = [];
+  for (let i = 0; i < filteredResults.length; i++) {
+    const result = filteredResults[i];
+    const isNoteOnly = result.value === 0 && result.note;
+    if (isNoteOnly) {
+      ranks.push(null);
+      continue;
+    }
+    // Count non-note results before this one
+    let pos = 0;
+    for (let j = 0; j < i; j++) {
+      const r = filteredResults[j];
+      if (!(r.value === 0 && r.note)) pos++;
+    }
+    // Check if previous non-note result has same value (tie)
+    if (i > 0) {
+      const prev = filteredResults[i - 1];
+      const prevIsNoteOnly = prev.value === 0 && prev.note;
+      if (!prevIsNoteOnly && prev.value === result.value) {
+        ranks.push(ranks[i - 1]);
+        continue;
+      }
+    }
+    ranks.push(pos + 1);
+  }
+  const rankedResults = filteredResults.map((result, i) => ({
+    ...result,
+    rank: ranks[i],
+  }));
+
+  const disciplineDisplayName = discipline === "custom"
+    ? (customDisciplineName || t.disciplines.custom)
+    : (t.disciplines[discipline] ?? discipline);
 
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold">{session.name}</h1>
-        <span className="inline-block mt-1 rounded-full bg-secondary px-3 py-0.5 text-xs font-medium text-secondary-foreground">
-          {formatLocalDate(session.date)}
-        </span>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">{session.name}</h1>
+          <span className="inline-block mt-1 rounded-full bg-secondary px-3 py-0.5 text-xs font-medium text-secondary-foreground">
+            {formatLocalDate(session.date)}
+          </span>
+        </div>
+        <Button variant="outline" size="sm" className="gap-1.5" render={<Link to={ROUTES.LEADERBOARD(id)} />}>
+          <Trophy className="h-4 w-4" />
+          {t.leaderboard}
+        </Button>
       </div>
 
       {/* ── Collapsible athletes panel ── */}
@@ -174,13 +296,10 @@ export default function SessionPage() {
                     key={athlete.id}
                     className="inline-flex items-center gap-1.5 rounded-full border bg-card px-3 py-1 text-sm font-medium"
                   >
-                    <span className="h-2 w-2 rounded-full bg-primary" />
+                    <AthleteAvatar name={athlete.name} avatarBase64={athlete.avatarBase64} size="sm" className="h-5 w-5 text-[8px]" />
                     {athlete.name}
-                    {athlete.yearOfBirth && (
-                      <span className="text-xs text-muted-foreground">
-                        {athlete.yearOfBirth}
-                      </span>
-                    )}
+                    <AgeGroupBadge yearOfBirth={athlete.yearOfBirth} />
+                    <GenderBadge gender={athlete.gender} />
                   </span>
                 ))}
               </div>
@@ -193,12 +312,16 @@ export default function SessionPage() {
       <div className="space-y-4">
         <div className="space-y-2">
           <Label>{t.disciplineLabel}</Label>
-          <DisciplinePicker value={discipline} onChange={handleDisciplineChange} />
+          <DisciplinePicker
+            value={discipline}
+            customName={customDisciplineName}
+            onChange={handleDisciplineChange}
+          />
         </div>
 
         {mode === "timed" && (
           <Button
-            className="w-full h-14 text-base gap-2"
+            className="w-full h-14 text-base gap-2 rounded-xl btn-shimmer"
             onClick={() => navigate(ROUTES.RACE(id, discipline))}
             disabled={sessionAthletes.length === 0}
           >
@@ -235,6 +358,63 @@ export default function SessionPage() {
               />
               <Button onClick={handleAddResult}>{t.save}</Button>
             </div>
+          </div>
+        )}
+
+        {mode === "custom" && (
+          <div className="space-y-3">
+            <Label>{t.enterResult} — {disciplineDisplayName}</Label>
+            <div className="flex gap-2">
+              <Select
+                value={selectedChildId}
+                onValueChange={(v) => { if (v) setSelectedChildId(v); }}
+              >
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder={t.chooseChild} />
+                </SelectTrigger>
+                <SelectContent>
+                  {sessionAthletes.map((a) => (
+                    <SelectItem key={a.id} value={a.id}>
+                      {a.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Input
+                type="number"
+                placeholder={t.unitValue}
+                value={resultValue}
+                onChange={(e) => setResultValue(e.target.value)}
+                className="w-24"
+              />
+              <Select
+                value={customUnit}
+                onValueChange={(v) => setCustomUnit(v as typeof CUSTOM_UNITS[number])}
+              >
+                <SelectTrigger className="w-20">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CUSTOM_UNITS.map((u) => (
+                    <SelectItem key={u} value={u}>
+                      {t.units[u]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Input
+              placeholder={t.notePlaceholder}
+              value={customNote}
+              onChange={(e) => setCustomNote(e.target.value)}
+            />
+            <Button
+              className="w-full"
+              onClick={handleAddCustomResult}
+              disabled={!selectedChildId || (!resultValue && !customNote.trim())}
+            >
+              {t.save}
+            </Button>
           </div>
         )}
 
@@ -297,50 +477,97 @@ export default function SessionPage() {
                   <th className="pb-2 pr-4">{t.rankCol}</th>
                   <th className="pb-2 pr-4">{t.nameCol}</th>
                   <th className="pb-2 text-right">
-                    {mode === "count" ? t.scoreCol : t.resultsTab}
+                    {mode === "count" ? t.scoreCol : disciplineDisplayName}
                   </th>
+                  {mode === "custom" && <th className="pb-2 pl-2 text-right">{t.noteHeader}</th>}
                   <th className="pb-2 pl-2" />
                 </tr>
               </thead>
               <tbody>
-                {filteredResults.map((result, i) => (
-                  <tr key={result.id} className={cn("border-b last:border-0", i % 2 === 1 && "bg-muted/30")}>
-                    <td className="py-2 pr-4 font-medium">
-                      {i < 3 ? (
-                        <span className={cn("inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold", MEDAL_COLORS[i])}>
-                          {i + 1}
+                {rankedResults.map((result, i) => {
+                  const rank = result.rank;
+                  return (
+                    <tr key={`${result.heatId}-${result.childId}`} className={cn("border-b last:border-0", i % 2 === 1 && "bg-muted/30")}>
+                      <td className="py-2 pr-4 font-medium">
+                        {rank == null ? "—" : getMedalStyle(rank) ? (
+                          <span className={cn("inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold", getMedalStyle(rank))}>
+                            {rank}
+                          </span>
+                        ) : (
+                          rank
+                        )}
+                      </td>
+                      <td className="py-2 pr-4">
+                        <span className="inline-flex items-center gap-1.5">
+                          {result.athleteName || "—"}
+                          <AgeGroupBadge yearOfBirth={result.yearOfBirth} />
+                          <GenderBadge gender={result.gender} />
                         </span>
-                      ) : (
-                        i + 1
+                      </td>
+                      <td className="py-2 text-right font-mono">
+                        {rank == null ? "—" : formatValue(result.value, result.unit)}
+                      </td>
+                      {mode === "custom" && (
+                        <td className="py-2 pl-2 text-right text-muted-foreground text-xs max-w-32 truncate">
+                          {result.note ?? ""}
+                        </td>
                       )}
-                    </td>
-                    <td className="py-2 pr-4">{result.athleteName || "—"}</td>
-                    <td className="py-2 text-right font-mono">
-                      {formatValue(result.value, result.unit)}
-                    </td>
-                    <td className="py-2 pl-2 text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                        onClick={() => deleteResult(id, result.id)}
-                        aria-label={t.deleteResult}
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
+                      <td className="py-2 pl-2 text-right">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                          onClick={() => setDeleteHeatTarget(result.heatId)}
+                          aria-label={t.deleteResult}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
       </div>
 
+      {/* Delete result confirmation */}
+      <AlertDialog
+        open={deleteHeatTarget !== null}
+        onOpenChange={(open) => !open && setDeleteHeatTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t.deleteResult}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t.deleteResultDesc}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (deleteHeatTarget) {
+                  deleteHeat(id, deleteHeatTarget);
+                  setDeleteHeatTarget(null);
+                }
+              }}
+            >
+              {t.deleteResult}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Athlete picker dialog */}
       <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
+            <DialogDescription className="sr-only">
+              {t.selectAthletes}
+            </DialogDescription>
             <div className="flex items-center justify-between pr-6">
               <DialogTitle>{t.selectAthletes}</DialogTitle>
               {allAthletes.length > 0 && (
@@ -368,7 +595,6 @@ export default function SessionPage() {
             <div className="flex flex-col gap-1.5 py-1 max-h-72 overflow-y-auto">
               {allAthletes.map((athlete) => {
                 const selected = pickerSelection.includes(athlete.id);
-                const initial = athlete.name.trim().charAt(0).toUpperCase();
                 return (
                   <button
                     key={athlete.id}
@@ -380,16 +606,15 @@ export default function SessionPage() {
                         : "border-border bg-card hover:bg-muted/50",
                     )}
                   >
-                    <span
+                    <AthleteAvatar
+                      name={athlete.name}
+                      avatarBase64={athlete.avatarBase64}
                       className={cn(
-                        "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold",
-                        selected
+                        !athlete.avatarBase64 && (selected
                           ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground",
+                          : "bg-muted text-muted-foreground"),
                       )}
-                    >
-                      {initial}
-                    </span>
+                    />
                     <span className="flex-1">
                       <span className={cn("block text-sm font-medium", selected && "text-primary")}>
                         {athlete.name}

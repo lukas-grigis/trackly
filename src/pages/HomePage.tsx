@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { useSessionStore } from "@/store/session-store";
 import type { Session } from "@/store/session-store";
 import { formatValue, escapeCsvField } from "@/lib/utils";
+import { exportSessionPdf } from "@/lib/pdfExport";
 import { useTranslation } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -25,20 +27,27 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Plus, Download, Trash2, ClipboardList } from "lucide-react";
+import { Plus, Download, FileText, Trash2, ClipboardList, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 import SessionCard from "@/components/session/SessionCard";
 
-function exportSessionCsv(session: Session, disciplineLabel: (key: string) => string) {
+function exportSessionCsv(
+  session: Session,
+  disciplineLabel: (key: string) => string,
+  athleteName: (id: string) => string,
+) {
   const rows = [
     ["Athlete", "Discipline", "Value", "Unit", "Date"].map(escapeCsvField),
-    ...session.results.map((r) =>
-      [
-        r.athleteName || "—",
-        disciplineLabel(r.discipline),
-        formatValue(r.value, r.unit),
-        r.unit,
-        r.recordedAt,
-      ].map(escapeCsvField),
+    ...session.heats.flatMap((h) =>
+      h.results.map((r) =>
+        [
+          athleteName(r.childId),
+          disciplineLabel(h.disciplineType),
+          formatValue(r.value, r.unit),
+          r.unit,
+          r.recordedAt,
+        ].map(escapeCsvField),
+      ),
     ),
   ];
   const csv = rows.map((row) => row.join(",")).join("\n");
@@ -52,7 +61,12 @@ function exportSessionCsv(session: Session, disciplineLabel: (key: string) => st
 }
 
 export default function HomePage() {
-  const sessions = useSessionStore((s) => s.sessions);
+  const rawSessions = useSessionStore((s) => s.sessions);
+  const sessions = useMemo(
+    () => [...rawSessions].sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id)),
+    [rawSessions],
+  );
+  const allAthletes = useSessionStore((s) => s.athletes);
   const addSession = useSessionStore((s) => s.addSession);
   const deleteSession = useSessionStore((s) => s.deleteSession);
   const clearAllData = useSessionStore((s) => s.clearAllData);
@@ -61,13 +75,27 @@ export default function HomePage() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [selectedAthleteIds, setSelectedAthleteIds] = useState<string[]>([]);
+
+  function handleOpenCreate() {
+    // Pre-select all athletes by default (presence = everyone unless unchecked)
+    setSelectedAthleteIds(allAthletes.map((a) => a.id));
+    setOpen(true);
+  }
+
+  function toggleAthlete(id: string) {
+    setSelectedAthleteIds((prev) =>
+      prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id],
+    );
+  }
 
   function handleCreate() {
     if (!name.trim()) return;
-    addSession(name.trim(), date);
+    addSession(name.trim(), date, selectedAthleteIds);
     toast.success(t.sessionCreated);
     setName("");
     setDate(new Date().toISOString().slice(0, 10));
+    setSelectedAthleteIds([]);
     setOpen(false);
   }
 
@@ -82,14 +110,17 @@ export default function HomePage() {
         <h1 className="text-3xl font-bold heading-tight">{t.sessions}</h1>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button onClick={handleOpenCreate}>
               <Plus className="mr-2 h-4 w-4" />
               {t.newSession}
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-sm sm:max-w-md">
             <DialogHeader>
               <DialogTitle>{t.newSession}</DialogTitle>
+              <DialogDescription className="sr-only">
+                {t.createSession}
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 pt-2">
               <div className="space-y-2">
@@ -111,6 +142,55 @@ export default function HomePage() {
                   onChange={(e) => setDate(e.target.value)}
                 />
               </div>
+
+              {/* Athlete presence check */}
+              {allAthletes.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>{t.presenceLabel}</Label>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedAthleteIds(
+                          selectedAthleteIds.length === allAthletes.length
+                            ? []
+                            : allAthletes.map((a) => a.id),
+                        )
+                      }
+                      className="text-xs font-medium text-primary hover:underline"
+                    >
+                      {selectedAthleteIds.length === allAthletes.length
+                        ? t.deselectAll
+                        : t.selectAll}
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto">
+                    {allAthletes.map((athlete) => {
+                      const selected = selectedAthleteIds.includes(athlete.id);
+                      return (
+                        <button
+                          key={athlete.id}
+                          type="button"
+                          onClick={() => toggleAthlete(athlete.id)}
+                          className={cn(
+                            "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
+                            selected
+                              ? "border-primary bg-primary/10 text-primary"
+                              : "border-border text-muted-foreground hover:border-foreground hover:text-foreground",
+                          )}
+                        >
+                          {athlete.name}
+                          {selected && <Check className="h-3 w-3" strokeWidth={3} />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {selectedAthleteIds.length} / {allAthletes.length}
+                  </p>
+                </div>
+              )}
+
               <Button className="w-full" onClick={handleCreate}>
                 {t.createSession}
               </Button>
@@ -128,7 +208,7 @@ export default function HomePage() {
           <p className="text-muted-foreground max-w-xs">{t.noSessions}</p>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline">
+              <Button variant="outline" onClick={handleOpenCreate}>
                 <Plus className="mr-2 h-4 w-4" />
                 {t.newSession}
               </Button>
@@ -136,26 +216,54 @@ export default function HomePage() {
           </Dialog>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {sessions.map((session) => (
             <div key={session.id} className="relative animate-card-enter">
               <SessionCard session={session} onDelete={handleDelete} />
-              {session.results.length > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-2 bottom-2 text-muted-foreground"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    exportSessionCsv(session, (key) => t.disciplines[key] ?? key);
-                    toast.success(t.csvExported);
-                  }}
-                  aria-label={t.exportCsv}
-                >
-                  <Download className="h-3.5 w-3.5 mr-1" />
-                  {t.exportCsv}
-                </Button>
-              )}
+              <div className="absolute right-2 bottom-2 flex gap-1">
+                {session.athleteIds.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-muted-foreground"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      exportSessionPdf(
+                        session,
+                        allAthletes,
+                        (key) => t.disciplines[key] ?? key,
+                        t,
+                      );
+                      toast.success(t.pdfExported);
+                    }}
+                    aria-label={t.exportPdf}
+                  >
+                    <FileText className="h-3.5 w-3.5 mr-1" />
+                    {t.exportPdf}
+                  </Button>
+                )}
+                {session.heats.some((h) => h.results.length > 0) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-muted-foreground"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      exportSessionCsv(
+                        session,
+                        (key) => t.disciplines[key] ?? key,
+                        (id) =>
+                          allAthletes.find((a) => a.id === id)?.name ?? id,
+                      );
+                      toast.success(t.csvExported);
+                    }}
+                    aria-label={t.exportCsv}
+                  >
+                    <Download className="h-3.5 w-3.5 mr-1" />
+                    {t.exportCsv}
+                  </Button>
+                )}
+              </div>
             </div>
           ))}
         </div>

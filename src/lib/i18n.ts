@@ -24,6 +24,13 @@ export interface Translations {
   deleteEverything: string;
   cancel: string;
   exportCsv: string;
+  exportPdf: string;
+  // PDF table headers
+  pdfRank: string;
+  pdfName: string;
+  pdfAgeGroup: string;
+  pdfResult: string;
+  pdfHeat: string;
   // Session card
   athletes: string;
   results: string;
@@ -55,6 +62,7 @@ export interface Translations {
   noAthletesForCounting: string;
   enterTimeManually: string;
   deleteResult: string;
+  deleteResultDesc: string;
   teamA: string;
   teamB: string;
   saveScore: string;
@@ -65,6 +73,7 @@ export interface Translations {
   athleteRemoved: string;
   athleteUpdated: string;
   selectAthletes: string;
+  presenceLabel: string;
   noAthletesInSession: string;
   selectAll: string;
   deselectAll: string;
@@ -85,11 +94,52 @@ export interface Translations {
   disciplines: Record<string, string>;
   // Categories
   categories: {
+    sprint: string;
+    endurance: string;
     running: string;
     jumping: string;
     throwing: string;
     games: string;
   };
+  // Custom discipline
+  customDisciplinePlaceholder: string;
+  unitValue: string;
+  notePlaceholder: string;
+  noteHeader: string;
+  units: {
+    s: string;
+    ms: string;
+    cm: string;
+    m: string;
+  };
+  // Avatar
+  addPhoto: string;
+  changePhoto: string;
+  removePhoto: string;
+  photoStorageFailed: string;
+  // Gender
+  genderLabels: {
+    male: string;
+    female: string;
+    nonbinary: string;
+  };
+  // Countdown
+  countdownLabel: string;
+  countdownNone: string;
+  countdownGo: string;
+  countdownPaused: string;
+  countdownTapResume: string;
+  // Field entry
+  fieldEntry: string;
+  foul: string;
+  undoFoul: string;
+  best: string;
+  addAttempt: string;
+  unitLabel: string;
+  fieldSaveWarning: string;
+  favorites: string;
+  addFavorite: string;
+  removeFavorite: string;
   // Toasts
   sessionCreated: string;
   sessionDeleted: string;
@@ -99,7 +149,61 @@ export interface Translations {
   resultSaved: string;
   resultsSaved: string;
   csvExported: string;
+  pdfExported: string;
   allDataCleared: string;
+  // Leaderboard
+  leaderboard: string;
+  leaderboardDiscipline: string;
+  leaderboardBest: string;
+  leaderboardNoResults: string;
+  leaderboardNoDisciplineResults: string;
+  leaderboardNoFilterResults: string;
+  leaderboardAgeGroupFilter: string;
+  leaderboardAllAgeGroups: string;
+  leaderboardHeatFilter: string;
+  leaderboardAllHeats: string;
+  leaderboardHeatLabel: string;
+  // Save indicator
+  savedAgo: string;
+  saveError: string;
+  autoSaveTooltip: string;
+  // TV Mode
+  tvToggle: string;
+  tvWaiting: string;
+  tvExitHint: string;
+  // Landing page
+  landingHero: string;
+  landingHeroSub: string;
+  landingOpenApp: string;
+  landingHowTitle: string;
+  landingStep1: string;
+  landingStep2: string;
+  landingStep3: string;
+  landingFeaturesTitle: string;
+  landingFeatureFree: string;
+  landingFeatureOffline: string;
+  landingFeatureNoAccount: string;
+  landingFeatureOpenSource: string;
+  landingFeatureExport: string;
+  landingFeatureLeaderboard: string;
+  landingWhoTitle: string;
+  landingWhoDesc: string;
+  landingViewGithub: string;
+  landingOpenSourceBadge: string;
+  landingFooterPrivacy: string;
+  // How-to guide
+  howToTitle: string;
+  howToSubtitle: string;
+  howToStep1Title: string;
+  howToStep1Desc: string;
+  howToStep2Title: string;
+  howToStep2Desc: string;
+  howToStep3Title: string;
+  howToStep3Desc: string;
+  howToStep4Title: string;
+  howToStep4Desc: string;
+  howToStep5Title: string;
+  howToStep5Desc: string;
   // 404
   notFound: string;
   notFoundDesc: string;
@@ -128,6 +232,12 @@ const de: Translations = {
   deleteEverything: "Alles löschen",
   cancel: "Abbrechen",
   exportCsv: "CSV",
+  exportPdf: "PDF",
+  pdfRank: "Rang",
+  pdfName: "Name",
+  pdfAgeGroup: "Altersklasse",
+  pdfResult: "Ergebnis",
+  pdfHeat: "Lauf",
   // Session card
   athletes: "Athleten",
   results: "Ergebnisse",
@@ -160,6 +270,7 @@ const de: Translations = {
   noAthletesForCounting: "Füge zuerst Athleten zur Session hinzu.",
   enterTimeManually: "Zeit manuell eintragen",
   deleteResult: "Ergebnis löschen",
+  deleteResultDesc: "Dieses Ergebnis wird unwiderruflich gelöscht.",
   teamA: "Team A",
   teamB: "Team B",
   saveScore: "Ergebnis speichern",
@@ -170,6 +281,7 @@ const de: Translations = {
   athleteRemoved: "Athlet entfernt",
   athleteUpdated: "Athlet aktualisiert",
   selectAthletes: "Athleten für Session wählen",
+  presenceLabel: "Wer ist dabei?",
   noAthletesInSession: "Keine Athleten ausgewählt. Wähle Athleten aus der globalen Liste.",
   selectAll: "Alle auswählen",
   deselectAll: "Alle abwählen",
@@ -197,13 +309,25 @@ const de: Translations = {
     run_400: "400m Lauf",
     run_800: "800m Lauf",
     run_1000: "1000m Lauf",
+    run_1500: "1500m Lauf",
+    run_2000: "2000m Lauf",
+    run_3000: "3000m Lauf",
+    run_5000: "5000m Lauf",
+    cooper_test: "Cooper-Test",
+    shuttle_run: "Pendellauf",
     hurdles: "Hürdenlauf",
     relay: "Staffellauf",
     long_jump: "Weitsprung",
     high_jump: "Hochsprung",
+    triple_jump: "Dreisprung",
+    standing_jump: "Standweitsprung",
+    pole_vault: "Stabhochsprung",
     ball_throw: "Ballwurf",
     shot_put: "Kugelstossen",
     sling_ball: "Schlagball",
+    discus: "Diskuswurf",
+    javelin: "Speerwurf",
+    vortex: "Vortexwurf",
     football: "Fussball",
     basketball: "Basketball",
     handball: "Handball",
@@ -212,14 +336,59 @@ const de: Translations = {
     dodgeball: "Völkerball",
     brennball: "Brennball",
     jump_rope: "Seilspringen",
+    capture_flag: "Capture the Flag",
+    tug_of_war: "Seilziehen",
+    obstacle_run: "Hindernislauf",
+    custom: "Eigene / Andere",
   },
   // Categories
   categories: {
+    sprint: "Sprint",
+    endurance: "Ausdauer",
     running: "Laufen",
     jumping: "Sprung",
     throwing: "Wurf",
     games: "Spiele",
   },
+  // Custom discipline
+  customDisciplinePlaceholder: "Disziplinname eingeben",
+  unitValue: "Wert",
+  notePlaceholder: "Optionale Notiz",
+  noteHeader: "Notiz",
+  units: {
+    s: "s",
+    ms: "ms",
+    cm: "cm",
+    m: "m",
+  },
+  // Avatar
+  addPhoto: "Foto hinzufügen",
+  changePhoto: "Foto ändern",
+  removePhoto: "Foto entfernen",
+  photoStorageFailed: "Foto konnte nicht gespeichert werden (Speicher voll?).",
+  // Gender
+  genderLabels: {
+    male: "Männlich",
+    female: "Weiblich",
+    nonbinary: "Non-binär",
+  },
+  // Countdown
+  countdownLabel: "Countdown",
+  countdownNone: "Ohne",
+  countdownGo: "Los!",
+  countdownPaused: "Pausiert",
+  countdownTapResume: "Tippen zum Fortsetzen",
+  // Field entry
+  fieldEntry: "Ergebnisse eintragen",
+  foul: "Fehlversuch",
+  undoFoul: "Rückgängig",
+  best: "Beste",
+  addAttempt: "Versuch hinzufügen",
+  unitLabel: "Einheit",
+  fieldSaveWarning: "Folgende Athleten haben keine gültigen Ergebnisse:",
+  favorites: "Favoriten",
+  addFavorite: "Zu Favoriten",
+  removeFavorite: "Aus Favoriten",
   // Toasts
   sessionCreated: "Session erstellt",
   sessionDeleted: "Session gelöscht",
@@ -229,7 +398,61 @@ const de: Translations = {
   resultSaved: "Ergebnis gespeichert",
   resultsSaved: "Ergebnisse gespeichert",
   csvExported: "CSV exportiert",
+  pdfExported: "PDF exportiert",
   allDataCleared: "Alle Daten gelöscht",
+  // Leaderboard
+  leaderboard: "Rangliste",
+  leaderboardDiscipline: "Disziplin wählen",
+  leaderboardBest: "Bestleistung",
+  leaderboardNoResults: "Noch keine Ergebnisse in dieser Session.",
+  leaderboardNoDisciplineResults: "Keine Ergebnisse für diese Disziplin.",
+  leaderboardNoFilterResults: "Keine Athleten für die gewählten Filter.",
+  leaderboardAgeGroupFilter: "Altersklasse",
+  leaderboardAllAgeGroups: "Alle Altersklassen",
+  leaderboardHeatFilter: "Lauf",
+  leaderboardAllHeats: "Alle Läufe",
+  leaderboardHeatLabel: "Lauf",
+  // Save indicator
+  savedAgo: "Gespeichert vor {time}",
+  saveError: "Speichern fehlgeschlagen",
+  autoSaveTooltip: "Deine Daten werden automatisch auf diesem Gerät gespeichert. Du musst nichts manuell speichern.",
+  // TV Mode
+  tvToggle: "TV-Modus",
+  tvWaiting: "Warten auf Ergebnisse…",
+  tvExitHint: "Tippen zum Beenden",
+  // Landing page
+  landingHero: "Zeitmessung für Athleten. Einfach.",
+  landingHeroSub: "Stoppuhr, Rangliste und Export — alles in einer App. Kostenlos und offline.",
+  landingOpenApp: "App öffnen",
+  landingHowTitle: "So funktioniert's",
+  landingStep1: "Session erstellen",
+  landingStep2: "Athleten hinzufügen",
+  landingStep3: "Tippen zum Stoppen",
+  landingFeaturesTitle: "Was Trackly bietet",
+  landingFeatureFree: "Komplett kostenlos",
+  landingFeatureOffline: "Funktioniert offline",
+  landingFeatureNoAccount: "Kein Konto nötig",
+  landingFeatureOpenSource: "Open Source",
+  landingFeatureExport: "PDF & CSV Export",
+  landingFeatureLeaderboard: "Rangliste",
+  landingWhoTitle: "Für alle, die Athleten stoppen",
+  landingWhoDesc: "Ob Leichtathletikverein, Schulsporttag, Trainingslager oder Eltern am Sportfest — Trackly passt überall hin.",
+  landingViewGithub: "Auf GitHub ansehen",
+  landingOpenSourceBadge: "Open Source",
+  landingFooterPrivacy: "Kein Tracking · Kein Konto nötig · Deine Daten bleiben auf deinem Gerät",
+  // How-to guide
+  howToTitle: "Schnellstart",
+  howToSubtitle: "In 5 Schritten zur ersten Zeitmessung.",
+  howToStep1Title: "Session erstellen",
+  howToStep1Desc: "Tippe auf «Neue Session» und gib einen Namen und ein Datum ein. Eine Session fasst alle Läufe und Ergebnisse eines Anlasses zusammen.",
+  howToStep2Title: "Athleten hinzufügen",
+  howToStep2Desc: "Füge Athleten mit Name hinzu. Jahrgang, Geschlecht und Foto sind optional, helfen aber bei Ranglisten und Export.",
+  howToStep3Title: "Lauf starten",
+  howToStep3Desc: "Wähle eine Disziplin, wähle die Athleten aus und starte den Countdown. Tippe auf einen Namen, sobald die Person im Ziel ist.",
+  howToStep4Title: "Rangliste & TV-Modus",
+  howToStep4Desc: "Öffne die Rangliste, um Bestleistungen pro Disziplin zu sehen. Im TV-Modus wird die Rangliste grossformatig für Zuschauer angezeigt.",
+  howToStep5Title: "Ergebnisse exportieren",
+  howToStep5Desc: "Exportiere die Ergebnisse als PDF oder CSV. Der Export enthält Rang, Name, Altersklasse und Ergebnis pro Disziplin.",
   // 404
   notFound: "Seite nicht gefunden",
   notFoundDesc: "Diese Seite existiert leider nicht.",
@@ -258,6 +481,12 @@ const en: Translations = {
   deleteEverything: "Delete Everything",
   cancel: "Cancel",
   exportCsv: "CSV",
+  exportPdf: "PDF",
+  pdfRank: "Rank",
+  pdfName: "Name",
+  pdfAgeGroup: "Age group",
+  pdfResult: "Result",
+  pdfHeat: "Heat",
   // Session card
   athletes: "Athletes",
   results: "Results",
@@ -290,6 +519,7 @@ const en: Translations = {
   noAthletesForCounting: "Add athletes to the session first.",
   enterTimeManually: "Enter time manually",
   deleteResult: "Delete result",
+  deleteResultDesc: "This result will be permanently deleted.",
   teamA: "Team A",
   teamB: "Team B",
   saveScore: "Save score",
@@ -300,6 +530,7 @@ const en: Translations = {
   athleteRemoved: "Athlete removed",
   athleteUpdated: "Athlete updated",
   selectAthletes: "Select athletes for session",
+  presenceLabel: "Who's here?",
   noAthletesInSession: "No athletes selected. Pick athletes from the global roster.",
   selectAll: "Select all",
   deselectAll: "Deselect all",
@@ -327,13 +558,25 @@ const en: Translations = {
     run_400: "400m Run",
     run_800: "800m Run",
     run_1000: "1000m Run",
+    run_1500: "1500m Run",
+    run_2000: "2000m Run",
+    run_3000: "3000m Run",
+    run_5000: "5000m Run",
+    cooper_test: "Cooper Test",
+    shuttle_run: "Shuttle Run",
     hurdles: "Hurdles",
     relay: "Relay",
     long_jump: "Long Jump",
     high_jump: "High Jump",
+    triple_jump: "Triple Jump",
+    standing_jump: "Standing Jump",
+    pole_vault: "Pole Vault",
     ball_throw: "Ball Throw",
     shot_put: "Shot Put",
     sling_ball: "Sling Ball",
+    discus: "Discus",
+    javelin: "Javelin",
+    vortex: "Vortex Throw",
     football: "Football",
     basketball: "Basketball",
     handball: "Handball",
@@ -342,14 +585,59 @@ const en: Translations = {
     dodgeball: "Dodgeball",
     brennball: "Brennball",
     jump_rope: "Jump Rope",
+    capture_flag: "Capture the Flag",
+    tug_of_war: "Tug of War",
+    obstacle_run: "Obstacle Run",
+    custom: "Custom / Other",
   },
   // Categories
   categories: {
+    sprint: "Sprint",
+    endurance: "Endurance",
     running: "Running",
     jumping: "Jumping",
     throwing: "Throwing",
     games: "Games",
   },
+  // Custom discipline
+  customDisciplinePlaceholder: "Enter discipline name",
+  unitValue: "Value",
+  notePlaceholder: "Optional note",
+  noteHeader: "Note",
+  units: {
+    s: "s",
+    ms: "ms",
+    cm: "cm",
+    m: "m",
+  },
+  // Avatar
+  addPhoto: "Add photo",
+  changePhoto: "Change photo",
+  removePhoto: "Remove photo",
+  photoStorageFailed: "Photo could not be saved (storage full?).",
+  // Gender
+  genderLabels: {
+    male: "Male",
+    female: "Female",
+    nonbinary: "Non-binary",
+  },
+  // Countdown
+  countdownLabel: "Countdown",
+  countdownNone: "None",
+  countdownGo: "Go!",
+  countdownPaused: "Paused",
+  countdownTapResume: "Tap to resume",
+  // Field entry
+  fieldEntry: "Enter results",
+  foul: "Foul",
+  undoFoul: "Undo",
+  best: "Best",
+  addAttempt: "Add attempt",
+  unitLabel: "Unit",
+  fieldSaveWarning: "The following athletes have no valid results:",
+  favorites: "Favorites",
+  addFavorite: "Add to favorites",
+  removeFavorite: "Remove from favorites",
   // Toasts
   sessionCreated: "Session created",
   sessionDeleted: "Session deleted",
@@ -359,7 +647,61 @@ const en: Translations = {
   resultSaved: "Result saved",
   resultsSaved: "Results saved",
   csvExported: "CSV exported",
+  pdfExported: "PDF exported",
   allDataCleared: "All data cleared",
+  // Leaderboard
+  leaderboard: "Leaderboard",
+  leaderboardDiscipline: "Select discipline",
+  leaderboardBest: "Personal best",
+  leaderboardNoResults: "No results in this session yet.",
+  leaderboardNoDisciplineResults: "No results for this discipline.",
+  leaderboardNoFilterResults: "No athletes match the selected filters.",
+  leaderboardAgeGroupFilter: "Age group",
+  leaderboardAllAgeGroups: "All age groups",
+  leaderboardHeatFilter: "Heat",
+  leaderboardAllHeats: "All heats",
+  leaderboardHeatLabel: "Heat",
+  // Save indicator
+  savedAgo: "Saved {time} ago",
+  saveError: "Save failed",
+  autoSaveTooltip: "Your data is automatically saved on this device. No need to save manually.",
+  // TV Mode
+  tvToggle: "TV Mode",
+  tvWaiting: "Waiting for results…",
+  tvExitHint: "Tap anywhere to exit",
+  // Landing page
+  landingHero: "Time athletes. Dead simple.",
+  landingHeroSub: "Stopwatch, leaderboard, and export — all in one app. Free and offline.",
+  landingOpenApp: "Open App",
+  landingHowTitle: "How it works",
+  landingStep1: "Create a session",
+  landingStep2: "Add athletes",
+  landingStep3: "Tap to time",
+  landingFeaturesTitle: "What you get",
+  landingFeatureFree: "Completely free",
+  landingFeatureOffline: "Works offline",
+  landingFeatureNoAccount: "No account needed",
+  landingFeatureOpenSource: "Open source",
+  landingFeatureExport: "PDF & CSV export",
+  landingFeatureLeaderboard: "Leaderboard",
+  landingWhoTitle: "For anyone who times athletes",
+  landingWhoDesc: "Youth athletics clubs, school sports days, training sessions, or parents at the track — Trackly fits anywhere.",
+  landingViewGithub: "View on GitHub",
+  landingOpenSourceBadge: "Open Source",
+  landingFooterPrivacy: "No tracking · No account needed · Your data stays on your device",
+  // How-to guide
+  howToTitle: "Quick Start",
+  howToSubtitle: "Get timing in 5 simple steps.",
+  howToStep1Title: "Create a session",
+  howToStep1Desc: "Tap \"New Session\" and enter a name and date. A session groups all heats and results for one event.",
+  howToStep2Title: "Add athletes",
+  howToStep2Desc: "Add athletes by name. Year of birth, gender, and photo are optional but help with leaderboards and exports.",
+  howToStep3Title: "Start a heat",
+  howToStep3Desc: "Pick a discipline, select the athletes, and start the countdown. Tap a name as soon as they cross the finish line.",
+  howToStep4Title: "View leaderboard & TV mode",
+  howToStep4Desc: "Open the leaderboard to see personal bests per discipline. TV mode shows the leaderboard in large format for spectators.",
+  howToStep5Title: "Export results",
+  howToStep5Desc: "Export results as PDF or CSV. The export includes rank, name, age group, and result per discipline.",
   // 404
   notFound: "Page not found",
   notFoundDesc: "This page does not exist.",
