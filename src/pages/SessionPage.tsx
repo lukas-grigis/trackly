@@ -355,61 +355,115 @@ export default function SessionPage() {
         )}
 
         {mode === "distance" && (
-          <div className="space-y-2">
-            <Label>{t.enterResult}</Label>
+          <div className="rounded-xl border bg-card p-4 space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {t.enterResult}
+            </p>
+            {/* Athlete chips */}
+            {sessionAthletes.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t.noAthletesInSession}</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {sessionAthletes.map((a) => (
+                  <button
+                    key={a.id}
+                    type="button"
+                    onClick={() => setSelectedChildId(a.id)}
+                    className={cn(
+                      "inline-flex items-center gap-2 rounded-xl border-2 px-3 py-2 text-sm font-medium transition-all tap-target",
+                      selectedChildId === a.id
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-muted/30 hover:border-primary/40 hover:bg-muted/50",
+                    )}
+                  >
+                    <AthleteAvatar
+                      name={a.name}
+                      avatarBase64={a.avatarBase64}
+                      size="sm"
+                      className={cn(
+                        "h-6 w-6 text-[10px]",
+                        !a.avatarBase64 && (selectedChildId === a.id
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground"),
+                      )}
+                    />
+                    {a.name}
+                    <AgeGroupBadge yearOfBirth={a.yearOfBirth} />
+                  </button>
+                ))}
+              </div>
+            )}
+            {/* Value + save */}
             <div className="flex gap-2">
-              <Select
-                value={selectedChildId}
-                onValueChange={(v) => { if (v) setSelectedChildId(v); }}
-              >
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder={t.chooseChild} />
-                </SelectTrigger>
-                <SelectContent>
-                  {sessionAthletes.map((a) => (
-                    <SelectItem key={a.id} value={a.id}>
-                      {a.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Input
-                type="number"
-                placeholder={disciplineConfig.unit === "count" ? "#" : disciplineConfig.unit}
-                value={resultValue}
-                onChange={(e) => setResultValue(e.target.value)}
-                className="w-24"
-              />
-              <Button onClick={handleAddResult}>{t.save}</Button>
+              <div className="relative flex-1">
+                <Input
+                  type="number"
+                  inputMode="decimal"
+                  placeholder="0"
+                  value={resultValue}
+                  onChange={(e) => setResultValue(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAddResult()}
+                  className="pr-10"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono text-muted-foreground pointer-events-none">
+                  {disciplineConfig.unit === "count" ? "#" : disciplineConfig.unit}
+                </span>
+              </div>
+              <Button onClick={handleAddResult} disabled={!selectedChildId || !resultValue}>
+                {t.save}
+              </Button>
             </div>
           </div>
         )}
 
         {mode === "custom" && (
-          <div className="space-y-3">
-            <Label>{t.enterResult} — {disciplineDisplayName}</Label>
+          <div className="rounded-xl border bg-card p-4 space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {t.enterResult} — {disciplineDisplayName}
+            </p>
+            {/* Athlete chips */}
+            {sessionAthletes.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t.noAthletesInSession}</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {sessionAthletes.map((a) => (
+                  <button
+                    key={a.id}
+                    type="button"
+                    onClick={() => setSelectedChildId(a.id)}
+                    className={cn(
+                      "inline-flex items-center gap-2 rounded-xl border-2 px-3 py-2 text-sm font-medium transition-all tap-target",
+                      selectedChildId === a.id
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-muted/30 hover:border-primary/40 hover:bg-muted/50",
+                    )}
+                  >
+                    <AthleteAvatar
+                      name={a.name}
+                      avatarBase64={a.avatarBase64}
+                      size="sm"
+                      className={cn(
+                        "h-6 w-6 text-[10px]",
+                        !a.avatarBase64 && (selectedChildId === a.id
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground"),
+                      )}
+                    />
+                    {a.name}
+                    <AgeGroupBadge yearOfBirth={a.yearOfBirth} />
+                  </button>
+                ))}
+              </div>
+            )}
+            {/* Value + unit + note */}
             <div className="flex gap-2">
-              <Select
-                value={selectedChildId}
-                onValueChange={(v) => { if (v) setSelectedChildId(v); }}
-              >
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder={t.chooseChild} />
-                </SelectTrigger>
-                <SelectContent>
-                  {sessionAthletes.map((a) => (
-                    <SelectItem key={a.id} value={a.id}>
-                      {a.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
               <Input
                 type="number"
+                inputMode="decimal"
                 placeholder={t.unitValue}
                 value={resultValue}
                 onChange={(e) => setResultValue(e.target.value)}
-                className="w-24"
+                className="flex-1"
               />
               <Select
                 value={customUnit}
