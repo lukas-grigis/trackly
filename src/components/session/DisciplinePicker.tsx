@@ -70,7 +70,7 @@ export default function DisciplinePicker({ value, customName, onChange }: Discip
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm lg:max-w-lg">
           <DialogHeader>
             <DialogTitle>{t.disciplineLabel}</DialogTitle>
           </DialogHeader>
@@ -90,7 +90,7 @@ export default function DisciplinePicker({ value, customName, onChange }: Discip
                   <p className="mb-2 text-xs font-medium uppercase text-muted-foreground">
                     {t.categories[key]}
                   </p>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
                     {getDisciplinesByCategory(key).map(([dKey]) => (
                       <Button
                         key={dKey}

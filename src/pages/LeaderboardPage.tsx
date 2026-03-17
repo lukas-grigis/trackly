@@ -1,8 +1,9 @@
 import { useState, useCallback } from "react";
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import { useSessionStore } from "@/store/session-store";
-import { DISCIPLINES } from "@/lib/constants";
-import { formatValue, getAgeGroup } from "@/lib/utils";
+import { DISCIPLINES, getMedalStyle } from "@/lib/constants";
+import { formatValue } from "@/lib/utils";
+import { AgeGroupBadge } from "@/components/AgeGroupBadge";
 import {
   useLeaderboard,
   AGE_GROUP_OPTIONS,
@@ -23,19 +24,6 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Trophy, Monitor } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TVMode } from "@/components/session/TVMode";
-
-const PODIUM_STYLES = [
-  "bg-yellow-400 text-yellow-900",   // gold
-  "bg-slate-300 text-slate-700",     // silver
-  "bg-amber-600 text-amber-100",     // bronze
-] as const;
-
-function getPodiumStyle(rank: number): string | undefined {
-  if (rank === 1) return PODIUM_STYLES[0];
-  if (rank === 2) return PODIUM_STYLES[1];
-  if (rank === 3) return PODIUM_STYLES[2];
-  return undefined;
-}
 
 export default function LeaderboardPage() {
   const { id } = useParams<{ id: string }>();
@@ -137,9 +125,9 @@ export default function LeaderboardPage() {
       </div>
 
       {/* Filters toolbar */}
-      <div className="flex flex-wrap gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {/* Discipline selector */}
-        <div className="space-y-1 min-w-[160px] flex-1">
+        <div className="space-y-1">
           <Label>{t.leaderboardDiscipline}</Label>
           <Select value={discipline} onValueChange={(d) => { if (d) { setDiscipline(d); setHeatFilter("all"); } }}>
             <SelectTrigger>
@@ -157,7 +145,7 @@ export default function LeaderboardPage() {
 
         {/* Heat filter */}
         {disciplineHeats.length > 1 && (
-          <div className="space-y-1 min-w-[140px] flex-1">
+          <div className="space-y-1">
             <Label>{t.leaderboardHeatFilter}</Label>
             <Select value={heatFilter} onValueChange={(v) => { if (v) setHeatFilter(v); }}>
               <SelectTrigger>
@@ -177,7 +165,7 @@ export default function LeaderboardPage() {
 
         {/* Age group filter — hidden when no athletes have YoB */}
         {hasYobData && (
-          <div className="space-y-1 min-w-[140px] flex-1">
+          <div className="space-y-1">
             <Label>{t.leaderboardAgeGroupFilter}</Label>
             <Select value={ageGroupFilter} onValueChange={(v) => setAgeGroupFilter(v as AgeGroupFilter)}>
               <SelectTrigger>
@@ -221,7 +209,7 @@ export default function LeaderboardPage() {
             </thead>
             <tbody>
               {entries.map((entry, i) => {
-                const podiumStyle = getPodiumStyle(entry.rank);
+                const medalStyle = getMedalStyle(entry.rank);
                 return (
                   <tr
                     key={entry.athleteId}
@@ -231,11 +219,11 @@ export default function LeaderboardPage() {
                     )}
                   >
                     <td className="py-2.5 pr-4 font-medium">
-                      {podiumStyle ? (
+                      {medalStyle ? (
                         <span
                           className={cn(
                             "inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold",
-                            podiumStyle,
+                            medalStyle,
                           )}
                         >
                           {entry.rank}
@@ -252,11 +240,7 @@ export default function LeaderboardPage() {
                           size="sm"
                         />
                         {entry.athlete?.name ?? entry.athleteId}
-                        {entry.athlete?.yearOfBirth && (
-                          <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
-                            {getAgeGroup(entry.athlete.yearOfBirth)}
-                          </span>
-                        )}
+                        <AgeGroupBadge yearOfBirth={entry.athlete?.yearOfBirth} />
                       </span>
                     </td>
                     <td className="py-2.5 text-right font-mono">

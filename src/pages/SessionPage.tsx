@@ -2,10 +2,11 @@ import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useSessionStore } from "@/store/session-store";
-import { DISCIPLINES } from "@/lib/constants";
-import { formatValue, getAgeGroup } from "@/lib/utils";
+import { DISCIPLINES, getMedalStyle } from "@/lib/constants";
+import { formatValue } from "@/lib/utils";
 import { GenderBadge } from "@/components/GenderBadge";
 import { AthleteAvatar } from "@/components/ui/athlete-avatar";
+import { AgeGroupBadge } from "@/components/AgeGroupBadge";
 import { useTranslation } from "@/lib/i18n";
 import { formatLocalDate } from "@/lib/locale";
 import { ROUTES } from "@/routes";
@@ -41,12 +42,6 @@ import {
 import { Check, ChevronDown, ChevronRight, Minus, Plus, Timer, Trophy, Users, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import DisciplinePicker from "@/components/session/DisciplinePicker";
-
-const MEDAL_COLORS = [
-  "bg-yellow-400 text-yellow-900",   // gold
-  "bg-slate-300 text-slate-700",     // silver
-  "bg-amber-600 text-amber-100",     // bronze
-];
 
 const CUSTOM_UNITS = ["s", "ms", "cm", "m"] as const;
 
@@ -303,11 +298,7 @@ export default function SessionPage() {
                   >
                     <AthleteAvatar name={athlete.name} avatarBase64={athlete.avatarBase64} size="sm" className="h-5 w-5 text-[8px]" />
                     {athlete.name}
-                    {athlete.yearOfBirth && (
-                      <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
-                        {getAgeGroup(athlete.yearOfBirth)}
-                      </span>
-                    )}
+                    <AgeGroupBadge yearOfBirth={athlete.yearOfBirth} />
                     <GenderBadge gender={athlete.gender} />
                   </span>
                 ))}
@@ -498,8 +489,8 @@ export default function SessionPage() {
                   return (
                     <tr key={`${result.heatId}-${result.childId}`} className={cn("border-b last:border-0", i % 2 === 1 && "bg-muted/30")}>
                       <td className="py-2 pr-4 font-medium">
-                        {rank == null ? "—" : rank <= 3 ? (
-                          <span className={cn("inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold", MEDAL_COLORS[rank - 1])}>
+                        {rank == null ? "—" : getMedalStyle(rank) ? (
+                          <span className={cn("inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold", getMedalStyle(rank))}>
                             {rank}
                           </span>
                         ) : (
@@ -509,11 +500,7 @@ export default function SessionPage() {
                       <td className="py-2 pr-4">
                         <span className="inline-flex items-center gap-1.5">
                           {result.athleteName || "—"}
-                          {result.yearOfBirth && (
-                            <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
-                              {getAgeGroup(result.yearOfBirth)}
-                            </span>
-                          )}
+                          <AgeGroupBadge yearOfBirth={result.yearOfBirth} />
                           <GenderBadge gender={result.gender} />
                         </span>
                       </td>

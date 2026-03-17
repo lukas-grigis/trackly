@@ -2,8 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useSessionStore } from "@/store/session-store";
-import { DISCIPLINES } from "@/lib/constants";
-import { isTimedDiscipline } from "@/lib/constants";
+import { DISCIPLINES, isTimedDiscipline, getMedalStyle } from "@/lib/constants";
 import { formatTime, formatStopwatch, cn, getAgeGroup } from "@/lib/utils";
 import { GenderBadgeInline } from "@/components/GenderBadge";
 import { AthleteAvatar } from "@/components/ui/athlete-avatar";
@@ -53,12 +52,6 @@ function playBeep(frequency: number, duration: number) {
 function vibrate(pattern: number | number[]) {
   try { navigator.vibrate?.(pattern); } catch { /* ignore */ }
 }
-
-const MEDAL_COLORS = [
-  "bg-yellow-400 text-yellow-900",
-  "bg-slate-300 text-slate-700",
-  "bg-amber-600 text-amber-100",
-];
 
 /** Split a formatStopwatch string into [beforeColon, colon, afterColon] */
 function StopwatchDisplay({ value }: { value: string }) {
@@ -338,7 +331,7 @@ export default function RacePage() {
 
         <div className="space-y-2">
           <p className="text-sm font-medium">{t.selectParticipants}</p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
             {sessionAthletes.map((athlete) => {
               const selected = selectedChildren.includes(athlete.id);
               return (
@@ -672,7 +665,7 @@ export default function RacePage() {
           </p>
         </div>
 
-        <div className="grid gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {selectedChildren.map((childId) => {
             const child = allAthletes.find((a) => a.id === childId);
             const finished = childId in finishTimes;
@@ -749,8 +742,8 @@ export default function RacePage() {
                   style={{ animationDelay: `${i * 80}ms` }}
                 >
                   <td className="py-3 pr-4 font-medium">
-                    {r.rank <= 3 ? (
-                      <span className={cn("inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold", MEDAL_COLORS[r.rank - 1])}>
+                    {getMedalStyle(r.rank) ? (
+                      <span className={cn("inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold", getMedalStyle(r.rank))}>
                         {r.rank}
                       </span>
                     ) : (

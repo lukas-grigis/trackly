@@ -6,7 +6,7 @@ import type { LeaderboardEntry } from "@/hooks/useLeaderboard";
 
 const MEDAL_COLORS = [
   { bg: "bg-yellow-400", text: "text-yellow-900", label: "🥇" },
-  { bg: "bg-slate-300", text: "text-slate-800", label: "🥈" },
+  { bg: "bg-slate-300", text: "text-slate-700", label: "🥈" },
   { bg: "bg-amber-600", text: "text-amber-100", label: "🥉" },
 ] as const;
 
@@ -167,7 +167,7 @@ export function TVMode({ entries, discipline, onExit }: TVModeProps) {
       {/* Remaining athletes */}
       {remainingEntries.length > 0 && (
         <div className="flex-1 px-4 pb-6 sm:px-8">
-          <div className="mx-auto max-w-2xl space-y-2">
+          <div className="mx-auto max-w-2xl lg:max-w-4xl space-y-2">
             {remainingEntries.map((entry) => (
               <div
                 key={entry.athleteId}

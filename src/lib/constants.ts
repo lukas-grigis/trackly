@@ -52,6 +52,17 @@ export const DISCIPLINE_CATEGORIES: {
   { key: "games",    icon: "mdi:soccer" },
 ];
 
+// Medal/podium colors — single source of truth (used in SessionPage, RacePage, LeaderboardPage, TVMode)
+export const MEDAL_STYLES = [
+  "bg-yellow-400 text-yellow-900",   // gold
+  "bg-slate-300 text-slate-700",     // silver
+  "bg-amber-600 text-amber-100",     // bronze
+] as const;
+
+export function getMedalStyle(rank: number): string | undefined {
+  return rank >= 1 && rank <= 3 ? MEDAL_STYLES[rank - 1] : undefined;
+}
+
 export function isTimedDiscipline(discipline: string): boolean {
   const config = DISCIPLINES[discipline];
   return config?.mode === "timed";

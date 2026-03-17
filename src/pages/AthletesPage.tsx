@@ -2,7 +2,8 @@ import { useState, useRef, useCallback } from "react";
 import { toast } from "sonner";
 import { useSessionStore, type Gender } from "@/store/session-store";
 import { useTranslation } from "@/lib/i18n";
-import { cn, getAgeGroup } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { AgeGroupBadge } from "@/components/AgeGroupBadge";
 import { GenderBadge } from "@/components/GenderBadge";
 import { AthleteAvatar } from "@/components/ui/athlete-avatar";
 import { Button } from "@/components/ui/button";
@@ -136,7 +137,7 @@ export default function AthletesPage() {
           <p className="text-sm text-muted-foreground max-w-xs">{t.noAthletes}</p>
         </div>
       ) : (
-        <ul className="space-y-2">
+        <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {athletes.map((athlete, i) => (
             <li
               key={athlete.id}
@@ -160,11 +161,7 @@ export default function AthletesPage() {
                 </button>
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{athlete.name}</span>
-                  {athlete.yearOfBirth && (
-                    <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
-                      {getAgeGroup(athlete.yearOfBirth)}
-                    </span>
-                  )}
+                  <AgeGroupBadge yearOfBirth={athlete.yearOfBirth} />
                   <GenderBadge gender={athlete.gender} />
                   {athlete.yearOfBirth && (
                     <span className="text-sm text-muted-foreground">

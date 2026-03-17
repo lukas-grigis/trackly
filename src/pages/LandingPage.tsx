@@ -91,7 +91,7 @@ export default function LandingPage() {
             {t.landingFeaturesTitle}
           </h2>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {FEATURES.map(({ icon: FeatureIcon, key }, i) => (
             <div
               key={key}
@@ -108,7 +108,7 @@ export default function LandingPage() {
       </section>
 
       {/* Who is it for */}
-      <section className="rounded-2xl border bg-card p-8 sm:p-10 text-center space-y-4">
+      <section className="rounded-2xl border bg-card p-8 sm:p-10 lg:p-12 text-center space-y-4">
         <h2 className="text-2xl font-bold tracking-tight">{t.landingWhoTitle}</h2>
         <p className="text-muted-foreground max-w-lg mx-auto leading-relaxed">
           {t.landingWhoDesc}
