@@ -26,11 +26,18 @@ export function formatStopwatch(elapsedMs: number): string {
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
   const ms = Math.floor((elapsedMs % 1000) / 10);
-  const hh = String(hours).padStart(2, "0");
-  const mm = String(minutes).padStart(2, "0");
   const ss = String(seconds).padStart(2, "0");
   const msStr = String(ms).padStart(2, "0");
-  return `${hh}:${mm}:${ss}.${msStr}`;
+  if (hours > 0) {
+    const hh = String(hours).padStart(2, "0");
+    const mm = String(minutes).padStart(2, "0");
+    return `${hh}:${mm}:${ss}.${msStr}`;
+  }
+  if (minutes > 0) {
+    const mm = String(minutes).padStart(2, "0");
+    return `${mm}:${ss}.${msStr}`;
+  }
+  return `${ss}.${msStr}`;
 }
 
 export function formatCount(n: number): string {
