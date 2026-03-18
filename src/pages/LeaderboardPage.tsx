@@ -240,7 +240,7 @@ export default function LeaderboardPage() {
                         >
                           {entry.athlete?.name ?? entry.athleteId}
                         </span>
-                        <AgeGroupBadge yearOfBirth={entry.athlete?.yearOfBirth} />
+                        <AgeGroupBadge yearOfBirth={entry.athlete?.yearOfBirth} referenceYear={new Date(session.date).getFullYear()} />
                       </div>
 
                       {/* Best value */}
