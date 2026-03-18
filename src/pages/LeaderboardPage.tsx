@@ -60,25 +60,35 @@ export default function LeaderboardPage() {
     }, { replace: true });
   }, [setSearchParams]);
 
-  // Disciplines with at least one result in this session
+  // Disciplines with at least one result in this session (including custom)
   const availableDisciplines = useMemo(() => {
     if (!session) return [];
-    return [...new Set(session.heats.map((h) => h.disciplineType))].filter(
+    const standard = [...new Set(session.heats.map((h) => h.disciplineType))].filter(
       (d) => d !== "custom" && DISCIPLINES[d],
-    );
+    ).map((d) => ({ discipline: d, customDisciplineName: undefined as string | undefined }));
+    // Collect unique custom discipline names
+    const customNames = [
+      ...new Set(
+        session.heats
+          .filter((h) => h.disciplineType === "custom" && h.customDisciplineName)
+          .map((h) => h.customDisciplineName!),
+      ),
+    ].map((name) => ({ discipline: "custom" as const, customDisciplineName: name }));
+    return [...standard, ...customNames];
   }, [session]);
 
   // Compute leaderboards for every discipline at once
   const sections = useMemo(() => {
     if (!session) return [];
-    return availableDisciplines.map((discipline) => {
+    return availableDisciplines.map(({ discipline, customDisciplineName }) => {
       const { entries, hasYobData } = computeLeaderboard(
         session,
         discipline,
         allAthletes,
         ageGroupFilter,
+        customDisciplineName,
       );
-      return { discipline, entries, hasYobData };
+      return { discipline, customDisciplineName, entries, hasYobData };
     }).filter((s) => s.entries.length > 0);
   }, [session, availableDisciplines, allAthletes, ageGroupFilter]);
 
@@ -92,7 +102,7 @@ export default function LeaderboardPage() {
   }, [session, allAthletes, ageGroupFilter]);
 
   // I6: pass all sections to TV mode for auto-rotation
-  const tvSections = sections.map(({ discipline, entries }) => ({ discipline, entries }));
+  const tvSections = sections.map(({ discipline, customDisciplineName, entries }) => ({ discipline, entries, customDisciplineName }));
 
   if (!session || !id) {
     return (
@@ -167,9 +177,11 @@ export default function LeaderboardPage() {
 
       {/* ── Discipline sections ── */}
       <div className="space-y-4">
-        {sections.map(({ discipline, entries }, sectionIdx) => {
+        {sections.map(({ discipline, customDisciplineName, entries }, sectionIdx) => {
           const config = DISCIPLINES[discipline];
-          const label = t.disciplines[discipline] ?? discipline;
+          const label = discipline === "custom" && customDisciplineName
+            ? customDisciplineName
+            : (t.disciplines[discipline] ?? discipline);
 
           return (
             <div
