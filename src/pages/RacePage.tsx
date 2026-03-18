@@ -390,7 +390,24 @@ export default function RacePage() {
         </div>
 
         <div className="space-y-2">
-          <p className="text-sm font-medium">{t.selectParticipants}</p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium">{t.selectParticipants}</p>
+            {sessionAthletes.length > 0 && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  const allIds = sessionAthletes.map((a) => a.id);
+                  const allSelected = allIds.every((id) => selectedChildren.includes(id));
+                  setSelectedChildren(allSelected ? [] : allIds);
+                }}
+              >
+                {sessionAthletes.every((a) => selectedChildren.includes(a.id))
+                  ? t.deselectAll
+                  : t.selectAll}
+              </Button>
+            )}
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
             {sessionAthletes.map((athlete) => {
               const selected = selectedChildren.includes(athlete.id);
