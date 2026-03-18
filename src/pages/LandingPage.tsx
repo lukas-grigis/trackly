@@ -1,37 +1,27 @@
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { useTranslation } from "@/lib/i18n";
-import { Icon } from "@iconify/react";
-import {
-  Zap,
-  WifiOff,
-  UserX,
-  Code2,
-  FileDown,
-  Trophy,
-  ExternalLink,
-  Medal,
-  ArrowRight,
-} from "lucide-react";
-import { ROUTES } from "@/routes";
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/lib/i18n';
+import { Icon } from '@iconify/react';
+import { Zap, WifiOff, UserX, Code2, FileDown, Trophy, ExternalLink, Medal, ArrowRight } from 'lucide-react';
+import { ROUTES } from '@/routes';
 
-import type { Translations } from "@/lib/i18n";
+import type { Translations } from '@/lib/i18n';
 
 type TranslationKey = keyof Translations;
 
 const STEPS: { icon: string; key: TranslationKey }[] = [
-  { icon: "mdi:clipboard-text-outline", key: "landingStep1" },
-  { icon: "mdi:account-plus-outline", key: "landingStep2" },
-  { icon: "mdi:checkbox-marked-circle-outline", key: "landingStep3" },
+  { icon: 'mdi:clipboard-text-outline', key: 'landingStep1' },
+  { icon: 'mdi:account-plus-outline', key: 'landingStep2' },
+  { icon: 'mdi:checkbox-marked-circle-outline', key: 'landingStep3' },
 ];
 
 const FEATURES: { icon: typeof Zap; key: TranslationKey }[] = [
-  { icon: Zap, key: "landingFeatureFree" },
-  { icon: WifiOff, key: "landingFeatureOffline" },
-  { icon: UserX, key: "landingFeatureNoAccount" },
-  { icon: Code2, key: "landingFeatureOpenSource" },
-  { icon: FileDown, key: "landingFeatureExport" },
-  { icon: Trophy, key: "landingFeatureLeaderboard" },
+  { icon: Zap, key: 'landingFeatureFree' },
+  { icon: WifiOff, key: 'landingFeatureOffline' },
+  { icon: UserX, key: 'landingFeatureNoAccount' },
+  { icon: Code2, key: 'landingFeatureOpenSource' },
+  { icon: FileDown, key: 'landingFeatureExport' },
+  { icon: Trophy, key: 'landingFeatureLeaderboard' },
 ];
 
 export default function LandingPage() {
@@ -46,13 +36,22 @@ export default function LandingPage() {
           <span>Free &middot; Offline &middot; Open Source</span>
         </div>
         <h1 className="text-gradient text-5xl sm:text-6xl font-black tracking-tight leading-[1.1] max-w-lg">
-          {t.landingHero}
+          {t.landingHero.split('. ').map((part, i, arr) => (
+            <span key={i}>
+              {part}
+              {i < arr.length - 1 ? '.' : ''}
+              {i < arr.length - 1 && <br />}
+            </span>
+          ))}
         </h1>
-        <p className="text-lg text-muted-foreground max-w-md leading-relaxed">
-          {t.landingHeroSub}
-        </p>
+        <p className="text-lg text-muted-foreground max-w-md leading-relaxed">{t.landingHeroSub}</p>
         <div className="flex items-center gap-3 pt-2">
-          <Button size="lg" className="btn-shimmer gap-2 h-12 px-8 text-base rounded-xl" nativeButton={false} render={<Link to={ROUTES.SESSIONS} />}>
+          <Button
+            size="lg"
+            className="btn-shimmer gap-2 h-12 px-8 text-base rounded-xl"
+            nativeButton={false}
+            render={<Link to={ROUTES.SESSIONS} />}
+          >
             {t.landingOpenApp}
             <ArrowRight className="h-4 w-4" />
           </Button>
@@ -87,9 +86,7 @@ export default function LandingPage() {
       {/* Features */}
       <section className="space-y-8">
         <div className="text-center">
-          <h2 className="text-2xl font-bold tracking-tight">
-            {t.landingFeaturesTitle}
-          </h2>
+          <h2 className="text-2xl font-bold tracking-tight">{t.landingFeaturesTitle}</h2>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {FEATURES.map(({ icon: FeatureIcon, key }, i) => (
@@ -110,14 +107,17 @@ export default function LandingPage() {
       {/* Who is it for */}
       <section className="rounded-2xl border bg-card p-8 sm:p-10 lg:p-12 text-center space-y-4">
         <h2 className="text-2xl font-bold tracking-tight">{t.landingWhoTitle}</h2>
-        <p className="text-muted-foreground max-w-lg mx-auto leading-relaxed">
-          {t.landingWhoDesc}
-        </p>
+        <p className="text-muted-foreground max-w-lg mx-auto leading-relaxed">{t.landingWhoDesc}</p>
       </section>
 
       {/* CTA */}
       <section className="flex flex-col items-center gap-5 py-4">
-        <Button size="lg" className="btn-shimmer gap-2 h-12 px-8 text-base rounded-xl" nativeButton={false} render={<Link to={ROUTES.SESSIONS} />}>
+        <Button
+          size="lg"
+          className="btn-shimmer gap-2 h-12 px-8 text-base rounded-xl"
+          nativeButton={false}
+          render={<Link to={ROUTES.SESSIONS} />}
+        >
           {t.landingOpenApp}
           <ArrowRight className="h-4 w-4" />
         </Button>

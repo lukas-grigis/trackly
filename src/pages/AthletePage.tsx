@@ -1,19 +1,19 @@
-import { useMemo } from "react";
-import { useParams, Link } from "react-router-dom";
-import { useSessionStore } from "@/store/session-store";
-import { DISCIPLINES, getMedalStyle } from "@/lib/constants";
-import { formatValue } from "@/lib/utils";
-import { AgeGroupBadge } from "@/components/AgeGroupBadge";
-import { GenderBadge } from "@/components/GenderBadge";
-import { AthleteAvatar } from "@/components/ui/athlete-avatar";
-import { computeLeaderboard } from "@/hooks/useLeaderboard";
-import { useTranslation } from "@/lib/i18n";
-import { formatLocalDate } from "@/lib/locale";
-import { ROUTES } from "@/routes";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, TrendingUp, TrendingDown, Minus } from "lucide-react";
-import { Icon } from "@iconify/react";
-import { cn } from "@/lib/utils";
+import { useMemo } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { useSessionStore } from '@/store/session-store';
+import { DISCIPLINES, getMedalStyle } from '@/lib/constants';
+import { formatValue } from '@/lib/utils';
+import { AgeGroupBadge } from '@/components/AgeGroupBadge';
+import { GenderBadge } from '@/components/GenderBadge';
+import { AthleteAvatar } from '@/components/ui/athlete-avatar';
+import { computeLeaderboard } from '@/hooks/useLeaderboard';
+import { useTranslation } from '@/lib/i18n';
+import { formatLocalDate } from '@/lib/locale';
+import { ROUTES } from '@/routes';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Icon } from '@iconify/react';
+import { cn } from '@/lib/utils';
 
 // ---------------------------------------------------------------------------
 // Data helpers
@@ -62,18 +62,26 @@ export default function AthletePage() {
     const sorted = [...sessions].sort((a, b) => a.date.localeCompare(b.date));
 
     // Track: discipline -> list of {value, sessionId, sessionName, sessionDate} ordered chronologically
-    const disciplineHistory = new Map<string, { value: number; sessionId: string; sessionName: string; sessionDate: string }[]>();
+    const disciplineHistory = new Map<
+      string,
+      { value: number; sessionId: string; sessionName: string; sessionDate: string }[]
+    >();
 
     for (const session of sorted) {
       for (const heat of session.heats) {
-        if (heat.disciplineType === "custom") continue;
+        if (heat.disciplineType === 'custom') continue;
         const config = DISCIPLINES[heat.disciplineType];
         if (!config) continue;
         const result = heat.results.find((r) => r.athleteId === id);
         if (!result) continue;
 
         const existing = disciplineHistory.get(heat.disciplineType) ?? [];
-        existing.push({ value: result.value, sessionId: session.id, sessionName: session.name, sessionDate: session.date });
+        existing.push({
+          value: result.value,
+          sessionId: session.id,
+          sessionName: session.name,
+          sessionDate: session.date,
+        });
         disciplineHistory.set(heat.disciplineType, existing);
       }
     }
@@ -111,12 +119,14 @@ export default function AthletePage() {
     for (const session of [...sorted].reverse()) {
       const results: SessionResult[] = [];
 
-      const disciplinesInSession = [...new Set(
-        session.heats
-          .filter((h) => h.disciplineType !== "custom" && DISCIPLINES[h.disciplineType])
-          .filter((h) => h.results.some((r) => r.athleteId === id))
-          .map((h) => h.disciplineType)
-      )];
+      const disciplinesInSession = [
+        ...new Set(
+          session.heats
+            .filter((h) => h.disciplineType !== 'custom' && DISCIPLINES[h.disciplineType])
+            .filter((h) => h.results.some((r) => r.athleteId === id))
+            .map((h) => h.disciplineType)
+        ),
+      ];
 
       for (const discipline of disciplinesInSession) {
         const config = DISCIPLINES[discipline];
@@ -164,11 +174,7 @@ export default function AthletePage() {
   }, [id, sessions, allAthletes]);
 
   if (!athlete) {
-    return (
-      <div className="py-12 text-center text-muted-foreground">
-        {t.athleteNotFound}
-      </div>
-    );
+    return <div className="py-12 text-center text-muted-foreground">{t.athleteNotFound}</div>;
   }
 
   return (
@@ -190,9 +196,7 @@ export default function AthletePage() {
         <div className="flex-1 min-w-0">
           <h1 className="text-2xl font-bold truncate">{athlete.name}</h1>
           <div className="flex flex-wrap items-center gap-1.5 mt-1">
-            {athlete.yearOfBirth && (
-              <span className="text-sm text-muted-foreground">*{athlete.yearOfBirth}</span>
-            )}
+            {athlete.yearOfBirth && <span className="text-sm text-muted-foreground">*{athlete.yearOfBirth}</span>}
             <AgeGroupBadge yearOfBirth={athlete.yearOfBirth} />
             <GenderBadge gender={athlete.gender} />
           </div>
@@ -243,17 +247,12 @@ export default function AthletePage() {
                 const config = DISCIPLINES[pb.discipline];
                 if (!config) return null;
                 const label = t.disciplines[pb.discipline] ?? pb.discipline;
-                const improved = config.sortAscending
-                  ? pb.value < pb.firstValue
-                  : pb.value > pb.firstValue;
+                const improved = config.sortAscending ? pb.value < pb.firstValue : pb.value > pb.firstValue;
                 const unchanged = pb.value === pb.firstValue;
                 return (
-                  <div
-                    key={pb.discipline}
-                    className="flex items-center gap-3 rounded-xl border bg-card px-4 py-3"
-                  >
+                  <div key={pb.discipline} className="flex items-center gap-3 rounded-xl border bg-card px-4 py-3">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                      <Icon icon={config.icon ?? "mdi:medal"} width={18} />
+                      <Icon icon={config.icon ?? 'mdi:medal'} width={18} />
                     </span>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs text-muted-foreground truncate">{label}</p>
@@ -265,10 +264,8 @@ export default function AthletePage() {
                       </p>
                     </div>
                     {!unchanged && (
-                      <span className={cn("shrink-0", improved ? "text-emerald-500" : "text-rose-500")}>
-                        {improved
-                          ? <TrendingUp className="h-4 w-4" />
-                          : <TrendingDown className="h-4 w-4" />}
+                      <span className={cn('shrink-0', improved ? 'text-emerald-500' : 'text-rose-500')}>
+                        {improved ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
                       </span>
                     )}
                     {unchanged && (
@@ -294,9 +291,7 @@ export default function AthletePage() {
                     className="flex items-center justify-between bg-muted/40 px-4 py-2.5 border-b hover:bg-muted/60 transition-colors"
                   >
                     <span className="font-semibold text-sm">{entry.sessionName}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {formatLocalDate(entry.sessionDate)}
-                    </span>
+                    <span className="text-xs text-muted-foreground">{formatLocalDate(entry.sessionDate)}</span>
                   </Link>
                   {/* Results */}
                   <div className="divide-y">
@@ -307,17 +302,17 @@ export default function AthletePage() {
                       return (
                         <div key={result.discipline} className="flex items-center gap-3 px-4 py-2.5">
                           <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                            <Icon icon={config?.icon ?? "mdi:medal"} width={13} />
+                            <Icon icon={config?.icon ?? 'mdi:medal'} width={13} />
                           </span>
                           <span className="flex-1 text-sm">{label}</span>
                           <span className="font-mono text-sm tabular-nums">
-                            {formatValue(result.value, config?.unit ?? "ms")}
+                            {formatValue(result.value, config?.unit ?? 'ms')}
                           </span>
                           {result.rank != null && (
                             <span
                               className={cn(
-                                "inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold",
-                                medalStyle ?? "bg-muted text-muted-foreground",
+                                'inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold',
+                                medalStyle ?? 'bg-muted text-muted-foreground'
                               )}
                             >
                               {result.rank}

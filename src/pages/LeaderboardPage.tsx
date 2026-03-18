@@ -1,35 +1,25 @@
-import { useState, useCallback, useMemo } from "react";
-import { useParams, Link, useSearchParams } from "react-router-dom";
-import { useSessionStore } from "@/store/session-store";
-import { DISCIPLINES, getMedalStyle } from "@/lib/constants";
-import { formatValue } from "@/lib/utils";
-import { AgeGroupBadge } from "@/components/AgeGroupBadge";
-import {
-  computeLeaderboard,
-  AGE_GROUP_OPTIONS,
-  type AgeGroupFilter,
-} from "@/hooks/useLeaderboard";
-import { useTranslation } from "@/lib/i18n";
-import { AthleteAvatar } from "@/components/ui/athlete-avatar";
-import { ROUTES } from "@/routes";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Trophy, Monitor } from "lucide-react";
-import { Icon } from "@iconify/react";
-import { cn } from "@/lib/utils";
-import { TVMode } from "@/components/session/TVMode";
+import { useState, useCallback, useMemo } from 'react';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
+import { useSessionStore } from '@/store/session-store';
+import { DISCIPLINES, getMedalStyle } from '@/lib/constants';
+import { formatValue } from '@/lib/utils';
+import { AgeGroupBadge } from '@/components/AgeGroupBadge';
+import { computeLeaderboard, AGE_GROUP_OPTIONS, type AgeGroupFilter } from '@/hooks/useLeaderboard';
+import { useTranslation } from '@/lib/i18n';
+import { AthleteAvatar } from '@/components/ui/athlete-avatar';
+import { ROUTES } from '@/routes';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Trophy, Monitor } from 'lucide-react';
+import { Icon } from '@iconify/react';
+import { cn } from '@/lib/utils';
+import { TVMode } from '@/components/session/TVMode';
 
 // Row highlight classes by rank
 const ROW_ACCENT: Record<number, string> = {
-  1: "bg-yellow-400/8 border-l-2 border-l-yellow-400",
-  2: "bg-zinc-400/6 border-l-2 border-l-zinc-400",
-  3: "bg-orange-700/6 border-l-2 border-l-orange-700",
+  1: 'bg-yellow-400/8 border-l-2 border-l-yellow-400',
+  2: 'bg-zinc-400/6 border-l-2 border-l-zinc-400',
+  3: 'bg-orange-700/6 border-l-2 border-l-orange-700',
 };
 
 export default function LeaderboardPage() {
@@ -39,84 +29,92 @@ export default function LeaderboardPage() {
   const allAthletes = useSessionStore((s) => s.athletes);
   const { t } = useTranslation();
 
-  const [tvMode, setTvMode] = useState(() => searchParams.get("tv") === "1");
-  const [ageGroupFilter, setAgeGroupFilter] = useState<AgeGroupFilter>("All");
+  const [tvMode, setTvMode] = useState(() => searchParams.get('tv') === '1');
+  const [ageGroupFilter, setAgeGroupFilter] = useState<AgeGroupFilter>('All');
 
   const exitTvMode = useCallback(() => {
     setTvMode(false);
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      next.delete("tv");
-      return next;
-    }, { replace: true });
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete('tv');
+        return next;
+      },
+      { replace: true }
+    );
   }, [setSearchParams]);
 
   const enterTvMode = useCallback(() => {
     setTvMode(true);
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      next.set("tv", "1");
-      return next;
-    }, { replace: true });
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set('tv', '1');
+        return next;
+      },
+      { replace: true }
+    );
   }, [setSearchParams]);
 
   // Disciplines with at least one result in this session (including custom)
   const availableDisciplines = useMemo(() => {
     if (!session) return [];
-    const standard = [...new Set(session.heats.map((h) => h.disciplineType))].filter(
-      (d) => d !== "custom" && DISCIPLINES[d],
-    ).map((d) => ({ discipline: d, customDisciplineName: undefined as string | undefined }));
+    const standard = [...new Set(session.heats.map((h) => h.disciplineType))]
+      .filter((d) => d !== 'custom' && DISCIPLINES[d])
+      .map((d) => ({ discipline: d, customDisciplineName: undefined as string | undefined }));
     // Collect unique custom discipline names
     const customNames = [
       ...new Set(
         session.heats
-          .filter((h) => h.disciplineType === "custom" && h.customDisciplineName)
-          .map((h) => h.customDisciplineName!),
+          .filter((h) => h.disciplineType === 'custom' && h.customDisciplineName)
+          .map((h) => h.customDisciplineName!)
       ),
-    ].map((name) => ({ discipline: "custom" as const, customDisciplineName: name }));
+    ].map((name) => ({ discipline: 'custom' as const, customDisciplineName: name }));
     return [...standard, ...customNames];
   }, [session]);
 
   // Compute leaderboards for every discipline at once
   const sections = useMemo(() => {
     if (!session) return [];
-    return availableDisciplines.map(({ discipline, customDisciplineName }) => {
-      const { entries, hasYobData } = computeLeaderboard(
-        session,
-        discipline,
-        allAthletes,
-        ageGroupFilter,
-        customDisciplineName,
-      );
-      return { discipline, customDisciplineName, entries, hasYobData };
-    }).filter((s) => s.entries.length > 0);
+    return availableDisciplines
+      .map(({ discipline, customDisciplineName }) => {
+        const { entries, hasYobData } = computeLeaderboard(
+          session,
+          discipline,
+          allAthletes,
+          ageGroupFilter,
+          customDisciplineName
+        );
+        return { discipline, customDisciplineName, entries, hasYobData };
+      })
+      .filter((s) => s.entries.length > 0);
   }, [session, availableDisciplines, allAthletes, ageGroupFilter]);
 
   const hasYobData = sections.some((s) => s.hasYobData);
 
   // I7: count athletes without birth year (hidden by age group filter)
   const athletesWithoutYob = useMemo(() => {
-    if (!session || ageGroupFilter === "All") return 0;
+    if (!session || ageGroupFilter === 'All') return 0;
     const sessionAthletes = allAthletes.filter((a) => session.athleteIds.includes(a.id));
     return sessionAthletes.filter((a) => a.yearOfBirth == null).length;
   }, [session, allAthletes, ageGroupFilter]);
 
   // I6: pass all sections to TV mode for auto-rotation
-  const tvSections = sections.map(({ discipline, customDisciplineName, entries }) => ({ discipline, entries, customDisciplineName }));
+  const tvSections = sections.map(({ discipline, customDisciplineName, entries }) => ({
+    discipline,
+    entries,
+    customDisciplineName,
+  }));
 
   if (!session || !id) {
-    return (
-      <div className="py-12 text-center text-muted-foreground">
-        {t.sessionNotFound}
-      </div>
-    );
+    return <div className="py-12 text-center text-muted-foreground">{t.sessionNotFound}</div>;
   }
 
   if (tvMode) {
     return (
       <TVMode
         entries={tvSections[0]?.entries ?? []}
-        discipline={tvSections[0]?.discipline ?? "sprint_60"}
+        discipline={tvSections[0]?.discipline ?? 'sprint_60'}
         onExit={exitTvMode}
         allSections={tvSections}
       />
@@ -154,14 +152,14 @@ export default function LeaderboardPage() {
             <SelectContent>
               {AGE_GROUP_OPTIONS.map((ag) => (
                 <SelectItem key={ag} value={ag}>
-                  {ag === "All" ? t.leaderboardAllAgeGroups : ag}
+                  {ag === 'All' ? t.leaderboardAllAgeGroups : ag}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           {athletesWithoutYob > 0 && (
             <span className="text-xs text-amber-600 dark:text-amber-400">
-              {t.athletesWithoutYob.replace("{count}", String(athletesWithoutYob))}
+              {t.athletesWithoutYob.replace('{count}', String(athletesWithoutYob))}
             </span>
           )}
         </div>
@@ -179,9 +177,10 @@ export default function LeaderboardPage() {
       <div className="space-y-4">
         {sections.map(({ discipline, customDisciplineName, entries }, sectionIdx) => {
           const config = DISCIPLINES[discipline];
-          const label = discipline === "custom" && customDisciplineName
-            ? customDisciplineName
-            : (t.disciplines[discipline] ?? discipline);
+          const label =
+            discipline === 'custom' && customDisciplineName
+              ? customDisciplineName
+              : (t.disciplines[discipline] ?? discipline);
 
           return (
             <div
@@ -192,76 +191,63 @@ export default function LeaderboardPage() {
               {/* Section header */}
               <div className="flex items-center gap-2.5 bg-muted/40 px-4 py-2.5 border-b">
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
-                  <Icon icon={config?.icon ?? "mdi:medal"} width={16} />
+                  <Icon icon={config?.icon ?? 'mdi:medal'} width={16} />
                 </span>
-                <span className="font-semibold text-sm tracking-wide uppercase">
-                  {label}
-                </span>
-                <span className="ml-auto text-xs text-muted-foreground tabular-nums">
-                  {entries.length}
-                </span>
+                <span className="font-semibold text-sm tracking-wide uppercase">{label}</span>
+                <span className="ml-auto text-xs text-muted-foreground tabular-nums">{entries.length}</span>
               </div>
 
               {/* Ranked rows */}
               <div className="divide-y">
                 {entries.map((entry) => {
                   const medalStyle = getMedalStyle(entry.rank);
-                  const rowAccent = ROW_ACCENT[entry.rank] ?? "";
+                  const rowAccent = ROW_ACCENT[entry.rank] ?? '';
 
                   return (
                     <div
                       key={entry.athleteId}
-                      className={cn(
-                        "flex items-center gap-3 px-4 py-2.5 transition-colors",
-                        rowAccent,
-                      )}
+                      className={cn('flex items-center gap-3 px-4 py-2.5 transition-colors', rowAccent)}
                     >
                       {/* Rank badge */}
                       <div className="w-7 shrink-0 flex justify-center">
                         {medalStyle ? (
                           <span
                             className={cn(
-                              "inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold",
-                              medalStyle,
+                              'inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold',
+                              medalStyle
                             )}
                           >
                             {entry.rank}
                           </span>
                         ) : (
-                          <span className="text-sm font-medium text-muted-foreground tabular-nums">
-                            {entry.rank}
-                          </span>
+                          <span className="text-sm font-medium text-muted-foreground tabular-nums">{entry.rank}</span>
                         )}
                       </div>
 
                       {/* Avatar */}
                       <AthleteAvatar
-                        name={entry.athlete?.name ?? "?"}
+                        name={entry.athlete?.name ?? '?'}
                         avatarBase64={entry.athlete?.avatarBase64}
                         size="sm"
-                        className={cn(entry.rank === 1 && "ring-2 ring-yellow-400/60")}
+                        className={cn(entry.rank === 1 && 'ring-2 ring-yellow-400/60')}
                       />
 
                       {/* Name + age group */}
                       <div className="flex flex-1 items-center gap-1.5 min-w-0">
-                        <span
-                          className={cn(
-                            "truncate text-sm",
-                            entry.rank === 1 ? "font-bold" : "font-medium",
-                          )}
-                        >
+                        <span className={cn('truncate text-sm', entry.rank === 1 ? 'font-bold' : 'font-medium')}>
                           {entry.athlete?.name ?? entry.athleteId}
                         </span>
-                        <AgeGroupBadge yearOfBirth={entry.athlete?.yearOfBirth} referenceYear={new Date(session.date).getFullYear()} />
+                        <AgeGroupBadge
+                          yearOfBirth={entry.athlete?.yearOfBirth}
+                          referenceYear={new Date(session.date).getFullYear()}
+                        />
                       </div>
 
                       {/* Best value */}
                       <span
                         className={cn(
-                          "shrink-0 font-mono text-sm tabular-nums",
-                          entry.rank === 1
-                            ? "font-bold text-foreground"
-                            : "text-muted-foreground",
+                          'shrink-0 font-mono text-sm tabular-nums',
+                          entry.rank === 1 ? 'font-bold text-foreground' : 'text-muted-foreground'
                         )}
                       >
                         {config ? formatValue(entry.bestValue, config.unit) : entry.bestValue}

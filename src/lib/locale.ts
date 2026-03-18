@@ -6,9 +6,9 @@
 export function formatLocalDate(isoDate: string): string {
   try {
     return new Intl.DateTimeFormat(navigator.language, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
     }).format(new Date(isoDate));
   } catch {
     return isoDate;

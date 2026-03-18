@@ -1,19 +1,19 @@
-import { useEffect, useRef } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Sun, Moon, ClipboardList, Users, CircleHelp } from "lucide-react";
-import { toast } from "sonner";
-import { useTranslation } from "@/lib/i18n";
-import { useTheme } from "@/hooks/use-theme";
-import { useSessionStore } from "@/store/session-store";
-import { ROUTES } from "@/routes";
-import { cn } from "@/lib/utils";
-import SaveIndicator from "./SaveIndicator";
+import { useEffect, useRef } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Sun, Moon, ClipboardList, Users, CircleHelp } from 'lucide-react';
+import { toast } from 'sonner';
+import { useTranslation } from '@/lib/i18n';
+import { useTheme } from '@/hooks/use-theme';
+import { useSessionStore } from '@/store/session-store';
+import { ROUTES } from '@/routes';
+import { cn } from '@/lib/utils';
+import SaveIndicator from './SaveIndicator';
 
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const isLanding = location.pathname === "/";
+  const isLanding = location.pathname === '/';
   const { t, lang, setLang } = useTranslation();
   const { toggleTheme, isDark } = useTheme();
 
@@ -71,9 +71,10 @@ export default function Navbar() {
         <Link
           to="/"
           className="text-lg font-bold tracking-tight shrink-0 mr-1"
-          style={{ fontVariationSettings: "'wght' 750", letterSpacing: "-0.025em" }}
+          style={{ fontVariationSettings: "'wght' 750", letterSpacing: '-0.025em' }}
         >
-          <span className="text-primary">Track</span><span className="text-foreground/70">ly</span>
+          <span className="text-primary">Track</span>
+          <span className="text-foreground/70">ly</span>
         </Link>
 
         {/* Nav links — visible on non-landing pages */}
@@ -86,10 +87,10 @@ export default function Navbar() {
                   key={to}
                   to={to}
                   className={cn(
-                    "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors",
+                    'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors',
                     isActive
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                   )}
                 >
                   <Icon className="h-3.5 w-3.5 shrink-0" />
@@ -113,8 +114,8 @@ export default function Navbar() {
               variant="ghost"
               size="icon"
               className={cn(
-                "h-8 w-8 rounded-full",
-                location.pathname === ROUTES.HOW_TO && "bg-primary/10 text-primary",
+                'h-8 w-8 rounded-full',
+                location.pathname === ROUTES.HOW_TO && 'bg-primary/10 text-primary'
               )}
               aria-label={t.howToTitle}
             >
@@ -125,16 +126,14 @@ export default function Navbar() {
 
         {/* Language toggle */}
         <div className="flex items-center rounded-full border bg-muted/50 p-0.5 text-xs font-semibold">
-          {(["de", "en"] as const).map((l) => (
+          {(['de', 'en'] as const).map((l) => (
             <button
               key={l}
               onClick={() => setLang(l)}
-              aria-label={t.switchToLanguage.replace("{lang}", l === "de" ? "Deutsch" : "English")}
+              aria-label={t.switchToLanguage.replace('{lang}', l === 'de' ? 'Deutsch' : 'English')}
               className={cn(
-                "rounded-full px-2 py-0.5 transition-colors uppercase tracking-wide",
-                lang === l
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground",
+                'rounded-full px-2 py-0.5 transition-colors uppercase tracking-wide',
+                lang === l ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
               )}
             >
               {l}
@@ -143,13 +142,7 @@ export default function Navbar() {
         </div>
 
         {/* Theme toggle */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={toggleTheme}
-          aria-label={t.toggleTheme}
-        >
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={toggleTheme} aria-label={t.toggleTheme}>
           {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </Button>
       </div>

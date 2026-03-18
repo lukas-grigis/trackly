@@ -1,27 +1,27 @@
-import { lazy, Suspense } from "react";
-import { HashRouter, Route, Routes } from "react-router-dom";
-import AppLayout from "@/components/layout/AppLayout";
+import { lazy, Suspense } from 'react';
+import { HashRouter, Route, Routes } from 'react-router-dom';
+import AppLayout from '@/components/layout/AppLayout';
 
-const LandingPage = lazy(() => import("@/pages/LandingPage"));
-const HomePage = lazy(() => import("@/pages/HomePage"));
-const AthletesPage = lazy(() => import("@/pages/AthletesPage"));
-const AthletePage = lazy(() => import("@/pages/AthletePage"));
-const SessionPage = lazy(() => import("@/pages/SessionPage"));
-const RacePage = lazy(() => import("@/pages/RacePage"));
-const LeaderboardPage = lazy(() => import("@/pages/LeaderboardPage"));
-const HowToPage = lazy(() => import("@/pages/HowToPage"));
-const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"));
+const LandingPage = lazy(() => import('@/pages/LandingPage'));
+const HomePage = lazy(() => import('@/pages/HomePage'));
+const AthletesPage = lazy(() => import('@/pages/AthletesPage'));
+const AthletePage = lazy(() => import('@/pages/AthletePage'));
+const SessionPage = lazy(() => import('@/pages/SessionPage'));
+const RacePage = lazy(() => import('@/pages/RacePage'));
+const LeaderboardPage = lazy(() => import('@/pages/LeaderboardPage'));
+const HowToPage = lazy(() => import('@/pages/HowToPage'));
+const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const ROUTES = {
-  HOME: "/",
-  SESSIONS: "/sessions",
-  ATHLETES: "/athletes",
+  HOME: '/',
+  SESSIONS: '/sessions',
+  ATHLETES: '/athletes',
   ATHLETE: (id: string) => `/athlete/${id}`,
   SESSION: (id: string) => `/session/${id}`,
   RACE: (id: string, discipline: string) => `/session/${id}/race/${discipline}`,
   LEADERBOARD: (id: string) => `/session/${id}/leaderboard`,
-  HOW_TO: "/how-to",
+  HOW_TO: '/how-to',
 } as const;
 
 function PageFallback() {

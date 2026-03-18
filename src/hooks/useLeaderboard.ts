@@ -1,28 +1,11 @@
-import { useMemo } from "react";
-import { DISCIPLINES } from "@/lib/constants";
-import { getAgeGroup } from "@/lib/utils";
-import type { Session, Athlete } from "@/store/session-store";
+import { useMemo } from 'react';
+import { DISCIPLINES } from '@/lib/constants';
+import { getAgeGroup } from '@/lib/utils';
+import type { Session, Athlete } from '@/store/session-store';
 
-export type AgeGroupFilter =
-  | "All"
-  | "U8"
-  | "U10"
-  | "U12"
-  | "U14"
-  | "U16"
-  | "U18"
-  | "Senior";
+export type AgeGroupFilter = 'All' | 'U8' | 'U10' | 'U12' | 'U14' | 'U16' | 'U18' | 'Senior';
 
-export const AGE_GROUP_OPTIONS: AgeGroupFilter[] = [
-  "All",
-  "U8",
-  "U10",
-  "U12",
-  "U14",
-  "U16",
-  "U18",
-  "Senior",
-];
+export const AGE_GROUP_OPTIONS: AgeGroupFilter[] = ['All', 'U8', 'U10', 'U12', 'U14', 'U16', 'U18', 'Senior'];
 
 export interface LeaderboardEntry {
   athleteId: string;
@@ -44,12 +27,18 @@ export function computeLeaderboard(
   session: Session,
   discipline: string,
   athletes: Athlete[],
-  ageGroupFilter: AgeGroupFilter = "All",
-  customDisciplineName?: string,
+  ageGroupFilter: AgeGroupFilter = 'All',
+  customDisciplineName?: string
 ): LeaderboardResult {
-  const isCustom = discipline === "custom";
+  const isCustom = discipline === 'custom';
   const config = isCustom
-    ? { sortAscending: true, unit: "count" as const, mode: "custom" as const, category: "games" as const, icon: "mdi:star" }
+    ? {
+        sortAscending: true,
+        unit: 'count' as const,
+        mode: 'custom' as const,
+        category: 'games' as const,
+        icon: 'mdi:star',
+      }
     : DISCIPLINES[discipline];
   if (!config) return { entries: [], hasYobData: false };
 
@@ -59,7 +48,7 @@ export function computeLeaderboard(
 
   const allowedAthleteIds = new Set<string>();
   for (const athlete of sessionAthletes) {
-    if (ageGroupFilter === "All") {
+    if (ageGroupFilter === 'All') {
       allowedAthleteIds.add(athlete.id);
     } else if (athlete.yearOfBirth != null && getAgeGroup(athlete.yearOfBirth, sessionYear) === ageGroupFilter) {
       allowedAthleteIds.add(athlete.id);
@@ -71,15 +60,15 @@ export function computeLeaderboard(
 
   const heats = session.heats.filter((h) =>
     isCustom
-      ? h.disciplineType === "custom" && h.customDisciplineName === customDisciplineName
-      : h.disciplineType === discipline,
+      ? h.disciplineType === 'custom' && h.customDisciplineName === customDisciplineName
+      : h.disciplineType === discipline
   );
   const bestByAthlete = new Map<string, number>();
 
   for (const heat of heats) {
     for (const result of heat.results) {
       if (!allowedAthleteIds.has(result.athleteId)) continue;
-      if (result.athleteId.startsWith("team-") || !athleteIdSet.has(result.athleteId)) continue;
+      if (result.athleteId.startsWith('team-') || !athleteIdSet.has(result.athleteId)) continue;
       const current = bestByAthlete.get(result.athleteId);
       if (current === undefined) {
         bestByAthlete.set(result.athleteId, result.value);
@@ -90,16 +79,14 @@ export function computeLeaderboard(
     }
   }
 
-  const entries: LeaderboardEntry[] = Array.from(bestByAthlete.entries()).map(
-    ([athleteId, bestValue]) => ({
-      athleteId,
-      athlete: athletes.find((a) => a.id === athleteId),
-      bestValue,
-      rank: 0,
-    }),
-  );
+  const entries: LeaderboardEntry[] = Array.from(bestByAthlete.entries()).map(([athleteId, bestValue]) => ({
+    athleteId,
+    athlete: athletes.find((a) => a.id === athleteId),
+    bestValue,
+    rank: 0,
+  }));
 
-  entries.sort((a, b) => config.sortAscending ? a.bestValue - b.bestValue : b.bestValue - a.bestValue);
+  entries.sort((a, b) => (config.sortAscending ? a.bestValue - b.bestValue : b.bestValue - a.bestValue));
 
   for (let i = 0; i < entries.length; i++) {
     if (i === 0) entries[i].rank = 1;
@@ -118,8 +105,8 @@ export function useLeaderboard(
   session: Session | undefined,
   discipline: string,
   athletes: Athlete[],
-  ageGroupFilter: AgeGroupFilter = "All",
-  heatFilter: string = "all",
+  ageGroupFilter: AgeGroupFilter = 'All',
+  heatFilter: string = 'all'
 ): LeaderboardResult {
   return useMemo(() => {
     if (!session) return { entries: [], hasYobData: false };
@@ -134,7 +121,7 @@ export function useLeaderboard(
 
     const allowedAthleteIds = new Set<string>();
     for (const athlete of sessionAthletes) {
-      if (ageGroupFilter === "All") {
+      if (ageGroupFilter === 'All') {
         allowedAthleteIds.add(athlete.id);
       } else if (athlete.yearOfBirth != null && getAgeGroup(athlete.yearOfBirth, sessionYear) === ageGroupFilter) {
         allowedAthleteIds.add(athlete.id);
@@ -142,13 +129,13 @@ export function useLeaderboard(
     }
 
     let heats = session.heats.filter((h) => h.disciplineType === discipline);
-    if (heatFilter !== "all") heats = heats.filter((h) => h.id === heatFilter);
+    if (heatFilter !== 'all') heats = heats.filter((h) => h.id === heatFilter);
 
     const bestByAthlete = new Map<string, number>();
     for (const heat of heats) {
       for (const result of heat.results) {
         if (!allowedAthleteIds.has(result.athleteId)) continue;
-        if (result.athleteId.startsWith("team-") || !athleteIdSet.has(result.athleteId)) continue;
+        if (result.athleteId.startsWith('team-') || !athleteIdSet.has(result.athleteId)) continue;
         const current = bestByAthlete.get(result.athleteId);
         if (current === undefined) {
           bestByAthlete.set(result.athleteId, result.value);
@@ -159,16 +146,14 @@ export function useLeaderboard(
       }
     }
 
-    const entries: LeaderboardEntry[] = Array.from(bestByAthlete.entries()).map(
-      ([athleteId, bestValue]) => ({
-        athleteId,
-        athlete: athletes.find((a) => a.id === athleteId),
-        bestValue,
-        rank: 0,
-      }),
-    );
+    const entries: LeaderboardEntry[] = Array.from(bestByAthlete.entries()).map(([athleteId, bestValue]) => ({
+      athleteId,
+      athlete: athletes.find((a) => a.id === athleteId),
+      bestValue,
+      rank: 0,
+    }));
 
-    entries.sort((a, b) => config.sortAscending ? a.bestValue - b.bestValue : b.bestValue - a.bestValue);
+    entries.sort((a, b) => (config.sortAscending ? a.bestValue - b.bestValue : b.bestValue - a.bestValue));
 
     for (let i = 0; i < entries.length; i++) {
       if (i === 0) entries[i].rank = 1;

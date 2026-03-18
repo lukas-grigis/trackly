@@ -1,13 +1,13 @@
-import { useEffect } from "react";
-import AppRoutes from "@/routes";
-import { Toaster } from "sonner";
-import { useTheme } from "@/hooks/use-theme";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { useEffect } from 'react';
+import AppRoutes from '@/routes';
+import { Toaster } from 'sonner';
+import { useTheme } from '@/hooks/use-theme';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 function ThemeInitializer() {
   const { isDark } = useTheme();
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", isDark);
+    document.documentElement.classList.toggle('dark', isDark);
   }, [isDark]);
   return null;
 }

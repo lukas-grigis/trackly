@@ -1,15 +1,15 @@
-import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
-import { useSessionStore } from "@/store/session-store";
-import type { Session } from "@/store/session-store";
-import { escapeCsvField, formatValue } from "@/lib/utils";
-import { exportSessionPdf } from "@/lib/pdfExport";
-import { useTranslation } from "@/lib/i18n";
-import { ROUTES } from "@/routes";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { useSessionStore } from '@/store/session-store';
+import type { Session } from '@/store/session-store';
+import { escapeCsvField, formatValue } from '@/lib/utils';
+import { exportSessionPdf } from '@/lib/pdfExport';
+import { useTranslation } from '@/lib/i18n';
+import { ROUTES } from '@/routes';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,16 +28,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Plus, Download, FileText, Trash2, ClipboardList, Check } from "lucide-react";
-import { cn } from "@/lib/utils";
-import SessionCard from "@/components/session/SessionCard";
+} from '@/components/ui/alert-dialog';
+import { Plus, Download, FileText, Trash2, ClipboardList, Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import SessionCard from '@/components/session/SessionCard';
 
 function exportSessionCsv(
   session: Session,
   disciplineLabel: (key: string) => string,
   athleteName: (id: string) => string,
-  headers: { athlete: string; discipline: string; value: string; unit: string; date: string },
+  headers: { athlete: string; discipline: string; value: string; unit: string; date: string }
 ) {
   const rows = [
     [headers.athlete, headers.discipline, headers.value, headers.unit, headers.date].map(escapeCsvField),
@@ -49,17 +49,17 @@ function exportSessionCsv(
           formatValue(r.value, r.unit),
           r.unit,
           r.recordedAt,
-        ].map(escapeCsvField),
-      ),
+        ].map(escapeCsvField)
+      )
     ),
   ];
-  const csv = rows.map((row) => row.join(",")).join("\n");
-  const bom = "\uFEFF";
-  const blob = new Blob([bom + csv], { type: "text/csv;charset=utf-8" });
+  const csv = rows.map((row) => row.join(',')).join('\n');
+  const bom = '\uFEFF';
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
+  const a = document.createElement('a');
   a.href = url;
-  a.download = `${session.name.replace(/\s+/g, "_")}_results.csv`;
+  a.download = `${session.name.replace(/\s+/g, '_')}_results.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -69,7 +69,7 @@ export default function HomePage() {
   const rawSessions = useSessionStore((s) => s.sessions);
   const sessions = useMemo(
     () => [...rawSessions].sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id)),
-    [rawSessions],
+    [rawSessions]
   );
   const allAthletes = useSessionStore((s) => s.athletes);
   const addSession = useSessionStore((s) => s.addSession);
@@ -78,7 +78,7 @@ export default function HomePage() {
   const { t } = useTranslation();
 
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
+  const [name, setName] = useState('');
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [selectedAthleteIds, setSelectedAthleteIds] = useState<string[]>([]);
 
@@ -89,16 +89,14 @@ export default function HomePage() {
   }
 
   function toggleAthlete(id: string) {
-    setSelectedAthleteIds((prev) =>
-      prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id],
-    );
+    setSelectedAthleteIds((prev) => (prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id]));
   }
 
   function handleCreate() {
     if (!name.trim()) return;
     const newId = addSession(name.trim(), date, selectedAthleteIds);
     toast.success(t.sessionCreated);
-    setName("");
+    setName('');
     setDate(new Date().toISOString().slice(0, 10));
     setSelectedAthleteIds([]);
     setOpen(false);
@@ -124,9 +122,7 @@ export default function HomePage() {
           <DialogContent className="max-w-sm sm:max-w-md">
             <DialogHeader>
               <DialogTitle>{t.newSession}</DialogTitle>
-              <DialogDescription className="sr-only">
-                {t.createSession}
-              </DialogDescription>
+              <DialogDescription className="sr-only">{t.createSession}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 pt-2">
               <div className="space-y-2">
@@ -136,17 +132,12 @@ export default function HomePage() {
                   placeholder={t.sessionNamePlaceholder}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+                  onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="session-date">{t.sessionDate}</Label>
-                <Input
-                  id="session-date"
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                />
+                <Input id="session-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
               </div>
 
               {/* Athlete presence check */}
@@ -158,16 +149,12 @@ export default function HomePage() {
                       type="button"
                       onClick={() =>
                         setSelectedAthleteIds(
-                          selectedAthleteIds.length === allAthletes.length
-                            ? []
-                            : allAthletes.map((a) => a.id),
+                          selectedAthleteIds.length === allAthletes.length ? [] : allAthletes.map((a) => a.id)
                         )
                       }
                       className="text-xs font-medium text-primary hover:underline"
                     >
-                      {selectedAthleteIds.length === allAthletes.length
-                        ? t.deselectAll
-                        : t.selectAll}
+                      {selectedAthleteIds.length === allAthletes.length ? t.deselectAll : t.selectAll}
                     </button>
                   </div>
                   <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto">
@@ -179,10 +166,10 @@ export default function HomePage() {
                           type="button"
                           onClick={() => toggleAthlete(athlete.id)}
                           className={cn(
-                            "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
+                            'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
                             selected
-                              ? "border-primary bg-primary/10 text-primary"
-                              : "border-border text-muted-foreground hover:border-foreground hover:text-foreground",
+                              ? 'border-primary bg-primary/10 text-primary'
+                              : 'border-border text-muted-foreground hover:border-foreground hover:text-foreground'
                           )}
                         >
                           {athlete.name}
@@ -207,10 +194,7 @@ export default function HomePage() {
 
       {sessions.length === 0 ? (
         <div className="flex flex-col items-center gap-4 py-16 text-center">
-          <ClipboardList
-            className="h-16 w-16 text-muted-foreground/40 animate-float"
-            strokeWidth={1.25}
-          />
+          <ClipboardList className="h-16 w-16 text-muted-foreground/40 animate-float" strokeWidth={1.25} />
           <p className="text-muted-foreground max-w-xs">{t.noSessions}</p>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
@@ -235,13 +219,11 @@ export default function HomePage() {
                     disabled={session.heats.length === 0}
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (session.heats.length === 0) { toast.warning(t.noExportData); return; }
-                      exportSessionPdf(
-                        session,
-                        allAthletes,
-                        (key) => t.disciplines[key] ?? key,
-                        t,
-                      );
+                      if (session.heats.length === 0) {
+                        toast.warning(t.noExportData);
+                        return;
+                      }
+                      exportSessionPdf(session, allAthletes, (key) => t.disciplines[key] ?? key, t);
                       toast.success(t.pdfExported);
                     }}
                     aria-label={t.exportPdf}
@@ -260,9 +242,14 @@ export default function HomePage() {
                       exportSessionCsv(
                         session,
                         (key) => t.disciplines[key] ?? key,
-                        (id) =>
-                          allAthletes.find((a) => a.id === id)?.name ?? id,
-                        { athlete: t.csvAthlete, discipline: t.csvDiscipline, value: t.csvValue, unit: t.csvUnit, date: t.csvDate },
+                        (id) => allAthletes.find((a) => a.id === id)?.name ?? id,
+                        {
+                          athlete: t.csvAthlete,
+                          discipline: t.csvDiscipline,
+                          value: t.csvValue,
+                          unit: t.csvUnit,
+                          date: t.csvDate,
+                        }
                       );
                       toast.success(t.csvExported);
                     }}
@@ -288,9 +275,7 @@ export default function HomePage() {
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>{t.clearAllDataConfirm}</AlertDialogTitle>
-                <AlertDialogDescription>
-                  {t.clearAllDataDesc}
-                </AlertDialogDescription>
+                <AlertDialogDescription>{t.clearAllDataDesc}</AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>{t.cancel}</AlertDialogCancel>

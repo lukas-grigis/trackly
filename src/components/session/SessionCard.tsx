@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Trash2, Pencil, Users, Timer } from "lucide-react";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Trash2, Pencil, Users, Timer } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,7 +13,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
 import {
   Dialog,
   DialogContent,
@@ -21,13 +21,13 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import type { Session } from "@/store/session-store";
-import { useSessionStore } from "@/store/session-store";
-import { useTranslation } from "@/lib/i18n";
-import { formatLocalDate } from "@/lib/locale";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import type { Session } from '@/store/session-store';
+import { useSessionStore } from '@/store/session-store';
+import { useTranslation } from '@/lib/i18n';
+import { formatLocalDate } from '@/lib/locale';
 
 interface SessionCardProps {
   session: Session;
@@ -108,15 +108,21 @@ export default function SessionCard({ session, onDelete }: SessionCardProps) {
             if (disciplines.length === 0) return null;
             const shown = disciplines.slice(0, 3);
             const remaining = disciplines.length - shown.length;
-            return shown.map((d) => (
-              <Badge key={d} variant="outline" className="text-muted-foreground text-[10px]">
-                {t.disciplines[d] ?? d}
-              </Badge>
-            )).concat(remaining > 0 ? [
-              <Badge key="more" variant="outline" className="text-muted-foreground text-[10px]">
-                +{remaining}
-              </Badge>
-            ] : []);
+            return shown
+              .map((d) => (
+                <Badge key={d} variant="outline" className="text-muted-foreground text-[10px]">
+                  {t.disciplines[d] ?? d}
+                </Badge>
+              ))
+              .concat(
+                remaining > 0
+                  ? [
+                      <Badge key="more" variant="outline" className="text-muted-foreground text-[10px]">
+                        +{remaining}
+                      </Badge>,
+                    ]
+                  : []
+              );
           })()}
         </CardContent>
       </Card>
@@ -126,9 +132,7 @@ export default function SessionCard({ session, onDelete }: SessionCardProps) {
         <AlertDialogContent onClick={(e) => e.stopPropagation()}>
           <AlertDialogHeader>
             <AlertDialogTitle>{t.deleteSessionConfirm}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t.deleteSessionDesc}
-            </AlertDialogDescription>
+            <AlertDialogDescription>{t.deleteSessionDesc}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
@@ -147,9 +151,7 @@ export default function SessionCard({ session, onDelete }: SessionCardProps) {
         <DialogContent onClick={(e) => e.stopPropagation()}>
           <DialogHeader>
             <DialogTitle>{t.editSession}</DialogTitle>
-            <DialogDescription className="sr-only">
-              {t.editSession}
-            </DialogDescription>
+            <DialogDescription className="sr-only">{t.editSession}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="space-y-2">
@@ -158,7 +160,7 @@ export default function SessionCard({ session, onDelete }: SessionCardProps) {
                 id="edit-session-name"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSaveEdit()}
+                onKeyDown={(e) => e.key === 'Enter' && handleSaveEdit()}
               />
             </div>
             <div className="space-y-2">
