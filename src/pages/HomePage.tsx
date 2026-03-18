@@ -1,10 +1,12 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useSessionStore } from "@/store/session-store";
 import type { Session } from "@/store/session-store";
-import { escapeCsvField } from "@/lib/utils";
+import { escapeCsvField, formatValue } from "@/lib/utils";
 import { exportSessionPdf } from "@/lib/pdfExport";
 import { useTranslation } from "@/lib/i18n";
+import { ROUTES } from "@/routes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,7 +46,7 @@ function exportSessionCsv(
         [
           athleteName(r.athleteId),
           disciplineLabel(h.disciplineType),
-          String(r.value),
+          formatValue(r.value, r.unit),
           r.unit,
           r.recordedAt,
         ].map(escapeCsvField),
@@ -63,6 +65,7 @@ function exportSessionCsv(
 }
 
 export default function HomePage() {
+  const navigate = useNavigate();
   const rawSessions = useSessionStore((s) => s.sessions);
   const sessions = useMemo(
     () => [...rawSessions].sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id)),
@@ -93,12 +96,13 @@ export default function HomePage() {
 
   function handleCreate() {
     if (!name.trim()) return;
-    addSession(name.trim(), date, selectedAthleteIds);
+    const newId = addSession(name.trim(), date, selectedAthleteIds);
     toast.success(t.sessionCreated);
     setName("");
     setDate(new Date().toISOString().slice(0, 10));
     setSelectedAthleteIds([]);
     setOpen(false);
+    navigate(ROUTES.SESSION(newId));
   }
 
   function handleDelete(id: string) {

@@ -22,7 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Trash2, Plus, Users, Camera, X } from "lucide-react";
+import { Trash2, Plus, Users, Camera, X, Pencil } from "lucide-react";
 
 const CURRENT_YEAR = new Date().getFullYear();
 // Ages 3–21 → 19 chips; the 20th slot is a custom entry
@@ -68,6 +68,14 @@ export default function AthletesPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const replaceFileInputRef = useRef<HTMLInputElement>(null);
   const [replaceTarget, setReplaceTarget] = useState<string | null>(null);
+
+  // Edit athlete state
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editYear, setEditYear] = useState<number | null>(null);
+  const [editGender, setEditGender] = useState<Gender | undefined>(undefined);
+  const [editCustomOpen, setEditCustomOpen] = useState(false);
+  const [editCustomInput, setEditCustomInput] = useState("");
 
   const handleFileSelect = useCallback(async (file: File, athleteId?: string) => {
     try {
@@ -129,6 +137,37 @@ export default function AthletesPage() {
     setRemoveTarget(null);
   }
 
+  function startEdit(athleteId: string) {
+    const athlete = athletes.find((a) => a.id === athleteId);
+    if (!athlete) return;
+    setEditId(athleteId);
+    setEditName(athlete.name);
+    setEditYear(athlete.yearOfBirth ?? null);
+    setEditGender(athlete.gender);
+    setEditCustomOpen(false);
+    setEditCustomInput("");
+  }
+
+  function handleEditSave() {
+    if (!editId || !editName.trim()) return;
+    const athlete = athletes.find((a) => a.id === editId);
+    if (!athlete) return;
+    updateAthlete(editId, editName.trim(), editYear ?? undefined, editGender, athlete.avatarBase64);
+    toast.success(t.athleteUpdated);
+    setEditId(null);
+  }
+
+  function handleEditCustomConfirm() {
+    const parsed = parseInt(editCustomInput, 10);
+    if (parsed > 1900 && parsed <= CURRENT_YEAR) {
+      setEditYear(parsed);
+    }
+    setEditCustomOpen(false);
+    setEditCustomInput("");
+  }
+
+  const isEditCustomYear = editYear !== null && !YEAR_OPTIONS.includes(editYear);
+
   return (
     <div className="space-y-4">
       <h1 className="text-3xl font-bold heading-tight">{t.athletesNav}</h1>
@@ -187,6 +226,15 @@ export default function AthletesPage() {
                     <X className="h-4 w-4" />
                   </Button>
                 )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground"
+                  onClick={() => startEdit(athlete.id)}
+                  aria-label={t.editAthlete}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -366,6 +414,97 @@ export default function AthletesPage() {
               onClick={() => removeTarget && handleRemove(removeTarget)}
             >
               {t.removeChild}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Edit athlete dialog */}
+      <AlertDialog
+        open={editId !== null}
+        onOpenChange={(open) => !open && setEditId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t.editAthlete}</AlertDialogTitle>
+            <AlertDialogDescription className="sr-only">{t.editAthlete}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-3">
+            <Input
+              placeholder={t.childNameLabel}
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleEditSave()}
+            />
+            <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5">
+              {YEAR_OPTIONS.map((y) => (
+                <button
+                  key={y}
+                  type="button"
+                  onClick={() => { setEditYear(editYear === y ? null : y); setEditCustomOpen(false); }}
+                  className={cn(
+                    "rounded-md border py-1.5 text-xs font-medium tabular-nums transition-colors",
+                    editYear === y
+                      ? "border-accent bg-accent text-accent-foreground"
+                      : "border-border bg-transparent text-muted-foreground hover:border-foreground hover:text-foreground",
+                  )}
+                >
+                  {y}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setEditCustomOpen((v) => !v)}
+                className={cn(
+                  "rounded-md border py-1.5 text-xs font-medium transition-colors",
+                  isEditCustomYear || editCustomOpen
+                    ? "border-accent bg-accent text-accent-foreground"
+                    : "border-border bg-transparent text-muted-foreground hover:border-foreground hover:text-foreground",
+                )}
+              >
+                {isEditCustomYear ? editYear : "···"}
+              </button>
+            </div>
+            {editCustomOpen && (
+              <div className="flex gap-2">
+                <Input
+                  autoFocus
+                  type="number"
+                  placeholder="e.g. 1998"
+                  value={editCustomInput}
+                  onChange={(e) => setEditCustomInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleEditCustomConfirm()}
+                  className="w-32 text-base md:text-sm"
+                />
+                <Button size="sm" onClick={handleEditCustomConfirm}>
+                  {t.done}
+                </Button>
+              </div>
+            )}
+            <div className="flex gap-2">
+              {(["male", "female", "nonbinary"] as const).map((g) => (
+                <button
+                  key={g}
+                  type="button"
+                  onClick={() => setEditGender(editGender === g ? undefined : g)}
+                  aria-label={t.genderLabels[g]}
+                  title={t.genderLabels[g]}
+                  className={cn(
+                    "flex-1 rounded-md border py-2 text-base transition-colors",
+                    editGender === g
+                      ? "border-accent bg-accent text-accent-foreground"
+                      : "border-border bg-transparent text-muted-foreground hover:border-foreground hover:text-foreground",
+                  )}
+                >
+                  {g === "male" ? "♂" : g === "female" ? "♀" : "⚧"}
+                </button>
+              ))}
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleEditSave}>
+              {t.save}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

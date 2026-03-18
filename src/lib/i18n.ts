@@ -76,6 +76,7 @@ export interface Translations {
   selectAthletes: string;
   presenceLabel: string;
   noAthletesInSession: string;
+  editAthlete: string;
   selectAll: string;
   deselectAll: string;
   done: string;
@@ -91,6 +92,10 @@ export interface Translations {
   rankCol: string;
   nameCol: string;
   timeCol: string;
+  // Repeat confirmation (#19)
+  repeatConfirmTitle: string;
+  repeatConfirmDesc: string;
+  repeatConfirmAction: string;
   // Disciplines
   disciplines: Record<string, string>;
   // Categories
@@ -167,6 +172,7 @@ export interface Translations {
   leaderboardGameFilter: string;
   leaderboardAllGames: string;
   leaderboardGameLabel: string;
+  viewLeaderboard: string;
   // Save indicator
   savedAgo: string;
   saveError: string;
@@ -294,7 +300,7 @@ const de: Translations = {
   deleteSession: "Session löschen",
   deleteSessionConfirm: "Session löschen?",
   deleteSessionDesc:
-    "Dies löscht die Session und alle zugehörigen Athleten und Ergebnisse unwiderruflich.",
+    "Dies löscht die Session und alle zugehörigen Ergebnisse unwiderruflich. Athleten bleiben im Kader erhalten.",
   // Session page
   childrenTab: "Athleten",
   resultsTab: "Ergebnisse",
@@ -332,6 +338,7 @@ const de: Translations = {
   selectAthletes: "Athleten für Session wählen",
   presenceLabel: "Wer ist dabei?",
   noAthletesInSession: "Keine Athleten ausgewählt. Wähle Athleten aus der globalen Liste.",
+  editAthlete: "Athlet bearbeiten",
   selectAll: "Alle auswählen",
   deselectAll: "Alle abwählen",
   done: "Fertig",
@@ -344,6 +351,9 @@ const de: Translations = {
   raceFinished: "Rennen beendet!",
   noTimesRecorded: "Keine Zeiten aufgezeichnet.",
   repeat: "Wiederholen",
+  repeatConfirmTitle: "Neuen Lauf starten?",
+  repeatConfirmDesc: "Die aktuellen Ergebnisse wurden gespeichert.",
+  repeatConfirmAction: "Neuen Lauf starten",
   rankCol: "#",
   nameCol: "Name",
   timeCol: "Zeit",
@@ -464,6 +474,7 @@ const de: Translations = {
   leaderboardGameFilter: "Spiel",
   leaderboardAllGames: "Alle Spiele",
   leaderboardGameLabel: "Spiel",
+  viewLeaderboard: "Rangliste anzeigen",
   // Save indicator
   savedAgo: "Gespeichert vor {time}",
   saveError: "Speichern fehlgeschlagen",
@@ -591,7 +602,7 @@ const en: Translations = {
   deleteSession: "Delete session",
   deleteSessionConfirm: "Delete session?",
   deleteSessionDesc:
-    "This will permanently delete the session and all associated athletes and results.",
+    "This will permanently delete the session and all associated results. Athletes will remain in the roster.",
   // Session page
   childrenTab: "Athletes",
   resultsTab: "Results",
@@ -629,6 +640,7 @@ const en: Translations = {
   selectAthletes: "Select athletes for session",
   presenceLabel: "Who's here?",
   noAthletesInSession: "No athletes selected. Pick athletes from the global roster.",
+  editAthlete: "Edit athlete",
   selectAll: "Select all",
   deselectAll: "Deselect all",
   done: "Done",
@@ -641,6 +653,9 @@ const en: Translations = {
   raceFinished: "Race finished!",
   noTimesRecorded: "No times recorded.",
   repeat: "Repeat",
+  repeatConfirmTitle: "Start new heat?",
+  repeatConfirmDesc: "The current results have been saved.",
+  repeatConfirmAction: "Start new heat",
   rankCol: "#",
   nameCol: "Name",
   timeCol: "Time",
@@ -761,6 +776,7 @@ const en: Translations = {
   leaderboardGameFilter: "Game",
   leaderboardAllGames: "All games",
   leaderboardGameLabel: "Game",
+  viewLeaderboard: "View Leaderboard",
   // Save indicator
   savedAgo: "Saved {time} ago",
   saveError: "Save failed",

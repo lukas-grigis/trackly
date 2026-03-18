@@ -92,6 +92,9 @@ export function getDisciplinesByCategory(
   return Object.entries(DISCIPLINES).filter(([, c]) => c.category === cat);
 }
 
+/** Maximum number of attempts per athlete in field events (e.g. high jump may need 6+). */
+export const MAX_FIELD_ATTEMPTS = 6;
+
 /** Returns true when the discipline belongs to the "games" category. */
 export function isGamesDiscipline(discipline: string): boolean {
   return DISCIPLINES[discipline]?.category === "games";

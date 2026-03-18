@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSessionStore } from "@/store/session-store";
-import { DISCIPLINES, isTimedDiscipline, getMedalStyle } from "@/lib/constants";
+import { DISCIPLINES, isTimedDiscipline, getMedalStyle, MAX_FIELD_ATTEMPTS } from "@/lib/constants";
 import { formatTime, formatStopwatch, cn, getAgeGroup } from "@/lib/utils";
 import { GenderBadgeInline } from "@/components/GenderBadge";
 import { AthleteAvatar } from "@/components/ui/athlete-avatar";
@@ -108,7 +108,7 @@ export default function RacePage() {
   const [showGo, setShowGo] = useState(false);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Field-entry state: attempts per athlete (up to 3)
+  // Field-entry state: attempts per athlete (up to MAX_FIELD_ATTEMPTS)
   interface Attempt {
     value: string; // raw input string
     foul: boolean;
@@ -228,6 +228,7 @@ export default function RacePage() {
   }, [countdownRemaining, startCountdown]);
 
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [repeatDialogOpen, setRepeatDialogOpen] = useState(false);
 
   if (!session || !id) {
     return (
@@ -345,6 +346,14 @@ export default function RacePage() {
   }
 
   function handleReset() {
+    // Clean up orphan heat (zero results) on repeat/abort (#13)
+    if (id && heatId) {
+      const s = useSessionStore.getState().sessions.find((sess) => sess.id === id);
+      const heat = s?.heats.find((h) => h.id === heatId);
+      if (heat && heat.results.length === 0) {
+        useSessionStore.getState().deleteHeat(id, heatId);
+      }
+    }
     setPhase("setup");
     setStartTime(null);
     setFinishTimes({});
@@ -390,7 +399,24 @@ export default function RacePage() {
         </div>
 
         <div className="space-y-2">
-          <p className="text-sm font-medium">{t.selectParticipants}</p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium">{t.selectParticipants}</p>
+            {sessionAthletes.length > 0 && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  const allIds = sessionAthletes.map((a) => a.id);
+                  const allSelected = allIds.every((id) => selectedChildren.includes(id));
+                  setSelectedChildren(allSelected ? [] : allIds);
+                }}
+              >
+                {sessionAthletes.every((a) => selectedChildren.includes(a.id))
+                  ? t.deselectAll
+                  : t.selectAll}
+              </Button>
+            )}
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
             {sessionAthletes.map((athlete) => {
               const selected = selectedChildren.includes(athlete.id);
@@ -407,7 +433,7 @@ export default function RacePage() {
                     <span className="flex items-center gap-1">
                       {athlete.yearOfBirth && (
                         <span className="text-[10px] font-normal opacity-70">
-                          {getAgeGroup(athlete.yearOfBirth)}
+                          {getAgeGroup(athlete.yearOfBirth, new Date(session.date).getFullYear())}
                         </span>
                       )}
                       <GenderBadgeInline gender={athlete.gender} />
@@ -449,7 +475,7 @@ export default function RacePage() {
           disabled={selectedChildren.length === 0}
           onClick={handleStart}
         >
-          {t.start}
+          {disciplineConfig.mode === "distance" ? t.fieldEntry : t.start}
         </Button>
       </div>
     );
@@ -551,7 +577,7 @@ export default function RacePage() {
     function addAttempt(athleteId: string) {
       setFieldAttempts((prev) => {
         const attempts = prev[athleteId] ?? [];
-        if (attempts.length >= 3) return prev;
+        if (attempts.length >= MAX_FIELD_ATTEMPTS) return prev;
         return { ...prev, [athleteId]: [...attempts, { value: "", foul: false }] };
       });
     }
@@ -669,7 +695,7 @@ export default function RacePage() {
                   ))}
                 </div>
 
-                {attempts.length < 3 && (
+                {attempts.length < MAX_FIELD_ATTEMPTS && (
                   <Button
                     size="sm"
                     variant="ghost"
@@ -752,7 +778,7 @@ export default function RacePage() {
                     <span className="flex items-center gap-1">
                       {athlete?.yearOfBirth && (
                         <span className="text-xs font-normal opacity-70">
-                          {getAgeGroup(athlete.yearOfBirth)}
+                          {getAgeGroup(athlete.yearOfBirth, new Date(session.date).getFullYear())}
                         </span>
                       )}
                       <GenderBadgeInline gender={athlete?.gender} />
@@ -850,10 +876,38 @@ export default function RacePage() {
         <Button className="flex-1 h-12 text-base rounded-xl" onClick={handleSave}>
           {t.save}
         </Button>
-        <Button variant="outline" className="flex-1 h-12 text-base rounded-xl" onClick={handleReset}>
+        <Button variant="outline" className="flex-1 h-12 text-base rounded-xl" onClick={() => setRepeatDialogOpen(true)}>
           {t.repeat}
         </Button>
       </div>
+
+      {/* Repeat confirmation dialog (#19) */}
+      {repeatDialogOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="mx-4 w-full max-w-sm rounded-2xl border bg-background p-6 space-y-4 shadow-lg">
+            <h2 className="text-lg font-bold">{t.repeatConfirmTitle}</h2>
+            <p className="text-sm text-muted-foreground">{t.repeatConfirmDesc}</p>
+            <div className="flex flex-col gap-2">
+              <Button onClick={() => { setRepeatDialogOpen(false); handleReset(); }}>
+                {t.repeatConfirmAction}
+              </Button>
+              <Button variant="outline" onClick={() => setRepeatDialogOpen(false)}>
+                {t.cancel}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {id && (
+        <Button
+          variant="ghost"
+          className="w-full h-10 text-sm"
+          onClick={() => navigate(ROUTES.LEADERBOARD(id))}
+        >
+          {t.viewLeaderboard}
+        </Button>
+      )}
     </div>
   );
 }

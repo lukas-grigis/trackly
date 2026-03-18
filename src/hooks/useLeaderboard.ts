@@ -45,10 +45,15 @@ export function computeLeaderboard(
   discipline: string,
   athletes: Athlete[],
   ageGroupFilter: AgeGroupFilter = "All",
+  customDisciplineName?: string,
 ): LeaderboardResult {
-  const config = DISCIPLINES[discipline];
+  const isCustom = discipline === "custom";
+  const config = isCustom
+    ? { sortAscending: true, unit: "count" as const, mode: "custom" as const, category: "games" as const, icon: "mdi:star" }
+    : DISCIPLINES[discipline];
   if (!config) return { entries: [], hasYobData: false };
 
+  const sessionYear = new Date(session.date).getFullYear();
   const sessionAthletes = athletes.filter((a) => session.athleteIds.includes(a.id));
   const hasYobData = sessionAthletes.some((a) => a.yearOfBirth != null);
 
@@ -56,7 +61,7 @@ export function computeLeaderboard(
   for (const athlete of sessionAthletes) {
     if (ageGroupFilter === "All") {
       allowedAthleteIds.add(athlete.id);
-    } else if (athlete.yearOfBirth != null && getAgeGroup(athlete.yearOfBirth) === ageGroupFilter) {
+    } else if (athlete.yearOfBirth != null && getAgeGroup(athlete.yearOfBirth, sessionYear) === ageGroupFilter) {
       allowedAthleteIds.add(athlete.id);
     }
   }
@@ -64,7 +69,11 @@ export function computeLeaderboard(
   // I1: exclude team- prefixed IDs and IDs not in athletes array
   const athleteIdSet = new Set(athletes.map((a) => a.id));
 
-  const heats = session.heats.filter((h) => h.disciplineType === discipline);
+  const heats = session.heats.filter((h) =>
+    isCustom
+      ? h.disciplineType === "custom" && h.customDisciplineName === customDisciplineName
+      : h.disciplineType === discipline,
+  );
   const bestByAthlete = new Map<string, number>();
 
   for (const heat of heats) {
@@ -118,6 +127,7 @@ export function useLeaderboard(
     const config = DISCIPLINES[discipline];
     if (!config) return { entries: [], hasYobData: false };
 
+    const sessionYear = new Date(session.date).getFullYear();
     const sessionAthletes = athletes.filter((a) => session.athleteIds.includes(a.id));
     const hasYobData = sessionAthletes.some((a) => a.yearOfBirth != null);
     const athleteIdSet = new Set(athletes.map((a) => a.id));
@@ -126,7 +136,7 @@ export function useLeaderboard(
     for (const athlete of sessionAthletes) {
       if (ageGroupFilter === "All") {
         allowedAthleteIds.add(athlete.id);
-      } else if (athlete.yearOfBirth != null && getAgeGroup(athlete.yearOfBirth) === ageGroupFilter) {
+      } else if (athlete.yearOfBirth != null && getAgeGroup(athlete.yearOfBirth, sessionYear) === ageGroupFilter) {
         allowedAthleteIds.add(athlete.id);
       }
     }
