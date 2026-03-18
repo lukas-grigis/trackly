@@ -172,6 +172,7 @@ export interface Translations {
   leaderboardGameFilter: string;
   leaderboardAllGames: string;
   leaderboardGameLabel: string;
+  viewLeaderboard: string;
   // Save indicator
   savedAgo: string;
   saveError: string;
@@ -473,6 +474,7 @@ const de: Translations = {
   leaderboardGameFilter: "Spiel",
   leaderboardAllGames: "Alle Spiele",
   leaderboardGameLabel: "Spiel",
+  viewLeaderboard: "Rangliste anzeigen",
   // Save indicator
   savedAgo: "Gespeichert vor {time}",
   saveError: "Speichern fehlgeschlagen",
@@ -774,6 +776,7 @@ const en: Translations = {
   leaderboardGameFilter: "Game",
   leaderboardAllGames: "All games",
   leaderboardGameLabel: "Game",
+  viewLeaderboard: "View Leaderboard",
   // Save indicator
   savedAgo: "Saved {time} ago",
   saveError: "Save failed",

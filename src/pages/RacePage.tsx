@@ -898,6 +898,16 @@ export default function RacePage() {
           </div>
         </div>
       )}
+
+      {id && (
+        <Button
+          variant="ghost"
+          className="w-full h-10 text-sm"
+          onClick={() => navigate(ROUTES.LEADERBOARD(id))}
+        >
+          {t.viewLeaderboard}
+        </Button>
+      )}
     </div>
   );
 }

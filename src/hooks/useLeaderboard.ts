@@ -45,8 +45,12 @@ export function computeLeaderboard(
   discipline: string,
   athletes: Athlete[],
   ageGroupFilter: AgeGroupFilter = "All",
+  customDisciplineName?: string,
 ): LeaderboardResult {
-  const config = DISCIPLINES[discipline];
+  const isCustom = discipline === "custom";
+  const config = isCustom
+    ? { sortAscending: true, unit: "count" as const, mode: "custom" as const, category: "games" as const, icon: "mdi:star" }
+    : DISCIPLINES[discipline];
   if (!config) return { entries: [], hasYobData: false };
 
   const sessionYear = new Date(session.date).getFullYear();
@@ -65,7 +69,11 @@ export function computeLeaderboard(
   // I1: exclude team- prefixed IDs and IDs not in athletes array
   const athleteIdSet = new Set(athletes.map((a) => a.id));
 
-  const heats = session.heats.filter((h) => h.disciplineType === discipline);
+  const heats = session.heats.filter((h) =>
+    isCustom
+      ? h.disciplineType === "custom" && h.customDisciplineName === customDisciplineName
+      : h.disciplineType === discipline,
+  );
   const bestByAthlete = new Map<string, number>();
 
   for (const heat of heats) {
