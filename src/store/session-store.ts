@@ -100,10 +100,15 @@ export const useSessionStore = create<StoreState>()(
       removeAthlete(id) {
         set((state) => ({
           athletes: state.athletes.filter((a) => a.id !== id),
-          // Also remove from any session rosters
+          // Also remove from any session rosters and cascade-clean heats
           sessions: state.sessions.map((s) => ({
             ...s,
             athleteIds: s.athleteIds.filter((aid) => aid !== id),
+            heats: s.heats.map((h) => ({
+              ...h,
+              participantIds: h.participantIds.filter((pid) => pid !== id),
+              results: h.results.filter((r) => r.athleteId !== id),
+            })),
           })),
         }));
       },

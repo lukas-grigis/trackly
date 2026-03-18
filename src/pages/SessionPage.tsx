@@ -8,7 +8,7 @@ import { formatValue } from "@/lib/utils";
 import { GenderBadge } from "@/components/GenderBadge";
 import { AthleteAvatar } from "@/components/ui/athlete-avatar";
 import { AgeGroupBadge } from "@/components/AgeGroupBadge";
-import { useTranslation } from "@/lib/i18n";
+import { useTranslation, getHeatLabel, getHeatsTabLabel, getAllRunsLabel } from "@/lib/i18n";
 import { formatLocalDate } from "@/lib/locale";
 import { ROUTES } from "@/routes";
 import { Button } from "@/components/ui/button";
@@ -270,8 +270,8 @@ export default function SessionPage() {
 
   const viewLabels: Record<string, string> = {
     rankings: t.leaderboard,
-    all: t.allRuns,
-    heats: t.heatsTab,
+    all: getAllRunsLabel(discipline, t),
+    heats: getHeatsTabLabel(discipline, t),
   };
 
   const disciplineDisplayName = discipline === "custom"
@@ -723,7 +723,7 @@ export default function SessionPage() {
                       {/* Heat header */}
                       <div className="flex items-center justify-between bg-muted/40 px-4 py-2 border-b">
                         <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          {t.pdfHeat} {heatIdx + 1}
+                          {getHeatLabel(discipline, t)} {heatIdx + 1}
                           <span className="ml-2 font-normal">
                             ({heat.results.length}/{heat.participantIds.length})
                           </span>

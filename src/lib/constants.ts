@@ -91,3 +91,8 @@ export function getDisciplinesByCategory(
 ): [string, DisciplineConfig][] {
   return Object.entries(DISCIPLINES).filter(([, c]) => c.category === cat);
 }
+
+/** Returns true when the discipline belongs to the "games" category. */
+export function isGamesDiscipline(discipline: string): boolean {
+  return DISCIPLINES[discipline]?.category === "games";
+}

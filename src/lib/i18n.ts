@@ -31,6 +31,7 @@ export interface Translations {
   pdfAgeGroup: string;
   pdfResult: string;
   pdfHeat: string;
+  pdfGame: string;
   // Session card
   athletes: string;
   results: string;
@@ -163,6 +164,9 @@ export interface Translations {
   leaderboardHeatFilter: string;
   leaderboardAllHeats: string;
   leaderboardHeatLabel: string;
+  leaderboardGameFilter: string;
+  leaderboardAllGames: string;
+  leaderboardGameLabel: string;
   // Save indicator
   savedAgo: string;
   saveError: string;
@@ -210,6 +214,8 @@ export interface Translations {
   goHome: string;
   allRuns: string;
   heatsTab: string;
+  allGames: string;
+  gamesTab: string;
   // Athlete profile
   athleteNotFound: string;
   personalBests: string;
@@ -246,6 +252,7 @@ const de: Translations = {
   pdfAgeGroup: "Altersklasse",
   pdfResult: "Ergebnis",
   pdfHeat: "Lauf",
+  pdfGame: "Spiel",
   // Session card
   athletes: "Athleten",
   results: "Ergebnisse",
@@ -420,6 +427,9 @@ const de: Translations = {
   leaderboardHeatFilter: "Lauf",
   leaderboardAllHeats: "Alle Läufe",
   leaderboardHeatLabel: "Lauf",
+  leaderboardGameFilter: "Spiel",
+  leaderboardAllGames: "Alle Spiele",
+  leaderboardGameLabel: "Spiel",
   // Save indicator
   savedAgo: "Gespeichert vor {time}",
   saveError: "Speichern fehlgeschlagen",
@@ -450,13 +460,13 @@ const de: Translations = {
   landingFooterPrivacy: "Kein Tracking · Kein Konto nötig · Deine Daten bleiben auf deinem Gerät",
   // How-to guide
   howToTitle: "Schnellstart",
-  howToSubtitle: "In 5 Schritten zur ersten Zeitmessung.",
+  howToSubtitle: "In 5 Schritten zum ersten Ergebnis.",
   howToStep1Title: "Session erstellen",
-  howToStep1Desc: "Tippe auf «Neue Session» und gib einen Namen und ein Datum ein. Eine Session fasst alle Läufe und Ergebnisse eines Anlasses zusammen.",
+  howToStep1Desc: "Tippe auf «Neue Session» und gib einen Namen und ein Datum ein. Eine Session fasst alle Läufe, Spiele und Ergebnisse eines Anlasses zusammen.",
   howToStep2Title: "Athleten hinzufügen",
   howToStep2Desc: "Füge Athleten mit Name hinzu. Jahrgang, Geschlecht und Foto sind optional, helfen aber bei Ranglisten und Export.",
-  howToStep3Title: "Lauf starten",
-  howToStep3Desc: "Wähle eine Disziplin, wähle die Athleten aus und starte den Countdown. Tippe auf einen Namen, sobald die Person im Ziel ist.",
+  howToStep3Title: "Lauf oder Spiel starten",
+  howToStep3Desc: "Wähle eine Disziplin, wähle die Athleten aus und starte den Countdown. Bei Spielen (Fussball, Basketball etc.) zähle direkt die Punkte pro Team.",
   howToStep4Title: "Rangliste & TV-Modus",
   howToStep4Desc: "Öffne die Rangliste, um Bestleistungen pro Disziplin zu sehen. Im TV-Modus wird die Rangliste grossformatig für Zuschauer angezeigt.",
   howToStep5Title: "Ergebnisse exportieren",
@@ -467,6 +477,8 @@ const de: Translations = {
   goHome: "Zur Startseite",
   allRuns: "Alle Läufe",
   heatsTab: "Läufe",
+  allGames: "Alle Spiele",
+  gamesTab: "Spiele",
   // Athlete profile
   athleteNotFound: "Athlet nicht gefunden",
   personalBests: "Persönliche Bestleistungen",
@@ -503,6 +515,7 @@ const en: Translations = {
   pdfAgeGroup: "Age group",
   pdfResult: "Result",
   pdfHeat: "Heat",
+  pdfGame: "Game",
   // Session card
   athletes: "Athletes",
   results: "Results",
@@ -677,6 +690,9 @@ const en: Translations = {
   leaderboardHeatFilter: "Heat",
   leaderboardAllHeats: "All heats",
   leaderboardHeatLabel: "Heat",
+  leaderboardGameFilter: "Game",
+  leaderboardAllGames: "All games",
+  leaderboardGameLabel: "Game",
   // Save indicator
   savedAgo: "Saved {time} ago",
   saveError: "Save failed",
@@ -707,13 +723,13 @@ const en: Translations = {
   landingFooterPrivacy: "No tracking · No account needed · Your data stays on your device",
   // How-to guide
   howToTitle: "Quick Start",
-  howToSubtitle: "Get timing in 5 simple steps.",
+  howToSubtitle: "Your first result in 5 simple steps.",
   howToStep1Title: "Create a session",
-  howToStep1Desc: "Tap \"New Session\" and enter a name and date. A session groups all heats and results for one event.",
+  howToStep1Desc: "Tap \"New Session\" and enter a name and date. A session groups all heats, games, and results for one event.",
   howToStep2Title: "Add athletes",
   howToStep2Desc: "Add athletes by name. Year of birth, gender, and photo are optional but help with leaderboards and exports.",
-  howToStep3Title: "Start a heat",
-  howToStep3Desc: "Pick a discipline, select the athletes, and start the countdown. Tap a name as soon as they cross the finish line.",
+  howToStep3Title: "Start a heat or game",
+  howToStep3Desc: "Pick a discipline, select the athletes, and start the countdown. For games (football, basketball, etc.) use the score counter to track points per team.",
   howToStep4Title: "View leaderboard & TV mode",
   howToStep4Desc: "Open the leaderboard to see personal bests per discipline. TV mode shows the leaderboard in large format for spectators.",
   howToStep5Title: "Export results",
@@ -724,6 +740,8 @@ const en: Translations = {
   goHome: "Go home",
   allRuns: "All Runs",
   heatsTab: "Heats",
+  allGames: "All Games",
+  gamesTab: "Games",
   // Athlete profile
   athleteNotFound: "Athlete not found",
   personalBests: "Personal Bests",
@@ -767,4 +785,30 @@ export function useTranslation() {
   const lang = useLangStore((s) => s.lang);
   const setLang = useLangStore((s) => s.setLang);
   return { t: translations[lang], lang, setLang };
+}
+
+// ---------------------------------------------------------------------------
+// Context-aware Heat / Game label helper
+// ---------------------------------------------------------------------------
+
+import { isGamesDiscipline } from "@/lib/constants";
+
+/** Returns "Game/Spiel" for games-category disciplines, "Heat/Lauf" otherwise. */
+export function getHeatLabel(discipline: string, t: Translations): string {
+  return isGamesDiscipline(discipline) ? t.pdfGame : t.pdfHeat;
+}
+
+/** Returns the plural tab label: "Games/Spiele" vs "Heats/Läufe". */
+export function getHeatsTabLabel(discipline: string, t: Translations): string {
+  return isGamesDiscipline(discipline) ? t.gamesTab : t.heatsTab;
+}
+
+/** Returns "All Games/Alle Spiele" vs "All Runs/Alle Läufe". */
+export function getAllRunsLabel(discipline: string, t: Translations): string {
+  return isGamesDiscipline(discipline) ? t.allGames : t.allRuns;
+}
+
+/** Returns the leaderboard heat/game label. */
+export function getLeaderboardHeatLabel(discipline: string, t: Translations): string {
+  return isGamesDiscipline(discipline) ? t.leaderboardGameLabel : t.leaderboardHeatLabel;
 }

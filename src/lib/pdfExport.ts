@@ -2,6 +2,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { Session, Athlete } from "@/store/session-store";
 import type { Translations } from "@/lib/i18n";
+import { getLeaderboardHeatLabel } from "@/lib/i18n";
 import { DISCIPLINES } from "@/lib/constants";
 import { formatValue, getAgeGroup } from "@/lib/utils";
 
@@ -110,7 +111,7 @@ export function exportSessionPdf(
       let heatLabel = "";
       if (heatForAthlete && heats.length > 1) {
         const idx = heats.indexOf(heatForAthlete);
-        heatLabel = `${t.leaderboardHeatLabel} ${idx + 1}`;
+        heatLabel = `${getLeaderboardHeatLabel(disciplineKey, t)} ${idx + 1}`;
       }
 
       rows.push({
