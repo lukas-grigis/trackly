@@ -262,7 +262,39 @@ export const useSessionStore = create<StoreState>()(
     }),
     {
       name: "trackly-storage",
-      version: 5,
+      version: 0,
+      migrate(persistedState: unknown, version: number) {
+        const CURRENT_VERSION = 0;
+
+        // If persisted version is ahead of current, wipe and start fresh
+        if (version > CURRENT_VERSION) {
+          console.warn(
+            `[trackly] Store version ${version} is ahead of current (${CURRENT_VERSION}). Resetting to defaults.`,
+          );
+          return { athletes: [], sessions: [] } as unknown as StoreState;
+        }
+
+        switch (version) {
+          case 0:
+            // Current schema — no migration needed
+            return persistedState as StoreState;
+
+          // Future migrations:
+          // case 0: {
+          //   const s = persistedState as StoreStateV0;
+          //   // transform v0 → v1 ...
+          //   persistedState = { ...s, newField: defaultValue };
+          // }
+          // falls through
+          // case 1: { ... }
+
+          default:
+            console.warn(
+              `[trackly] Unknown store version ${version}. Resetting to defaults.`,
+            );
+            return { athletes: [], sessions: [] } as unknown as StoreState;
+        }
+      },
       storage: (() => {
         // Re-entry guard: updating lastSavedAt triggers persist, which calls
         // setItem again, which would schedule another setState — infinite loop.
