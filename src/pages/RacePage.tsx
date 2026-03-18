@@ -211,11 +211,11 @@ export default function RacePage() {
     );
   }
 
-  function toggleChild(childId: string) {
+  function toggleAthlete(athleteId: string) {
     setSelectedChildren((prev) =>
-      prev.includes(childId)
-        ? prev.filter((c) => c !== childId)
-        : [...prev, childId],
+      prev.includes(athleteId)
+        ? prev.filter((c) => c !== athleteId)
+        : [...prev, athleteId],
     );
   }
 
@@ -238,13 +238,13 @@ export default function RacePage() {
         initial[cid] = [{ value: "", foul: false }];
       }
       setFieldAttempts(initial);
-      // Set default unit based on discipline
-      if (discipline === "long_jump" || discipline === "shot_put" || discipline === "ball_throw" || discipline === "sling_ball") {
-        setFieldUnit("m"); // displayed as m, stored as cm
-      } else if (discipline === "high_jump") {
-        setFieldUnit("cm");
+      // Set display unit based on discipline config
+      const cfg = DISCIPLINES[discipline];
+      if (cfg?.unit === "cm") {
+        // cm-stored disciplines: display as m (except high_jump which stays cm)
+        setFieldUnit(discipline === "high_jump" || discipline === "pole_vault" ? "cm" : "m");
       } else {
-        setFieldUnit("m"); // custom default
+        setFieldUnit("m");
       }
       setPhase("field-entry");
       return;
@@ -259,12 +259,12 @@ export default function RacePage() {
     }
   }
 
-  function handleFinish(childId: string) {
+  function handleFinish(athleteId: string) {
     if (!startTime) return;
     // eslint-disable-next-line react-hooks/purity -- event handler, not called during render
     const time = performance.now() - startTime;
     setFinishTimes((prev) => {
-      const next = { ...prev, [childId]: time };
+      const next = { ...prev, [athleteId]: time };
       if (Object.keys(next).length >= selectedChildren.length) {
         stopTimer();
         setPhase("finished");
@@ -281,9 +281,9 @@ export default function RacePage() {
   function handleSave() {
     if (!id || !session || !heatId) return;
     const now = new Date().toISOString();
-    for (const [childId, value] of Object.entries(finishTimes)) {
+    for (const [athleteId, value] of Object.entries(finishTimes)) {
       addHeatResult(id, heatId, {
-        childId,
+        athleteId,
         value: Math.round(value),
         unit: disciplineConfig.unit,
         recordedAt: now,
@@ -310,11 +310,11 @@ export default function RacePage() {
 
   const rankedResults = Object.entries(finishTimes)
     .sort(([, a], [, b]) => a - b)
-    .map(([childId, time], i) => ({
+    .map(([athleteId, time], i) => ({
       rank: i + 1,
-      childId,
+      athleteId,
       time,
-      name: allAthletes.find((a) => a.id === childId)?.name ?? "—",
+      name: allAthletes.find((a) => a.id === athleteId)?.name ?? "—",
     }));
 
   const disciplineLabel = t.disciplines[discipline] ?? discipline;
@@ -339,7 +339,7 @@ export default function RacePage() {
                   key={athlete.id}
                   variant={selected ? "default" : "outline"}
                   className="tap-target tap-press h-14 font-medium gap-2"
-                  onClick={() => toggleChild(athlete.id)}
+                  onClick={() => toggleAthlete(athlete.id)}
                 >
                   <AthleteAvatar name={athlete.name} avatarBase64={athlete.avatarBase64} size="sm" />
                   <span className="flex flex-col items-start">
@@ -437,13 +437,17 @@ export default function RacePage() {
   // FIELD-ENTRY PHASE
   if (phase === "field-entry") {
     const isCustom = disciplineConfig.mode === "custom";
-    const displayUnit = isCustom ? fieldUnit : (discipline === "high_jump" ? "cm" : "m");
-    const unitLabel = displayUnit;
+    // For cm-stored disciplines display as "m" (easier to enter) except vertical jumps
+    const displayUnit = isCustom
+      ? fieldUnit
+      : disciplineConfig.unit === "cm"
+        ? (discipline === "high_jump" || discipline === "pole_vault" ? "cm" : "m")
+        : disciplineConfig.unit as "m" | "cm" | "s" | "ms" | "count";
+    const unitLabel = displayUnit === "count" ? "#" : displayUnit;
 
-    function getStoredUnit(): "cm" | "m" | "s" | "ms" {
+    function getStoredUnit(): "cm" | "m" | "s" | "ms" | "count" {
       if (isCustom) return fieldUnit;
-      // long_jump, shot_put, ball_throw, sling_ball, high_jump all store as cm
-      return "cm";
+      return disciplineConfig.unit as "cm" | "m" | "s" | "ms" | "count";
     }
 
     function toStoredValue(inputStr: string): number | null {
@@ -476,30 +480,30 @@ export default function RacePage() {
       return bestIdx;
     }
 
-    function updateAttempt(childId: string, idx: number, update: Partial<{ value: string; foul: boolean }>) {
+    function updateAttempt(athleteId: string, idx: number, update: Partial<{ value: string; foul: boolean }>) {
       setFieldAttempts((prev) => {
-        const attempts = [...(prev[childId] ?? [])];
+        const attempts = [...(prev[athleteId] ?? [])];
         attempts[idx] = { ...attempts[idx], ...update };
-        return { ...prev, [childId]: attempts };
+        return { ...prev, [athleteId]: attempts };
       });
     }
 
-    function addAttempt(childId: string) {
+    function addAttempt(athleteId: string) {
       setFieldAttempts((prev) => {
-        const attempts = prev[childId] ?? [];
+        const attempts = prev[athleteId] ?? [];
         if (attempts.length >= 3) return prev;
-        return { ...prev, [childId]: [...attempts, { value: "", foul: false }] };
+        return { ...prev, [athleteId]: [...attempts, { value: "", foul: false }] };
       });
     }
 
     function handleFieldSave() {
       // Check for athletes with 0 valid attempts
       const athletesWithNoResults: string[] = [];
-      for (const childId of selectedChildren) {
-        const attempts = fieldAttempts[childId] ?? [];
+      for (const athleteId of selectedChildren) {
+        const attempts = fieldAttempts[athleteId] ?? [];
         const hasValid = attempts.some((a) => !a.foul && a.value.trim() !== "" && !isNaN(parseFloat(a.value)));
         if (!hasValid) {
-          athletesWithNoResults.push(childId);
+          athletesWithNoResults.push(athleteId);
         }
       }
 
@@ -514,14 +518,14 @@ export default function RacePage() {
       const now = new Date().toISOString();
       const storedUnit = getStoredUnit();
 
-      for (const childId of selectedChildren) {
-        const attempts = fieldAttempts[childId] ?? [];
+      for (const athleteId of selectedChildren) {
+        const attempts = fieldAttempts[athleteId] ?? [];
         const bestIdx = getBestAttemptIdx(attempts);
         if (bestIdx === null) continue;
         const stored = toStoredValue(attempts[bestIdx].value);
         if (stored === null) continue;
         addHeatResult(id, heatId, {
-          childId,
+          athleteId,
           value: stored,
           unit: storedUnit,
           recordedAt: now,
@@ -556,13 +560,13 @@ export default function RacePage() {
         )}
 
         <div className="space-y-4">
-          {selectedChildren.map((childId) => {
-            const athlete = allAthletes.find((a) => a.id === childId);
-            const attempts = fieldAttempts[childId] ?? [];
+          {selectedChildren.map((athleteId) => {
+            const athlete = allAthletes.find((a) => a.id === athleteId);
+            const attempts = fieldAttempts[athleteId] ?? [];
             const bestIdx = getBestAttemptIdx(attempts);
 
             return (
-              <div key={childId} className="rounded-xl border p-3 space-y-2">
+              <div key={athleteId} className="rounded-xl border p-3 space-y-2">
                 <div className="flex items-center gap-2 font-semibold">
                   <AthleteAvatar name={athlete?.name ?? "?"} avatarBase64={athlete?.avatarBase64} size="sm" />
                   <span>{athlete?.name ?? "—"}</span>
@@ -586,7 +590,7 @@ export default function RacePage() {
                           className="flex-1 rounded border bg-background px-2 py-1 text-sm"
                           placeholder="0.00"
                           value={attempt.value}
-                          onChange={(e) => updateAttempt(childId, idx, { value: e.target.value })}
+                          onChange={(e) => updateAttempt(athleteId, idx, { value: e.target.value })}
                         />
                       )}
                       {!attempt.foul && <span className="text-xs text-muted-foreground">{unitLabel}</span>}
@@ -594,7 +598,7 @@ export default function RacePage() {
                         size="sm"
                         variant={attempt.foul ? "destructive" : "ghost"}
                         className="h-7 text-xs px-2"
-                        onClick={() => updateAttempt(childId, idx, { foul: !attempt.foul, value: attempt.foul ? "" : attempt.value })}
+                        onClick={() => updateAttempt(athleteId, idx, { foul: !attempt.foul, value: attempt.foul ? "" : attempt.value })}
                       >
                         {attempt.foul ? t.undoFoul : t.foul}
                       </Button>
@@ -610,7 +614,7 @@ export default function RacePage() {
                     size="sm"
                     variant="ghost"
                     className="text-xs"
-                    onClick={() => addAttempt(childId)}
+                    onClick={() => addAttempt(athleteId)}
                   >
                     + {t.addAttempt}
                   </Button>
@@ -666,14 +670,14 @@ export default function RacePage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {selectedChildren.map((childId) => {
-            const child = allAthletes.find((a) => a.id === childId);
-            const finished = childId in finishTimes;
+          {selectedChildren.map((athleteId) => {
+            const athlete = allAthletes.find((a) => a.id === athleteId);
+            const finished = athleteId in finishTimes;
             return (
               <button
-                key={childId}
+                key={athleteId}
                 disabled={finished}
-                onClick={() => handleFinish(childId)}
+                onClick={() => handleFinish(athleteId)}
                 className={cn(
                   "tap-target tap-press flex w-full items-center justify-between rounded-2xl px-5 py-4 text-lg font-semibold transition-all min-h-[4.5rem]",
                   finished
@@ -682,22 +686,22 @@ export default function RacePage() {
                 )}
               >
                 <span className="flex items-center gap-3">
-                  <AthleteAvatar name={child?.name ?? "?"} avatarBase64={child?.avatarBase64} size="sm" />
+                  <AthleteAvatar name={athlete?.name ?? "?"} avatarBase64={athlete?.avatarBase64} size="sm" />
                   <span className="flex flex-col items-start">
-                    <span>{child?.name}</span>
+                    <span>{athlete?.name}</span>
                     <span className="flex items-center gap-1">
-                      {child?.yearOfBirth && (
+                      {athlete?.yearOfBirth && (
                         <span className="text-xs font-normal opacity-70">
-                          {getAgeGroup(child.yearOfBirth)}
+                          {getAgeGroup(athlete.yearOfBirth)}
                         </span>
                       )}
-                      <GenderBadgeInline gender={child?.gender} />
+                      <GenderBadgeInline gender={athlete?.gender} />
                     </span>
                   </span>
                 </span>
                 {finished && (
                   <span className="font-mono text-base animate-celebrate">
-                    {formatTime(finishTimes[childId])}
+                    {formatTime(finishTimes[athleteId])}
                   </span>
                 )}
               </button>
@@ -737,7 +741,7 @@ export default function RacePage() {
             <tbody>
               {rankedResults.map((r, i) => (
                 <tr
-                  key={r.childId}
+                  key={r.athleteId}
                   className={cn("border-b last:border-0 animate-card-enter-stagger")}
                   style={{ animationDelay: `${i * 80}ms` }}
                 >

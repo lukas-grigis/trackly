@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useSessionStore } from "@/store/session-store";
 import { DISCIPLINES, getMedalStyle } from "@/lib/constants";
+import { computeLeaderboard } from "@/hooks/useLeaderboard";
 import { formatValue } from "@/lib/utils";
 import { GenderBadge } from "@/components/GenderBadge";
 import { AthleteAvatar } from "@/components/ui/athlete-avatar";
@@ -59,14 +60,16 @@ export default function SessionPage() {
   const [athletesOpen, setAthletesOpen] = useState(true);
   const [discipline, setDiscipline] = useState("sprint_60");
   const [customDisciplineName, setCustomDisciplineName] = useState("");
-  const [selectedChildId, setSelectedChildId] = useState("");
+  const [selectedAthleteId, setSelectedAthleteId] = useState("");
   const [resultValue, setResultValue] = useState("");
   const [customUnit, setCustomUnit] = useState<typeof CUSTOM_UNITS[number]>("s");
   const [customNote, setCustomNote] = useState("");
   const [score, setScore] = useState({ a: 0, b: 0 });
+  const [teamNames, setTeamNames] = useState({ a: "", b: "" });
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerSelection, setPickerSelection] = useState<string[]>([]);
   const [deleteHeatTarget, setDeleteHeatTarget] = useState<string | null>(null);
+  const [resultsView, setResultsView] = useState<"rankings" | "all" | "heats">("rankings");
 
   if (!session || !id) {
     return (
@@ -84,6 +87,8 @@ export default function SessionPage() {
     setDiscipline(newDiscipline);
     if (newCustomName !== undefined) setCustomDisciplineName(newCustomName);
     setScore({ a: 0, b: 0 });
+    const newMode = DISCIPLINES[newDiscipline]?.mode ?? "timed";
+    setResultsView(newMode === "count" || newMode === "custom" ? "heats" : "rankings");
   }
 
   function openPicker() {
@@ -105,18 +110,18 @@ export default function SessionPage() {
   }
 
   function handleAddResult() {
-    if (!selectedChildId || !resultValue || !id) return;
+    if (!selectedAthleteId || !resultValue || !id) return;
     const value = parseFloat(resultValue);
     if (isNaN(value)) return;
     const now = new Date().toISOString();
     const heatId = addHeat(id, {
       sessionId: id,
       disciplineType: discipline,
-      participantIds: [selectedChildId],
+      participantIds: [selectedAthleteId],
       startedAt: now,
     });
     addHeatResult(id, heatId, {
-      childId: selectedChildId,
+      athleteId: selectedAthleteId,
       value,
       unit: disciplineConfig.unit,
       recordedAt: now,
@@ -126,7 +131,7 @@ export default function SessionPage() {
   }
 
   function handleAddCustomResult() {
-    if (!selectedChildId || !id) return;
+    if (!selectedAthleteId || !id) return;
     const numValue = resultValue ? parseFloat(resultValue) : NaN;
     const hasNumeric = !isNaN(numValue) && resultValue !== "";
     const hasNote = customNote.trim() !== "";
@@ -137,11 +142,11 @@ export default function SessionPage() {
       sessionId: id,
       disciplineType: "custom",
       customDisciplineName,
-      participantIds: [selectedChildId],
+      participantIds: [selectedAthleteId],
       startedAt: now,
     });
     addHeatResult(id, heatId, {
-      childId: selectedChildId,
+      athleteId: selectedAthleteId,
       value: hasNumeric ? numValue : 0,
       unit: customUnit,
       note: hasNote ? customNote.trim() : undefined,
@@ -161,14 +166,16 @@ export default function SessionPage() {
     const now = new Date().toISOString();
     const teamAId = "team-a";
     const teamBId = "team-b";
+    const nameA = teamNames.a.trim() || t.teamA;
+    const nameB = teamNames.b.trim() || t.teamB;
     const heatId = addHeat(id, {
       sessionId: id,
       disciplineType: discipline,
       participantIds: [teamAId, teamBId],
       startedAt: now,
     });
-    addHeatResult(id, heatId, { childId: teamAId, value: score.a, unit: "count", recordedAt: now });
-    addHeatResult(id, heatId, { childId: teamBId, value: score.b, unit: "count", recordedAt: now });
+    addHeatResult(id, heatId, { athleteId: teamAId, value: score.a, unit: "count", note: nameA, recordedAt: now });
+    addHeatResult(id, heatId, { athleteId: teamBId, value: score.b, unit: "count", note: nameB, recordedAt: now });
     toast.success(t.resultsSaved);
     setScore({ a: 0, b: 0 });
   }
@@ -183,13 +190,14 @@ export default function SessionPage() {
     })
     .sort((a, b) => a.startedAt.localeCompare(b.startedAt) || a.id.localeCompare(b.id));
 
+  // Flatten all results across heats, sorted by performance (best first)
   const filteredResults = filteredHeats.flatMap((h) =>
     h.results.map((r) => {
-      const athlete = allAthletes.find((a) => a.id === r.childId);
+      const athlete = allAthletes.find((a) => a.id === r.athleteId);
       return {
         heatId: h.id,
-        childId: r.childId,
-        athleteName: athlete?.name ?? r.childId,
+        athleteId: r.athleteId,
+        athleteName: athlete?.name ?? r.athleteId,
         yearOfBirth: athlete?.yearOfBirth,
         gender: athlete?.gender,
         value: r.value,
@@ -239,6 +247,33 @@ export default function SessionPage() {
     rank: ranks[i],
   }));
 
+  // Rankings view: personal best per athlete (for timed/distance modes)
+  const rankingEntries = useMemo(() => {
+    if (!session || mode === "count" || mode === "custom") return [];
+    return computeLeaderboard(session, discipline, allAthletes).entries;
+  }, [session, discipline, allAthletes, mode]);
+
+  // Attempt counts per athlete (shown in rankings view)
+  const attemptCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const r of filteredResults) {
+      counts.set(r.athleteId, (counts.get(r.athleteId) ?? 0) + 1);
+    }
+    return counts;
+  }, [filteredResults]);
+
+  // Tab options per discipline mode
+  const viewTabs = useMemo(() => {
+    if (mode === "count" || mode === "custom") return ["heats", "all"] as const;
+    return ["rankings", "all", "heats"] as const;
+  }, [mode]);
+
+  const viewLabels: Record<string, string> = {
+    rankings: t.leaderboard,
+    all: t.allRuns,
+    heats: t.heatsTab,
+  };
+
   const disciplineDisplayName = discipline === "custom"
     ? (customDisciplineName || t.disciplines.custom)
     : (t.disciplines[discipline] ?? discipline);
@@ -261,11 +296,12 @@ export default function SessionPage() {
 
       {/* ── Collapsible athletes panel ── */}
       <div className="rounded-lg border overflow-hidden">
-        <button
-          className="flex w-full items-center justify-between bg-secondary/50 px-4 py-3 text-sm font-semibold"
-          onClick={() => setAthletesOpen((v) => !v)}
-        >
-          <span className="flex items-center gap-2">
+        <div className="flex w-full items-center justify-between bg-secondary/50 px-4 py-3 text-sm font-semibold">
+          <button
+            className="flex flex-1 items-center gap-2 text-left"
+            onClick={() => setAthletesOpen((v) => !v)}
+            aria-expanded={athletesOpen}
+          >
             {athletesOpen
               ? <ChevronDown className="h-4 w-4 text-muted-foreground" />
               : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
@@ -273,17 +309,17 @@ export default function SessionPage() {
             <span className="ml-1 text-muted-foreground font-normal">
               ({sessionAthletes.length})
             </span>
-          </span>
+          </button>
           <Button
             variant="ghost"
             size="sm"
             className="h-7 gap-1 px-2 text-xs text-muted-foreground"
-            onClick={(e) => { e.stopPropagation(); openPicker(); }}
+            onClick={openPicker}
           >
             <Users className="h-3.5 w-3.5" />
             {t.selectAthletes}
           </Button>
-        </button>
+        </div>
 
         {athletesOpen && (
           <div className="border-t px-4 py-3">
@@ -292,15 +328,16 @@ export default function SessionPage() {
             ) : (
               <div className="flex flex-wrap gap-2">
                 {sessionAthletes.map((athlete) => (
-                  <span
+                  <Link
                     key={athlete.id}
-                    className="inline-flex items-center gap-1.5 rounded-full border bg-card px-3 py-1 text-sm font-medium"
+                    to={ROUTES.ATHLETE(athlete.id)}
+                    className="inline-flex items-center gap-1.5 rounded-full border bg-card px-3 py-1 text-sm font-medium hover:border-primary/40 hover:bg-primary/5 transition-colors"
                   >
                     <AthleteAvatar name={athlete.name} avatarBase64={athlete.avatarBase64} size="sm" className="h-5 w-5 text-[8px]" />
                     {athlete.name}
                     <AgeGroupBadge yearOfBirth={athlete.yearOfBirth} />
                     <GenderBadge gender={athlete.gender} />
-                  </span>
+                  </Link>
                 ))}
               </div>
             )}
@@ -331,61 +368,115 @@ export default function SessionPage() {
         )}
 
         {mode === "distance" && (
-          <div className="space-y-2">
-            <Label>{t.enterResult}</Label>
+          <div className="rounded-xl border bg-card p-4 space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {t.enterResult}
+            </p>
+            {/* Athlete chips */}
+            {sessionAthletes.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t.noAthletesInSession}</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {sessionAthletes.map((a) => (
+                  <button
+                    key={a.id}
+                    type="button"
+                    onClick={() => setSelectedAthleteId(a.id)}
+                    className={cn(
+                      "inline-flex items-center gap-2 rounded-xl border-2 px-3 py-2 text-sm font-medium transition-all tap-target",
+                      selectedAthleteId === a.id
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-muted/30 hover:border-primary/40 hover:bg-muted/50",
+                    )}
+                  >
+                    <AthleteAvatar
+                      name={a.name}
+                      avatarBase64={a.avatarBase64}
+                      size="sm"
+                      className={cn(
+                        "h-6 w-6 text-[10px]",
+                        !a.avatarBase64 && (selectedAthleteId === a.id
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground"),
+                      )}
+                    />
+                    {a.name}
+                    <AgeGroupBadge yearOfBirth={a.yearOfBirth} />
+                  </button>
+                ))}
+              </div>
+            )}
+            {/* Value + save */}
             <div className="flex gap-2">
-              <Select
-                value={selectedChildId}
-                onValueChange={(v) => { if (v) setSelectedChildId(v); }}
-              >
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder={t.chooseChild} />
-                </SelectTrigger>
-                <SelectContent>
-                  {sessionAthletes.map((a) => (
-                    <SelectItem key={a.id} value={a.id}>
-                      {a.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Input
-                type="number"
-                placeholder={disciplineConfig.unit}
-                value={resultValue}
-                onChange={(e) => setResultValue(e.target.value)}
-                className="w-24"
-              />
-              <Button onClick={handleAddResult}>{t.save}</Button>
+              <div className="relative flex-1">
+                <Input
+                  type="number"
+                  inputMode="decimal"
+                  placeholder="0"
+                  value={resultValue}
+                  onChange={(e) => setResultValue(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAddResult()}
+                  className="pr-10"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono text-muted-foreground pointer-events-none">
+                  {disciplineConfig.unit === "count" ? "#" : disciplineConfig.unit}
+                </span>
+              </div>
+              <Button onClick={handleAddResult} disabled={!selectedAthleteId || !resultValue}>
+                {t.save}
+              </Button>
             </div>
           </div>
         )}
 
         {mode === "custom" && (
-          <div className="space-y-3">
-            <Label>{t.enterResult} — {disciplineDisplayName}</Label>
+          <div className="rounded-xl border bg-card p-4 space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {t.enterResult} — {disciplineDisplayName}
+            </p>
+            {/* Athlete chips */}
+            {sessionAthletes.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t.noAthletesInSession}</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {sessionAthletes.map((a) => (
+                  <button
+                    key={a.id}
+                    type="button"
+                    onClick={() => setSelectedAthleteId(a.id)}
+                    className={cn(
+                      "inline-flex items-center gap-2 rounded-xl border-2 px-3 py-2 text-sm font-medium transition-all tap-target",
+                      selectedAthleteId === a.id
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-muted/30 hover:border-primary/40 hover:bg-muted/50",
+                    )}
+                  >
+                    <AthleteAvatar
+                      name={a.name}
+                      avatarBase64={a.avatarBase64}
+                      size="sm"
+                      className={cn(
+                        "h-6 w-6 text-[10px]",
+                        !a.avatarBase64 && (selectedAthleteId === a.id
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground"),
+                      )}
+                    />
+                    {a.name}
+                    <AgeGroupBadge yearOfBirth={a.yearOfBirth} />
+                  </button>
+                ))}
+              </div>
+            )}
+            {/* Value + unit + note */}
             <div className="flex gap-2">
-              <Select
-                value={selectedChildId}
-                onValueChange={(v) => { if (v) setSelectedChildId(v); }}
-              >
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder={t.chooseChild} />
-                </SelectTrigger>
-                <SelectContent>
-                  {sessionAthletes.map((a) => (
-                    <SelectItem key={a.id} value={a.id}>
-                      {a.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
               <Input
                 type="number"
+                inputMode="decimal"
                 placeholder={t.unitValue}
                 value={resultValue}
                 onChange={(e) => setResultValue(e.target.value)}
-                className="w-24"
+                className="flex-1"
               />
               <Select
                 value={customUnit}
@@ -411,7 +502,7 @@ export default function SessionPage() {
             <Button
               className="w-full"
               onClick={handleAddCustomResult}
-              disabled={!selectedChildId || (!resultValue && !customNote.trim())}
+              disabled={!selectedAthleteId || (!resultValue && !customNote.trim())}
             >
               {t.save}
             </Button>
@@ -426,9 +517,13 @@ export default function SessionPage() {
                   key={team}
                   className="flex flex-col items-center gap-2 rounded-xl border p-3"
                 >
-                  <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                    {team === "a" ? t.teamA : t.teamB}
-                  </span>
+                  <input
+                    type="text"
+                    value={teamNames[team]}
+                    placeholder={team === "a" ? t.teamA : t.teamB}
+                    onChange={(e) => setTeamNames((prev) => ({ ...prev, [team]: e.target.value }))}
+                    className="w-full text-center text-sm font-semibold uppercase tracking-wide bg-transparent text-muted-foreground placeholder:text-muted-foreground/60 border-b border-transparent focus:border-primary focus:text-foreground focus:outline-none transition-colors"
+                  />
                   <Button
                     variant="outline"
                     size="icon"
@@ -470,64 +565,238 @@ export default function SessionPage() {
         {filteredResults.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t.noResults}</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b text-left text-muted-foreground">
-                  <th className="pb-2 pr-4">{t.rankCol}</th>
-                  <th className="pb-2 pr-4">{t.nameCol}</th>
-                  <th className="pb-2 text-right">
-                    {mode === "count" ? t.scoreCol : disciplineDisplayName}
-                  </th>
-                  {mode === "custom" && <th className="pb-2 pl-2 text-right">{t.noteHeader}</th>}
-                  <th className="pb-2 pl-2" />
-                </tr>
-              </thead>
-              <tbody>
-                {rankedResults.map((result, i) => {
-                  const rank = result.rank;
+          <div className="space-y-3">
+            {/* View toggle */}
+            <div className="inline-flex rounded-lg border p-0.5 bg-muted/50 gap-0.5">
+              {viewTabs.map((view) => (
+                <button
+                  key={view}
+                  type="button"
+                  onClick={() => setResultsView(view)}
+                  className={cn(
+                    "rounded-md px-3 py-1 text-xs font-medium transition-colors",
+                    resultsView === view
+                      ? "bg-background shadow-sm text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {viewLabels[view]}
+                </button>
+              ))}
+            </div>
+
+            {/* ── Rankings view ── */}
+            {resultsView === "rankings" && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left text-muted-foreground">
+                      <th className="pb-2 pr-4">{t.rankCol}</th>
+                      <th className="pb-2 pr-4">{t.nameCol}</th>
+                      <th className="pb-2 text-right">{disciplineDisplayName}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rankingEntries.map((entry, i) => {
+                      const medalStyle = getMedalStyle(entry.rank);
+                      const attempts = attemptCounts.get(entry.athleteId) ?? 1;
+                      return (
+                        <tr key={entry.athleteId} className={cn("border-b last:border-0", i % 2 === 1 && "bg-muted/30")}>
+                          <td className="py-2 pr-4 font-medium">
+                            {medalStyle ? (
+                              <span className={cn("inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold", medalStyle)}>
+                                {entry.rank}
+                              </span>
+                            ) : entry.rank}
+                          </td>
+                          <td className="py-2 pr-4">
+                            <span className="inline-flex items-center gap-1.5">
+                              {entry.athlete?.name ?? entry.athleteId}
+                              <AgeGroupBadge yearOfBirth={entry.athlete?.yearOfBirth} />
+                              <GenderBadge gender={entry.athlete?.gender} />
+                              {attempts > 1 && (
+                                <span className="text-[10px] text-muted-foreground">×{attempts}</span>
+                              )}
+                            </span>
+                          </td>
+                          <td className="py-2 text-right font-mono">
+                            {formatValue(entry.bestValue, disciplineConfig.unit)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* ── All runs view ── */}
+            {resultsView === "all" && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left text-muted-foreground">
+                      <th className="pb-2 pr-4">{t.rankCol}</th>
+                      <th className="pb-2 pr-4">{t.nameCol}</th>
+                      <th className="pb-2 text-right">
+                        {mode === "count" ? t.scoreCol : disciplineDisplayName}
+                      </th>
+                      {mode === "custom" && <th className="pb-2 pl-2 text-right">{t.noteHeader}</th>}
+                      <th className="pb-2 pl-2" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rankedResults.map((result, i) => {
+                      const rank = result.rank;
+                      return (
+                        <tr key={`${result.heatId}-${result.athleteId}-${i}`} className={cn("border-b last:border-0", i % 2 === 1 && "bg-muted/30")}>
+                          <td className="py-2 pr-4 font-medium">
+                            {rank == null ? "—" : getMedalStyle(rank) ? (
+                              <span className={cn("inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold", getMedalStyle(rank))}>
+                                {rank}
+                              </span>
+                            ) : rank}
+                          </td>
+                          <td className="py-2 pr-4">
+                            <span className="inline-flex items-center gap-1.5">
+                              {result.athleteName || "—"}
+                              <AgeGroupBadge yearOfBirth={result.yearOfBirth} />
+                              <GenderBadge gender={result.gender} />
+                            </span>
+                          </td>
+                          <td className="py-2 text-right font-mono">
+                            {rank == null ? "—" : formatValue(result.value, result.unit)}
+                          </td>
+                          {mode === "custom" && (
+                            <td className="py-2 pl-2 text-right text-muted-foreground text-xs max-w-32 truncate">
+                              {result.note ?? ""}
+                            </td>
+                          )}
+                          <td className="py-2 pl-2 text-right">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                              onClick={() => setDeleteHeatTarget(result.heatId)}
+                              aria-label={t.deleteResult}
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* ── Heats view ── */}
+            {resultsView === "heats" && (
+              <div className="space-y-3">
+                {filteredHeats.map((heat, heatIdx) => {
+                  // Build a row for every participant: result if available, "—" otherwise
+                  const resultMap = new Map(heat.results.map((r) => [r.athleteId, r]));
+                  const rows = heat.participantIds.map((pid) => {
+                    const r = resultMap.get(pid);
+                    const athlete = allAthletes.find((a) => a.id === pid);
+                    return { athleteId: pid, athlete, result: r ?? null };
+                  });
+                  // Sort: athletes with results first (ranked by value), then unfinished
+                  rows.sort((a, b) => {
+                    if (a.result && !b.result) return -1;
+                    if (!a.result && b.result) return 1;
+                    if (a.result && b.result) {
+                      return disciplineConfig.sortAscending
+                        ? a.result.value - b.result.value
+                        : b.result.value - a.result.value;
+                    }
+                    return 0;
+                  });
+
+                  const isCountHeat = mode === "count";
+                  const teamA = isCountHeat ? heat.results.find((r) => r.athleteId === "team-a") : null;
+                  const teamB = isCountHeat ? heat.results.find((r) => r.athleteId === "team-b") : null;
+
                   return (
-                    <tr key={`${result.heatId}-${result.childId}`} className={cn("border-b last:border-0", i % 2 === 1 && "bg-muted/30")}>
-                      <td className="py-2 pr-4 font-medium">
-                        {rank == null ? "—" : getMedalStyle(rank) ? (
-                          <span className={cn("inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold", getMedalStyle(rank))}>
-                            {rank}
+                    <div key={heat.id} className="rounded-xl border bg-card overflow-hidden">
+                      {/* Heat header */}
+                      <div className="flex items-center justify-between bg-muted/40 px-4 py-2 border-b">
+                        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          {t.pdfHeat} {heatIdx + 1}
+                          <span className="ml-2 font-normal">
+                            ({heat.results.length}/{heat.participantIds.length})
                           </span>
-                        ) : (
-                          rank
-                        )}
-                      </td>
-                      <td className="py-2 pr-4">
-                        <span className="inline-flex items-center gap-1.5">
-                          {result.athleteName || "—"}
-                          <AgeGroupBadge yearOfBirth={result.yearOfBirth} />
-                          <GenderBadge gender={result.gender} />
                         </span>
-                      </td>
-                      <td className="py-2 text-right font-mono">
-                        {rank == null ? "—" : formatValue(result.value, result.unit)}
-                      </td>
-                      {mode === "custom" && (
-                        <td className="py-2 pl-2 text-right text-muted-foreground text-xs max-w-32 truncate">
-                          {result.note ?? ""}
-                        </td>
-                      )}
-                      <td className="py-2 pl-2 text-right">
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                          onClick={() => setDeleteHeatTarget(result.heatId)}
+                          className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                          onClick={() => setDeleteHeatTarget(heat.id)}
                           aria-label={t.deleteResult}
                         >
-                          <X className="h-3.5 w-3.5" />
+                          <X className="h-3 w-3" />
                         </Button>
-                      </td>
-                    </tr>
+                      </div>
+
+                      {/* Count mode: team score card */}
+                      {isCountHeat ? (
+                        <div className="flex items-center justify-center gap-6 px-4 py-4">
+                          <div className="text-center">
+                            <p className="text-xs text-muted-foreground">{teamA?.note || t.teamA}</p>
+                            <p className="text-3xl font-bold tabular-nums">{teamA?.value ?? 0}</p>
+                          </div>
+                          <span className="text-lg text-muted-foreground font-bold">:</span>
+                          <div className="text-center">
+                            <p className="text-xs text-muted-foreground">{teamB?.note || t.teamB}</p>
+                            <p className="text-3xl font-bold tabular-nums">{teamB?.value ?? 0}</p>
+                          </div>
+                        </div>
+                      ) : (
+                        /* Timed / distance / custom: all participants within heat */
+                        <div className="divide-y">
+                          {rows.map((row, ri) => {
+                            const hasResult = row.result !== null;
+                            const finishedCount = rows.filter((r) => r.result !== null).length;
+                            const rank = hasResult ? ri + 1 : null;
+                            const medalStyle = rank != null && finishedCount > 1 ? getMedalStyle(rank) : null;
+                            const isNoteOnly = hasResult && row.result!.value === 0 && row.result!.note;
+                            return (
+                              <div key={`${row.athleteId}-${ri}`} className={cn("flex items-center gap-3 px-4 py-2", !hasResult && "opacity-50")}>
+                                <div className="w-6 shrink-0 flex justify-center">
+                                  {!hasResult || isNoteOnly ? (
+                                    <span className="text-xs text-muted-foreground">—</span>
+                                  ) : medalStyle ? (
+                                    <span className={cn("inline-flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold", medalStyle)}>
+                                      {rank}
+                                    </span>
+                                  ) : (
+                                    <span className="text-xs font-medium text-muted-foreground">{rank}</span>
+                                  )}
+                                </div>
+                                <span className="flex-1 text-sm inline-flex items-center gap-1.5 min-w-0">
+                                  <span className="truncate font-medium">{row.athlete?.name ?? row.athleteId}</span>
+                                  <AgeGroupBadge yearOfBirth={row.athlete?.yearOfBirth} />
+                                  <GenderBadge gender={row.athlete?.gender} />
+                                </span>
+                                <span className="shrink-0 font-mono text-sm tabular-nums">
+                                  {!hasResult ? "—" : isNoteOnly ? "—" : formatValue(row.result!.value, row.result!.unit)}
+                                </span>
+                                {mode === "custom" && hasResult && row.result!.note && (
+                                  <span className="shrink-0 text-xs text-muted-foreground max-w-24 truncate">
+                                    {row.result!.note}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
-              </tbody>
-            </table>
+              </div>
+            )}
           </div>
         )}
       </div>

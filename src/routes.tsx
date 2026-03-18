@@ -5,6 +5,7 @@ import AppLayout from "@/components/layout/AppLayout";
 const LandingPage = lazy(() => import("@/pages/LandingPage"));
 const HomePage = lazy(() => import("@/pages/HomePage"));
 const AthletesPage = lazy(() => import("@/pages/AthletesPage"));
+const AthletePage = lazy(() => import("@/pages/AthletePage"));
 const SessionPage = lazy(() => import("@/pages/SessionPage"));
 const RacePage = lazy(() => import("@/pages/RacePage"));
 const LeaderboardPage = lazy(() => import("@/pages/LeaderboardPage"));
@@ -16,6 +17,7 @@ export const ROUTES = {
   HOME: "/",
   SESSIONS: "/sessions",
   ATHLETES: "/athletes",
+  ATHLETE: (id: string) => `/athlete/${id}`,
   SESSION: (id: string) => `/session/${id}`,
   RACE: (id: string, discipline: string) => `/session/${id}/race/${discipline}`,
   LEADERBOARD: (id: string) => `/session/${id}/leaderboard`,
@@ -39,6 +41,7 @@ export default function AppRoutes() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/sessions" element={<HomePage />} />
             <Route path="/athletes" element={<AthletesPage />} />
+            <Route path="/athlete/:id" element={<AthletePage />} />
             <Route path="/session/:id" element={<SessionPage />} />
             <Route path="/session/:id/race/:discipline" element={<RacePage />} />
             <Route path="/session/:id/leaderboard" element={<LeaderboardPage />} />
