@@ -1,8 +1,16 @@
 {
   "name": "trackly",
+  "description": "Coaching tool for youth athletics — track sprints, jumps, throws, and games. Free, offline, no account needed.",
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "license": "MIT",
+  "author": "Lukas Grigis",
+  "homepage": "https://lukas-grigis.github.io/trackly/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lukas-grigis/trackly"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

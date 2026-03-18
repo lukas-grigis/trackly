@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Live app
+    url: https://lukas-grigis.github.io/trackly/
+    about: Try the app before opening an issue — it might already be fixed.
