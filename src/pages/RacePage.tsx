@@ -345,6 +345,14 @@ export default function RacePage() {
   }
 
   function handleReset() {
+    // Clean up orphan heat (zero results) on repeat/abort (#13)
+    if (id && heatId) {
+      const s = useSessionStore.getState().sessions.find((sess) => sess.id === id);
+      const heat = s?.heats.find((h) => h.id === heatId);
+      if (heat && heat.results.length === 0) {
+        useSessionStore.getState().deleteHeat(id, heatId);
+      }
+    }
     setPhase("setup");
     setStartTime(null);
     setFinishTimes({});
@@ -407,7 +415,7 @@ export default function RacePage() {
                     <span className="flex items-center gap-1">
                       {athlete.yearOfBirth && (
                         <span className="text-[10px] font-normal opacity-70">
-                          {getAgeGroup(athlete.yearOfBirth)}
+                          {getAgeGroup(athlete.yearOfBirth, new Date(session.date).getFullYear())}
                         </span>
                       )}
                       <GenderBadgeInline gender={athlete.gender} />
@@ -752,7 +760,7 @@ export default function RacePage() {
                     <span className="flex items-center gap-1">
                       {athlete?.yearOfBirth && (
                         <span className="text-xs font-normal opacity-70">
-                          {getAgeGroup(athlete.yearOfBirth)}
+                          {getAgeGroup(athlete.yearOfBirth, new Date(session.date).getFullYear())}
                         </span>
                       )}
                       <GenderBadgeInline gender={athlete?.gender} />

@@ -49,6 +49,7 @@ export function computeLeaderboard(
   const config = DISCIPLINES[discipline];
   if (!config) return { entries: [], hasYobData: false };
 
+  const sessionYear = new Date(session.date).getFullYear();
   const sessionAthletes = athletes.filter((a) => session.athleteIds.includes(a.id));
   const hasYobData = sessionAthletes.some((a) => a.yearOfBirth != null);
 
@@ -56,7 +57,7 @@ export function computeLeaderboard(
   for (const athlete of sessionAthletes) {
     if (ageGroupFilter === "All") {
       allowedAthleteIds.add(athlete.id);
-    } else if (athlete.yearOfBirth != null && getAgeGroup(athlete.yearOfBirth) === ageGroupFilter) {
+    } else if (athlete.yearOfBirth != null && getAgeGroup(athlete.yearOfBirth, sessionYear) === ageGroupFilter) {
       allowedAthleteIds.add(athlete.id);
     }
   }
@@ -118,6 +119,7 @@ export function useLeaderboard(
     const config = DISCIPLINES[discipline];
     if (!config) return { entries: [], hasYobData: false };
 
+    const sessionYear = new Date(session.date).getFullYear();
     const sessionAthletes = athletes.filter((a) => session.athleteIds.includes(a.id));
     const hasYobData = sessionAthletes.some((a) => a.yearOfBirth != null);
     const athleteIdSet = new Set(athletes.map((a) => a.id));
@@ -126,7 +128,7 @@ export function useLeaderboard(
     for (const athlete of sessionAthletes) {
       if (ageGroupFilter === "All") {
         allowedAthleteIds.add(athlete.id);
-      } else if (athlete.yearOfBirth != null && getAgeGroup(athlete.yearOfBirth) === ageGroupFilter) {
+      } else if (athlete.yearOfBirth != null && getAgeGroup(athlete.yearOfBirth, sessionYear) === ageGroupFilter) {
         allowedAthleteIds.add(athlete.id);
       }
     }

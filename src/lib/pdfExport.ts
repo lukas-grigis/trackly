@@ -118,7 +118,7 @@ export function exportSessionPdf(
         athleteId,
         name: athlete?.name ?? athleteId,
         ageGroup: athlete?.yearOfBirth
-          ? getAgeGroup(athlete.yearOfBirth)
+          ? getAgeGroup(athlete.yearOfBirth, new Date(session.date).getFullYear())
           : "",
         result: best ? formatValue(best.value, best.unit) : "—",
         heat: heatLabel,
