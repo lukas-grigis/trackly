@@ -1,11 +1,11 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-export type Gender = "male" | "female" | "nonbinary";
+export type Gender = 'male' | 'female' | 'nonbinary';
 
 export interface Athlete {
   id: string;
@@ -18,7 +18,7 @@ export interface Athlete {
 export interface HeatResult {
   athleteId: string;
   value: number;
-  unit: "ms" | "s" | "cm" | "m" | "count";
+  unit: 'ms' | 's' | 'cm' | 'm' | 'count';
   note?: string;
   recordedAt: string; // ISO timestamp
 }
@@ -74,14 +74,17 @@ export function compressAvatar(dataUrl: string): Promise<string> {
       const size = Math.min(img.width, img.height);
       const sx = (img.width - size) / 2;
       const sy = (img.height - size) / 2;
-      const canvas = document.createElement("canvas");
+      const canvas = document.createElement('canvas');
       const dim = Math.min(size, 200);
       canvas.width = dim;
       canvas.height = dim;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) { resolve(dataUrl); return; }
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        resolve(dataUrl);
+        return;
+      }
       ctx.drawImage(img, sx, sy, size, size, 0, 0, dim, dim);
-      resolve(canvas.toDataURL("image/jpeg", 0.6));
+      resolve(canvas.toDataURL('image/jpeg', 0.6));
     };
     img.onerror = () => resolve(dataUrl);
     img.src = dataUrl;
@@ -108,9 +111,13 @@ interface StoreState {
   setSessionAthletes: (sessionId: string, athleteIds: string[]) => void;
 
   // Heats
-  addHeat: (sessionId: string, heat: Omit<Heat, "id" | "results">) => string;
+  addHeat: (sessionId: string, heat: Omit<Heat, 'id' | 'results'>) => string;
   addHeatResult: (sessionId: string, heatId: string, result: HeatResult) => void;
-  updateHeat: (sessionId: string, heatId: string, updates: Partial<Pick<Heat, "disciplineType" | "customDisciplineName" | "participantIds" | "startedAt">>) => void;
+  updateHeat: (
+    sessionId: string,
+    heatId: string,
+    updates: Partial<Pick<Heat, 'disciplineType' | 'customDisciplineName' | 'participantIds' | 'startedAt'>>
+  ) => void;
   deleteHeat: (sessionId: string, heatId: string) => void;
 
   clearAllData: () => void;
@@ -136,9 +143,7 @@ export const useSessionStore = create<StoreState>()(
 
       updateAthlete(id, name, yearOfBirth, gender, avatarBase64) {
         set((state) => ({
-          athletes: state.athletes.map((a) =>
-            a.id === id ? { ...a, name, yearOfBirth, gender, avatarBase64 } : a,
-          ),
+          athletes: state.athletes.map((a) => (a.id === id ? { ...a, name, yearOfBirth, gender, avatarBase64 } : a)),
         }));
       },
 
@@ -161,19 +166,14 @@ export const useSessionStore = create<StoreState>()(
       addSession(name, date, athleteIds) {
         const id = crypto.randomUUID();
         set((state) => ({
-          sessions: [
-            ...state.sessions,
-            { id, name, date, athleteIds: athleteIds ?? [], heats: [] },
-          ],
+          sessions: [...state.sessions, { id, name, date, athleteIds: athleteIds ?? [], heats: [] }],
         }));
         return id;
       },
 
       updateSession(id, name, date) {
         set((state) => ({
-          sessions: state.sessions.map((s) =>
-            s.id === id ? { ...s, name, date } : s,
-          ),
+          sessions: state.sessions.map((s) => (s.id === id ? { ...s, name, date } : s)),
         }));
       },
 
@@ -185,9 +185,7 @@ export const useSessionStore = create<StoreState>()(
 
       setSessionAthletes(sessionId, athleteIds) {
         set((state) => ({
-          sessions: state.sessions.map((s) =>
-            s.id === sessionId ? { ...s, athleteIds } : s,
-          ),
+          sessions: state.sessions.map((s) => (s.id === sessionId ? { ...s, athleteIds } : s)),
         }));
       },
 
@@ -195,9 +193,7 @@ export const useSessionStore = create<StoreState>()(
         const id = crypto.randomUUID();
         set((state) => ({
           sessions: state.sessions.map((s) =>
-            s.id === sessionId
-              ? { ...s, heats: [...s.heats, { ...heat, id, results: [] }] }
-              : s,
+            s.id === sessionId ? { ...s, heats: [...s.heats, { ...heat, id, results: [] }] } : s
           ),
         }));
         return id;
@@ -217,7 +213,7 @@ export const useSessionStore = create<StoreState>()(
                     return { ...h, results: [...h.results, result] };
                   }),
                 }
-              : s,
+              : s
           ),
         }));
       },
@@ -233,14 +229,12 @@ export const useSessionStore = create<StoreState>()(
                     const updated = { ...h, ...updates };
                     // Cascade-remove results when participantIds shrink
                     if (updates.participantIds) {
-                      updated.results = updated.results.filter((r) =>
-                        updates.participantIds!.includes(r.athleteId),
-                      );
+                      updated.results = updated.results.filter((r) => updates.participantIds!.includes(r.athleteId));
                     }
                     return updated;
                   }),
                 }
-              : s,
+              : s
           ),
         }));
       },
@@ -248,20 +242,29 @@ export const useSessionStore = create<StoreState>()(
       deleteHeat(sessionId, heatId) {
         set((state) => ({
           sessions: state.sessions.map((s) =>
-            s.id === sessionId
-              ? { ...s, heats: s.heats.filter((h) => h.id !== heatId) }
-              : s,
+            s.id === sessionId ? { ...s, heats: s.heats.filter((h) => h.id !== heatId) } : s
           ),
         }));
       },
 
       clearAllData() {
-        try { localStorage.removeItem("trackly-save-tooltip-dismissed"); } catch { /* ignore */ }
-        set({ athletes: [], sessions: [], lastSavedAt: null, _heatJustSaved: false, _saveError: false, _quotaWarning: false });
+        try {
+          localStorage.removeItem('trackly-save-tooltip-dismissed');
+        } catch {
+          /* ignore */
+        }
+        set({
+          athletes: [],
+          sessions: [],
+          lastSavedAt: null,
+          _heatJustSaved: false,
+          _saveError: false,
+          _quotaWarning: false,
+        });
       },
     }),
     {
-      name: "trackly-storage",
+      name: 'trackly-storage',
       version: 0,
       migrate(persistedState: unknown, version: number) {
         const CURRENT_VERSION = 0;
@@ -269,7 +272,7 @@ export const useSessionStore = create<StoreState>()(
         // If persisted version is ahead of current, wipe and start fresh
         if (version > CURRENT_VERSION) {
           console.warn(
-            `[trackly] Store version ${version} is ahead of current (${CURRENT_VERSION}). Resetting to defaults.`,
+            `[trackly] Store version ${version} is ahead of current (${CURRENT_VERSION}). Resetting to defaults.`
           );
           return { athletes: [], sessions: [] } as unknown as StoreState;
         }
@@ -289,9 +292,7 @@ export const useSessionStore = create<StoreState>()(
           // case 1: { ... }
 
           default:
-            console.warn(
-              `[trackly] Unknown store version ${version}. Resetting to defaults.`,
-            );
+            console.warn(`[trackly] Unknown store version ${version}. Resetting to defaults.`);
             return { athletes: [], sessions: [] } as unknown as StoreState;
         }
       },
@@ -316,11 +317,15 @@ export const useSessionStore = create<StoreState>()(
               localStorage.setItem(name, json);
               const nearQuota = isStorageNearQuota();
               queueMicrotask(() => {
-                useSessionStore.setState({ lastSavedAt: Date.now(), _saveError: false, _quotaWarning: nearQuota });
+                useSessionStore.setState({
+                  lastSavedAt: Date.now(),
+                  _saveError: false,
+                  _quotaWarning: nearQuota,
+                });
                 _writing = false;
               });
             } catch (e) {
-              const isQuota = e instanceof DOMException && (e.name === "QuotaExceededError" || e.code === 22);
+              const isQuota = e instanceof DOMException && (e.name === 'QuotaExceededError' || e.code === 22);
               queueMicrotask(() => {
                 useSessionStore.setState({ _saveError: true, _quotaWarning: isQuota });
                 _writing = false;
@@ -336,18 +341,19 @@ export const useSessionStore = create<StoreState>()(
           },
         };
       })(),
-      partialize: (state) => ({
-        athletes: state.athletes,
-        sessions: state.sessions,
-      }) as unknown as StoreState,
-    },
-  ),
+      partialize: (state) =>
+        ({
+          athletes: state.athletes,
+          sessions: state.sessions,
+        }) as unknown as StoreState,
+    }
+  )
 );
 
 // M5: Cross-tab sync — reload store when another tab writes to localStorage
-if (typeof window !== "undefined") {
-  window.addEventListener("storage", (e) => {
-    if (e.key === "trackly-storage" && e.newValue) {
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'trackly-storage' && e.newValue) {
       try {
         const parsed = JSON.parse(e.newValue);
         if (parsed?.state) {
@@ -357,7 +363,9 @@ if (typeof window !== "undefined") {
             lastSavedAt: Date.now(),
           });
         }
-      } catch { /* ignore parse errors */ }
+      } catch {
+        /* ignore parse errors */
+      }
     }
   });
 }

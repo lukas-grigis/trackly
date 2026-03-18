@@ -1,6 +1,6 @@
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { useTranslation } from "@/lib/i18n";
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/lib/i18n';
 
 export default function NotFoundPage() {
   const { t } = useTranslation();

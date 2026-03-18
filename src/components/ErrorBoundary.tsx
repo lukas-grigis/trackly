@@ -1,4 +1,4 @@
-import { Component, type ReactNode } from "react";
+import { Component, type ReactNode } from 'react';
 
 interface Props {
   children: ReactNode;
@@ -26,7 +26,9 @@ export class ErrorBoundary extends Component<Props, State> {
   handleClearData = () => {
     try {
       localStorage.clear();
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     window.location.reload();
   };
 
@@ -36,7 +38,17 @@ export class ErrorBoundary extends Component<Props, State> {
         <div className="min-h-screen flex items-center justify-center bg-background p-6">
           <div className="mx-auto max-w-md w-full rounded-2xl border bg-card p-8 space-y-6 text-center shadow-lg">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 text-destructive">
-              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <circle cx="12" cy="12" r="10" />
                 <line x1="12" y1="8" x2="12" y2="12" />
                 <line x1="12" y1="16" x2="12.01" y2="16" />

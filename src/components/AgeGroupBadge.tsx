@@ -1,4 +1,4 @@
-import { getAgeGroup } from "@/lib/utils";
+import { getAgeGroup } from '@/lib/utils';
 
 export function AgeGroupBadge({ yearOfBirth, referenceYear }: { yearOfBirth?: number; referenceYear?: number }) {
   if (!yearOfBirth) return null;

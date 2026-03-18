@@ -1,14 +1,14 @@
-import { useEffect, useRef, useCallback, useState } from "react";
-import { useTranslation } from "@/lib/i18n";
-import { formatValue } from "@/lib/utils";
-import { DISCIPLINES } from "@/lib/constants";
-import type { LeaderboardEntry } from "@/hooks/useLeaderboard";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useRef, useCallback, useState } from 'react';
+import { useTranslation } from '@/lib/i18n';
+import { formatValue } from '@/lib/utils';
+import { DISCIPLINES } from '@/lib/constants';
+import type { LeaderboardEntry } from '@/hooks/useLeaderboard';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const MEDAL_COLORS = [
-  { bg: "bg-yellow-400", text: "text-yellow-900", label: "🥇" },
-  { bg: "bg-slate-300", text: "text-slate-700", label: "🥈" },
-  { bg: "bg-amber-600", text: "text-amber-100", label: "🥉" },
+  { bg: 'bg-yellow-400', text: 'text-yellow-900', label: '🥇' },
+  { bg: 'bg-slate-300', text: 'text-slate-700', label: '🥈' },
+  { bg: 'bg-amber-600', text: 'text-amber-100', label: '🥉' },
 ] as const;
 
 const TV_ROTATION_MS = 8000;
@@ -27,13 +27,28 @@ interface TVModeProps {
   allSections?: DisciplineData[];
 }
 
-export function TVMode({ entries: defaultEntries, discipline: defaultDiscipline, customDisciplineName: defaultCustomName, onExit, allSections }: TVModeProps) {
+export function TVMode({
+  entries: defaultEntries,
+  discipline: defaultDiscipline,
+  customDisciplineName: defaultCustomName,
+  onExit,
+  allSections,
+}: TVModeProps) {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
 
   // I6: discipline rotation
-  const sections = allSections && allSections.length > 0 ? allSections : [{ discipline: defaultDiscipline, entries: defaultEntries, customDisciplineName: defaultCustomName }];
+  const sections =
+    allSections && allSections.length > 0
+      ? allSections
+      : [
+          {
+            discipline: defaultDiscipline,
+            entries: defaultEntries,
+            customDisciplineName: defaultCustomName,
+          },
+        ];
   const [currentIdx, setCurrentIdx] = useState(0);
   const safeIdx = currentIdx % sections.length;
   const { discipline, entries, customDisciplineName } = sections[safeIdx];
@@ -63,8 +78,8 @@ export function TVMode({ entries: defaultEntries, discipline: defaultDiscipline,
     // Wake Lock
     async function requestWakeLock() {
       try {
-        if ("wakeLock" in navigator) {
-          wakeLockRef.current = await navigator.wakeLock.request("screen");
+        if ('wakeLock' in navigator) {
+          wakeLockRef.current = await navigator.wakeLock.request('screen');
         }
       } catch {
         // Wake Lock denied or unsupported
@@ -87,14 +102,17 @@ export function TVMode({ entries: defaultEntries, discipline: defaultDiscipline,
   // Re-acquire wake lock when page becomes visible again (e.g. tab switch)
   useEffect(() => {
     function handleVisibilityChange() {
-      if (document.visibilityState === "visible" && !wakeLockRef.current) {
-        navigator.wakeLock?.request("screen").then((lock) => {
-          wakeLockRef.current = lock;
-        }).catch(() => {});
+      if (document.visibilityState === 'visible' && !wakeLockRef.current) {
+        navigator.wakeLock
+          ?.request('screen')
+          .then((lock) => {
+            wakeLockRef.current = lock;
+          })
+          .catch(() => {});
       }
     }
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   // Exit on fullscreen change (user pressed Esc)
@@ -104,15 +122,18 @@ export function TVMode({ entries: defaultEntries, discipline: defaultDiscipline,
         onExit();
       }
     }
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, [onExit]);
 
-  const handleClick = useCallback((e: React.MouseEvent) => {
-    // Don't exit when clicking nav arrows
-    if ((e.target as HTMLElement).closest("[data-tv-nav]")) return;
-    onExit();
-  }, [onExit]);
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => {
+      // Don't exit when clicking nav arrows
+      if ((e.target as HTMLElement).closest('[data-tv-nav]')) return;
+      onExit();
+    },
+    [onExit]
+  );
 
   const sectionCount = sections.length;
   const goPrev = () => setCurrentIdx((i) => (i - 1 + sectionCount) % sectionCount);
@@ -153,10 +174,14 @@ export function TVMode({ entries: defaultEntries, discipline: defaultDiscipline,
         )}
         <div>
           <h1 className="text-3xl font-bold text-slate-300 sm:text-4xl">
-            {discipline === "custom" && customDisciplineName ? customDisciplineName : (t.disciplines[discipline] ?? discipline)}
+            {discipline === 'custom' && customDisciplineName
+              ? customDisciplineName
+              : (t.disciplines[discipline] ?? discipline)}
           </h1>
           {sections.length > 1 && (
-            <p className="text-xs text-slate-500 mt-1">{safeIdx + 1} / {sections.length}</p>
+            <p className="text-xs text-slate-500 mt-1">
+              {safeIdx + 1} / {sections.length}
+            </p>
           )}
         </div>
         {sections.length > 1 && (
@@ -176,33 +201,27 @@ export function TVMode({ entries: defaultEntries, discipline: defaultDiscipline,
           return (
             <div
               key={entry.athleteId}
-              className={`flex flex-col items-center ${isFirst ? "order-1" : entry.rank === 2 ? "order-0" : "order-2"}`}
+              className={`flex flex-col items-center ${isFirst ? 'order-1' : entry.rank === 2 ? 'order-0' : 'order-2'}`}
             >
               {/* Medal indicator */}
-              <span className="text-4xl sm:text-5xl mb-2">
-                {medal?.label}
-              </span>
+              <span className="text-4xl sm:text-5xl mb-2">{medal?.label}</span>
               {/* Name */}
               <p
-                className={`font-bold text-center leading-tight ${isFirst ? "text-3xl sm:text-5xl" : "text-2xl sm:text-4xl"}`}
+                className={`font-bold text-center leading-tight ${isFirst ? 'text-3xl sm:text-5xl' : 'text-2xl sm:text-4xl'}`}
               >
                 {entry.athlete?.name ?? entry.athleteId}
               </p>
               {/* Result */}
               <p
-                className={`font-mono mt-1 ${isFirst ? "text-2xl sm:text-4xl" : "text-xl sm:text-3xl"} text-slate-300`}
+                className={`font-mono mt-1 ${isFirst ? 'text-2xl sm:text-4xl' : 'text-xl sm:text-3xl'} text-slate-300`}
               >
-                {config
-                  ? formatValue(entry.bestValue, config.unit)
-                  : entry.bestValue}
+                {config ? formatValue(entry.bestValue, config.unit) : entry.bestValue}
               </p>
               {/* Pedestal */}
               <div
-                className={`mt-3 rounded-t-lg w-24 sm:w-32 ${medal ? `${medal.bg}` : "bg-slate-600"} ${isFirst ? "h-20 sm:h-28" : entry.rank === 2 ? "h-14 sm:h-20" : "h-10 sm:h-16"}`}
+                className={`mt-3 rounded-t-lg w-24 sm:w-32 ${medal ? `${medal.bg}` : 'bg-slate-600'} ${isFirst ? 'h-20 sm:h-28' : entry.rank === 2 ? 'h-14 sm:h-20' : 'h-10 sm:h-16'}`}
               >
-                <p
-                  className={`text-center font-bold pt-2 text-xl sm:text-2xl ${medal ? medal.text : "text-white"}`}
-                >
+                <p className={`text-center font-bold pt-2 text-xl sm:text-2xl ${medal ? medal.text : 'text-white'}`}>
                   {entry.rank}
                 </p>
               </div>
@@ -221,17 +240,11 @@ export function TVMode({ entries: defaultEntries, discipline: defaultDiscipline,
                 className="flex items-center justify-between rounded-lg bg-slate-800 px-4 py-3 sm:px-6 sm:py-4"
               >
                 <div className="flex items-center gap-4">
-                  <span className="text-xl font-bold text-slate-400 sm:text-2xl w-8 text-right">
-                    {entry.rank}
-                  </span>
-                  <span className="text-xl font-semibold sm:text-2xl">
-                    {entry.athlete?.name ?? entry.athleteId}
-                  </span>
+                  <span className="text-xl font-bold text-slate-400 sm:text-2xl w-8 text-right">{entry.rank}</span>
+                  <span className="text-xl font-semibold sm:text-2xl">{entry.athlete?.name ?? entry.athleteId}</span>
                 </div>
                 <span className="text-xl font-mono text-slate-300 sm:text-2xl">
-                  {config
-                    ? formatValue(entry.bestValue, config.unit)
-                    : entry.bestValue}
+                  {config ? formatValue(entry.bestValue, config.unit) : entry.bestValue}
                 </span>
               </div>
             ))}

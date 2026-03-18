@@ -1,15 +1,15 @@
-import { useTranslation } from "@/lib/i18n";
+import { useTranslation } from '@/lib/i18n';
 
-import type { Translations } from "@/lib/i18n";
+import type { Translations } from '@/lib/i18n';
 
 type TranslationKey = keyof Translations;
 
 const STEPS: { num: number; titleKey: TranslationKey; descKey: TranslationKey }[] = [
-  { num: 1, titleKey: "howToStep1Title", descKey: "howToStep1Desc" },
-  { num: 2, titleKey: "howToStep2Title", descKey: "howToStep2Desc" },
-  { num: 3, titleKey: "howToStep3Title", descKey: "howToStep3Desc" },
-  { num: 4, titleKey: "howToStep4Title", descKey: "howToStep4Desc" },
-  { num: 5, titleKey: "howToStep5Title", descKey: "howToStep5Desc" },
+  { num: 1, titleKey: 'howToStep1Title', descKey: 'howToStep1Desc' },
+  { num: 2, titleKey: 'howToStep2Title', descKey: 'howToStep2Desc' },
+  { num: 3, titleKey: 'howToStep3Title', descKey: 'howToStep3Desc' },
+  { num: 4, titleKey: 'howToStep4Title', descKey: 'howToStep4Desc' },
+  { num: 5, titleKey: 'howToStep5Title', descKey: 'howToStep5Desc' },
 ];
 
 export default function HowToPage() {
@@ -39,9 +39,7 @@ export default function HowToPage() {
             {/* Content */}
             <div className="flex-1 rounded-xl border bg-card p-4 space-y-1">
               <h2 className="font-semibold">{t[titleKey] as string}</h2>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {t[descKey] as string}
-              </p>
+              <p className="text-sm text-muted-foreground leading-relaxed">{t[descKey] as string}</p>
             </div>
           </div>
         ))}

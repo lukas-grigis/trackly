@@ -1,10 +1,10 @@
-import type { Gender } from "@/store/session-store";
-import { useTranslation } from "@/lib/i18n";
+import type { Gender } from '@/store/session-store';
+import { useTranslation } from '@/lib/i18n';
 
 const GENDER_ICONS: Record<Gender, string> = {
-  male: "♂",
-  female: "♀",
-  nonbinary: "⚧",
+  male: '♂',
+  female: '♀',
+  nonbinary: '⚧',
 };
 
 export function GenderBadge({ gender }: { gender?: Gender }) {

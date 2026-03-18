@@ -1,17 +1,17 @@
-import { useState, useRef, useCallback } from "react";
-import { Link } from "react-router-dom";
-import { toast } from "sonner";
-import { useSessionStore, type Gender } from "@/store/session-store";
-import { useTranslation } from "@/lib/i18n";
-import { cn } from "@/lib/utils";
-import { AgeGroupBadge } from "@/components/AgeGroupBadge";
-import { GenderBadge } from "@/components/GenderBadge";
-import { AthleteAvatar } from "@/components/ui/athlete-avatar";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { ROUTES } from "@/routes";
+import { useState, useRef, useCallback } from 'react';
+import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
+import { useSessionStore, type Gender } from '@/store/session-store';
+import { useTranslation } from '@/lib/i18n';
+import { cn } from '@/lib/utils';
+import { AgeGroupBadge } from '@/components/AgeGroupBadge';
+import { GenderBadge } from '@/components/GenderBadge';
+import { AthleteAvatar } from '@/components/ui/athlete-avatar';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { ROUTES } from '@/routes';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,8 +21,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Trash2, Plus, Users, Camera, X, Pencil } from "lucide-react";
+} from '@/components/ui/alert-dialog';
+import { Trash2, Plus, Users, Camera, X, Pencil } from 'lucide-react';
 
 const CURRENT_YEAR = new Date().getFullYear();
 // Ages 3–21 → 19 chips; the 20th slot is a custom entry
@@ -37,16 +37,22 @@ function processImage(file: File): Promise<string> {
       const size = Math.min(img.width, img.height);
       const sx = (img.width - size) / 2;
       const sy = (img.height - size) / 2;
-      const canvas = document.createElement("canvas");
+      const canvas = document.createElement('canvas');
       const dim = Math.min(size, 128);
       canvas.width = dim;
       canvas.height = dim;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) { reject(new Error("canvas")); return; }
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('canvas'));
+        return;
+      }
       ctx.drawImage(img, sx, sy, size, size, 0, 0, dim, dim);
-      resolve(canvas.toDataURL("image/jpeg", 0.85));
+      resolve(canvas.toDataURL('image/jpeg', 0.85));
     };
-    img.onerror = () => { URL.revokeObjectURL(img.src); reject(new Error("load")); };
+    img.onerror = () => {
+      URL.revokeObjectURL(img.src);
+      reject(new Error('load'));
+    };
     img.src = URL.createObjectURL(file);
   });
 }
@@ -58,12 +64,12 @@ export default function AthletesPage() {
   const removeAthlete = useSessionStore((s) => s.removeAthlete);
   const { t } = useTranslation();
 
-  const [name, setName] = useState("");
+  const [name, setName] = useState('');
   const [year, setYear] = useState<number | null>(null);
   const [gender, setGender] = useState<Gender | undefined>(undefined);
   const [avatar, setAvatar] = useState<string | undefined>(undefined);
   const [customOpen, setCustomOpen] = useState(false);
-  const [customInput, setCustomInput] = useState("");
+  const [customInput, setCustomInput] = useState('');
   const [removeTarget, setRemoveTarget] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const replaceFileInputRef = useRef<HTMLInputElement>(null);
@@ -71,30 +77,33 @@ export default function AthletesPage() {
 
   // Edit athlete state
   const [editId, setEditId] = useState<string | null>(null);
-  const [editName, setEditName] = useState("");
+  const [editName, setEditName] = useState('');
   const [editYear, setEditYear] = useState<number | null>(null);
   const [editGender, setEditGender] = useState<Gender | undefined>(undefined);
   const [editCustomOpen, setEditCustomOpen] = useState(false);
-  const [editCustomInput, setEditCustomInput] = useState("");
+  const [editCustomInput, setEditCustomInput] = useState('');
 
-  const handleFileSelect = useCallback(async (file: File, athleteId?: string) => {
-    try {
-      const dataUrl = await processImage(file);
-      if (athleteId) {
-        const athlete = athletes.find((a) => a.id === athleteId);
-        if (!athlete) return;
-        try {
-          updateAthlete(athleteId, athlete.name, athlete.yearOfBirth, athlete.gender, dataUrl);
-        } catch {
-          toast.warning(t.photoStorageFailed);
+  const handleFileSelect = useCallback(
+    async (file: File, athleteId?: string) => {
+      try {
+        const dataUrl = await processImage(file);
+        if (athleteId) {
+          const athlete = athletes.find((a) => a.id === athleteId);
+          if (!athlete) return;
+          try {
+            updateAthlete(athleteId, athlete.name, athlete.yearOfBirth, athlete.gender, dataUrl);
+          } catch {
+            toast.warning(t.photoStorageFailed);
+          }
+        } else {
+          setAvatar(dataUrl);
         }
-      } else {
-        setAvatar(dataUrl);
+      } catch {
+        toast.warning(t.photoStorageFailed);
       }
-    } catch {
-      toast.warning(t.photoStorageFailed);
-    }
-  }, [athletes, updateAthlete, t]);
+    },
+    [athletes, updateAthlete, t]
+  );
 
   function handleCustomConfirm() {
     const parsed = parseInt(customInput, 10);
@@ -102,7 +111,7 @@ export default function AthletesPage() {
       setYear(parsed);
     }
     setCustomOpen(false);
-    setCustomInput("");
+    setCustomInput('');
   }
 
   const isCustomYear = year !== null && !YEAR_OPTIONS.includes(year);
@@ -117,12 +126,12 @@ export default function AthletesPage() {
       if (avatar) toast.warning(t.photoStorageFailed);
     }
     toast.success(t.athleteAdded);
-    setName("");
+    setName('');
     setYear(null);
     setGender(undefined);
     setAvatar(undefined);
     setCustomOpen(false);
-    setCustomInput("");
+    setCustomInput('');
   }
 
   function handleRemovePhoto(athleteId: string) {
@@ -145,7 +154,7 @@ export default function AthletesPage() {
     setEditYear(athlete.yearOfBirth ?? null);
     setEditGender(athlete.gender);
     setEditCustomOpen(false);
-    setEditCustomInput("");
+    setEditCustomInput('');
   }
 
   function handleEditSave() {
@@ -163,7 +172,7 @@ export default function AthletesPage() {
       setEditYear(parsed);
     }
     setEditCustomOpen(false);
-    setEditCustomInput("");
+    setEditCustomInput('');
   }
 
   const isEditCustomYear = editYear !== null && !YEAR_OPTIONS.includes(editYear);
@@ -207,11 +216,7 @@ export default function AthletesPage() {
                   <span className="font-medium">{athlete.name}</span>
                   <AgeGroupBadge yearOfBirth={athlete.yearOfBirth} />
                   <GenderBadge gender={athlete.gender} />
-                  {athlete.yearOfBirth && (
-                    <span className="text-sm text-muted-foreground">
-                      *{athlete.yearOfBirth}
-                    </span>
-                  )}
+                  {athlete.yearOfBirth && <span className="text-sm text-muted-foreground">*{athlete.yearOfBirth}</span>}
                 </Link>
               </div>
               <div className="flex items-center gap-1">
@@ -261,7 +266,7 @@ export default function AthletesPage() {
             placeholder={t.childNameLabel}
             value={name}
             onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+            onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
             className="flex-1"
           />
           <Button size="icon" onClick={handleAdd} aria-label={t.addChild}>
@@ -275,12 +280,15 @@ export default function AthletesPage() {
             <button
               key={y}
               type="button"
-              onClick={() => { setYear(year === y ? null : y); setCustomOpen(false); }}
+              onClick={() => {
+                setYear(year === y ? null : y);
+                setCustomOpen(false);
+              }}
               className={cn(
-                "rounded-md border py-1.5 text-xs font-medium tabular-nums transition-colors",
+                'rounded-md border py-1.5 text-xs font-medium tabular-nums transition-colors',
                 year === y
-                  ? "border-accent bg-accent text-accent-foreground"
-                  : "border-border bg-transparent text-muted-foreground hover:border-foreground hover:text-foreground",
+                  ? 'border-accent bg-accent text-accent-foreground'
+                  : 'border-border bg-transparent text-muted-foreground hover:border-foreground hover:text-foreground'
               )}
             >
               {y}
@@ -289,15 +297,17 @@ export default function AthletesPage() {
           {/* 20th slot: custom entry */}
           <button
             type="button"
-            onClick={() => { setCustomOpen((v) => !v); }}
+            onClick={() => {
+              setCustomOpen((v) => !v);
+            }}
             className={cn(
-              "rounded-md border py-1.5 text-xs font-medium transition-colors",
+              'rounded-md border py-1.5 text-xs font-medium transition-colors',
               isCustomYear || customOpen
-                ? "border-accent bg-accent text-accent-foreground"
-                : "border-border bg-transparent text-muted-foreground hover:border-foreground hover:text-foreground",
+                ? 'border-accent bg-accent text-accent-foreground'
+                : 'border-border bg-transparent text-muted-foreground hover:border-foreground hover:text-foreground'
             )}
           >
-            {isCustomYear ? year : "···"}
+            {isCustomYear ? year : '···'}
           </button>
         </div>
 
@@ -310,7 +320,7 @@ export default function AthletesPage() {
               placeholder="e.g. 1998"
               value={customInput}
               onChange={(e) => setCustomInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleCustomConfirm()}
+              onKeyDown={(e) => e.key === 'Enter' && handleCustomConfirm()}
               className="w-32 text-base md:text-sm"
             />
             <Button size="sm" onClick={handleCustomConfirm}>
@@ -321,7 +331,7 @@ export default function AthletesPage() {
 
         {/* Gender toggle */}
         <div className="flex gap-2">
-          {(["male", "female", "nonbinary"] as const).map((g) => (
+          {(['male', 'female', 'nonbinary'] as const).map((g) => (
             <button
               key={g}
               type="button"
@@ -329,13 +339,13 @@ export default function AthletesPage() {
               aria-label={t.genderLabels[g]}
               title={t.genderLabels[g]}
               className={cn(
-                "flex-1 rounded-md border py-2 text-base transition-colors",
+                'flex-1 rounded-md border py-2 text-base transition-colors',
                 gender === g
-                  ? "border-accent bg-accent text-accent-foreground"
-                  : "border-border bg-transparent text-muted-foreground hover:border-foreground hover:text-foreground",
+                  ? 'border-accent bg-accent text-accent-foreground'
+                  : 'border-border bg-transparent text-muted-foreground hover:border-foreground hover:text-foreground'
               )}
             >
-              {g === "male" ? "♂" : g === "female" ? "♀" : "⚧"}
+              {g === 'male' ? '♂' : g === 'female' ? '♀' : '⚧'}
             </button>
           ))}
         </div>
@@ -343,18 +353,13 @@ export default function AthletesPage() {
         {/* Photo capture */}
         <div className="flex items-center gap-3">
           {avatar ? (
-            <AthleteAvatar name={name || "?"} avatarBase64={avatar} />
+            <AthleteAvatar name={name || '?'} avatarBase64={avatar} />
           ) : (
             <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-dashed border-muted-foreground/40 text-muted-foreground/40">
               <Camera className="h-4 w-4" />
             </span>
           )}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => fileInputRef.current?.click()}
-          >
+          <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
             {avatar ? t.changePhoto : t.addPhoto}
           </Button>
           {avatar && (
@@ -381,7 +386,7 @@ export default function AthletesPage() {
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) handleFileSelect(file);
-          e.target.value = "";
+          e.target.value = '';
         }}
       />
       <input
@@ -393,15 +398,12 @@ export default function AthletesPage() {
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file && replaceTarget) handleFileSelect(file, replaceTarget);
-          e.target.value = "";
+          e.target.value = '';
           setReplaceTarget(null);
         }}
       />
 
-      <AlertDialog
-        open={removeTarget !== null}
-        onOpenChange={(open) => !open && setRemoveTarget(null)}
-      >
+      <AlertDialog open={removeTarget !== null} onOpenChange={(open) => !open && setRemoveTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t.removeChildConfirm}</AlertDialogTitle>
@@ -420,10 +422,7 @@ export default function AthletesPage() {
       </AlertDialog>
 
       {/* Edit athlete dialog */}
-      <AlertDialog
-        open={editId !== null}
-        onOpenChange={(open) => !open && setEditId(null)}
-      >
+      <AlertDialog open={editId !== null} onOpenChange={(open) => !open && setEditId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t.editAthlete}</AlertDialogTitle>
@@ -434,19 +433,22 @@ export default function AthletesPage() {
               placeholder={t.childNameLabel}
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleEditSave()}
+              onKeyDown={(e) => e.key === 'Enter' && handleEditSave()}
             />
             <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5">
               {YEAR_OPTIONS.map((y) => (
                 <button
                   key={y}
                   type="button"
-                  onClick={() => { setEditYear(editYear === y ? null : y); setEditCustomOpen(false); }}
+                  onClick={() => {
+                    setEditYear(editYear === y ? null : y);
+                    setEditCustomOpen(false);
+                  }}
                   className={cn(
-                    "rounded-md border py-1.5 text-xs font-medium tabular-nums transition-colors",
+                    'rounded-md border py-1.5 text-xs font-medium tabular-nums transition-colors',
                     editYear === y
-                      ? "border-accent bg-accent text-accent-foreground"
-                      : "border-border bg-transparent text-muted-foreground hover:border-foreground hover:text-foreground",
+                      ? 'border-accent bg-accent text-accent-foreground'
+                      : 'border-border bg-transparent text-muted-foreground hover:border-foreground hover:text-foreground'
                   )}
                 >
                   {y}
@@ -456,13 +458,13 @@ export default function AthletesPage() {
                 type="button"
                 onClick={() => setEditCustomOpen((v) => !v)}
                 className={cn(
-                  "rounded-md border py-1.5 text-xs font-medium transition-colors",
+                  'rounded-md border py-1.5 text-xs font-medium transition-colors',
                   isEditCustomYear || editCustomOpen
-                    ? "border-accent bg-accent text-accent-foreground"
-                    : "border-border bg-transparent text-muted-foreground hover:border-foreground hover:text-foreground",
+                    ? 'border-accent bg-accent text-accent-foreground'
+                    : 'border-border bg-transparent text-muted-foreground hover:border-foreground hover:text-foreground'
                 )}
               >
-                {isEditCustomYear ? editYear : "···"}
+                {isEditCustomYear ? editYear : '···'}
               </button>
             </div>
             {editCustomOpen && (
@@ -473,7 +475,7 @@ export default function AthletesPage() {
                   placeholder="e.g. 1998"
                   value={editCustomInput}
                   onChange={(e) => setEditCustomInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleEditCustomConfirm()}
+                  onKeyDown={(e) => e.key === 'Enter' && handleEditCustomConfirm()}
                   className="w-32 text-base md:text-sm"
                 />
                 <Button size="sm" onClick={handleEditCustomConfirm}>
@@ -482,7 +484,7 @@ export default function AthletesPage() {
               </div>
             )}
             <div className="flex gap-2">
-              {(["male", "female", "nonbinary"] as const).map((g) => (
+              {(['male', 'female', 'nonbinary'] as const).map((g) => (
                 <button
                   key={g}
                   type="button"
@@ -490,22 +492,20 @@ export default function AthletesPage() {
                   aria-label={t.genderLabels[g]}
                   title={t.genderLabels[g]}
                   className={cn(
-                    "flex-1 rounded-md border py-2 text-base transition-colors",
+                    'flex-1 rounded-md border py-2 text-base transition-colors',
                     editGender === g
-                      ? "border-accent bg-accent text-accent-foreground"
-                      : "border-border bg-transparent text-muted-foreground hover:border-foreground hover:text-foreground",
+                      ? 'border-accent bg-accent text-accent-foreground'
+                      : 'border-border bg-transparent text-muted-foreground hover:border-foreground hover:text-foreground'
                   )}
                 >
-                  {g === "male" ? "♂" : g === "female" ? "♀" : "⚧"}
+                  {g === 'male' ? '♂' : g === 'female' ? '♀' : '⚧'}
                 </button>
               ))}
             </div>
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleEditSave}>
-              {t.save}
-            </AlertDialogAction>
+            <AlertDialogAction onClick={handleEditSave}>{t.save}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
