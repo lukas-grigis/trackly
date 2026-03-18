@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { useSessionStore } from "@/store/session-store";
 import type { Session } from "@/store/session-store";
-import { escapeCsvField } from "@/lib/utils";
+import { escapeCsvField, formatValue } from "@/lib/utils";
 import { exportSessionPdf } from "@/lib/pdfExport";
 import { useTranslation } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
@@ -44,7 +44,7 @@ function exportSessionCsv(
         [
           athleteName(r.athleteId),
           disciplineLabel(h.disciplineType),
-          String(r.value),
+          formatValue(r.value, r.unit),
           r.unit,
           r.recordedAt,
         ].map(escapeCsvField),

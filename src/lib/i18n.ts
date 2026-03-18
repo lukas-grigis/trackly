@@ -91,6 +91,10 @@ export interface Translations {
   rankCol: string;
   nameCol: string;
   timeCol: string;
+  // Repeat confirmation (#19)
+  repeatConfirmTitle: string;
+  repeatConfirmDesc: string;
+  repeatConfirmAction: string;
   // Disciplines
   disciplines: Record<string, string>;
   // Categories
@@ -344,6 +348,9 @@ const de: Translations = {
   raceFinished: "Rennen beendet!",
   noTimesRecorded: "Keine Zeiten aufgezeichnet.",
   repeat: "Wiederholen",
+  repeatConfirmTitle: "Neuen Lauf starten?",
+  repeatConfirmDesc: "Die aktuellen Ergebnisse wurden gespeichert.",
+  repeatConfirmAction: "Neuen Lauf starten",
   rankCol: "#",
   nameCol: "Name",
   timeCol: "Zeit",
@@ -641,6 +648,9 @@ const en: Translations = {
   raceFinished: "Race finished!",
   noTimesRecorded: "No times recorded.",
   repeat: "Repeat",
+  repeatConfirmTitle: "Start new heat?",
+  repeatConfirmDesc: "The current results have been saved.",
+  repeatConfirmAction: "Start new heat",
   rankCol: "#",
   nameCol: "Name",
   timeCol: "Time",
