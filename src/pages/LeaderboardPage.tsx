@@ -138,7 +138,7 @@ export default function LeaderboardPage() {
         <div className="flex items-center gap-3">
           <span className="text-sm text-muted-foreground shrink-0">{t.leaderboardAgeGroupFilter}</span>
           <Select value={ageGroupFilter} onValueChange={(v) => setAgeGroupFilter(v as AgeGroupFilter)}>
-            <SelectTrigger className="w-36 h-8 text-sm">
+            <SelectTrigger className="w-36 h-8 text-base md:text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

@@ -263,7 +263,7 @@ export default function AthletesPage() {
               value={customInput}
               onChange={(e) => setCustomInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleCustomConfirm()}
-              className="w-32 text-sm"
+              className="w-32 text-base md:text-sm"
             />
             <Button size="sm" onClick={handleCustomConfirm}>
               {t.done}
