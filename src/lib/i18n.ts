@@ -294,7 +294,7 @@ const de: Translations = {
   deleteSession: "Session löschen",
   deleteSessionConfirm: "Session löschen?",
   deleteSessionDesc:
-    "Dies löscht die Session und alle zugehörigen Athleten und Ergebnisse unwiderruflich.",
+    "Dies löscht die Session und alle zugehörigen Ergebnisse unwiderruflich. Athleten bleiben im Kader erhalten.",
   // Session page
   childrenTab: "Athleten",
   resultsTab: "Ergebnisse",
@@ -591,7 +591,7 @@ const en: Translations = {
   deleteSession: "Delete session",
   deleteSessionConfirm: "Delete session?",
   deleteSessionDesc:
-    "This will permanently delete the session and all associated athletes and results.",
+    "This will permanently delete the session and all associated results. Athletes will remain in the roster.",
   // Session page
   childrenTab: "Athletes",
   resultsTab: "Results",
