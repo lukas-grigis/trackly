@@ -732,9 +732,15 @@ export default function SessionPage() {
                       <div className="flex items-center justify-between bg-muted/40 px-4 py-2 border-b">
                         <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                           {getHeatLabel(discipline, t)} {heatIdx + 1}
-                          <span className="ml-2 font-normal">
-                            ({heat.results.length}/{heat.participantIds.length})
-                          </span>
+                          {isCountHeat && teamA && teamB ? (
+                            <span className="ml-2 font-normal">
+                              ({teamA.value}:{teamB.value})
+                            </span>
+                          ) : !isCountHeat ? (
+                            <span className="ml-2 font-normal">
+                              ({heat.results.length}/{heat.participantIds.length})
+                            </span>
+                          ) : null}
                         </span>
                         <Button
                           variant="ghost"
