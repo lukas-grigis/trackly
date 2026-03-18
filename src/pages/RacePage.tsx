@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSessionStore } from "@/store/session-store";
-import { DISCIPLINES, isTimedDiscipline, getMedalStyle } from "@/lib/constants";
+import { DISCIPLINES, isTimedDiscipline, getMedalStyle, MAX_FIELD_ATTEMPTS } from "@/lib/constants";
 import { formatTime, formatStopwatch, cn, getAgeGroup } from "@/lib/utils";
 import { GenderBadgeInline } from "@/components/GenderBadge";
 import { AthleteAvatar } from "@/components/ui/athlete-avatar";
@@ -108,7 +108,7 @@ export default function RacePage() {
   const [showGo, setShowGo] = useState(false);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Field-entry state: attempts per athlete (up to 3)
+  // Field-entry state: attempts per athlete (up to MAX_FIELD_ATTEMPTS)
   interface Attempt {
     value: string; // raw input string
     foul: boolean;
@@ -449,7 +449,7 @@ export default function RacePage() {
           disabled={selectedChildren.length === 0}
           onClick={handleStart}
         >
-          {t.start}
+          {disciplineConfig.mode === "distance" ? t.fieldEntry : t.start}
         </Button>
       </div>
     );
@@ -551,7 +551,7 @@ export default function RacePage() {
     function addAttempt(athleteId: string) {
       setFieldAttempts((prev) => {
         const attempts = prev[athleteId] ?? [];
-        if (attempts.length >= 3) return prev;
+        if (attempts.length >= MAX_FIELD_ATTEMPTS) return prev;
         return { ...prev, [athleteId]: [...attempts, { value: "", foul: false }] };
       });
     }
@@ -669,7 +669,7 @@ export default function RacePage() {
                   ))}
                 </div>
 
-                {attempts.length < 3 && (
+                {attempts.length < MAX_FIELD_ATTEMPTS && (
                   <Button
                     size="sm"
                     variant="ghost"
