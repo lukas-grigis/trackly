@@ -688,17 +688,24 @@ export default function SessionPage() {
             {resultsView === "heats" && (
               <div className="space-y-3">
                 {filteredHeats.map((heat, heatIdx) => {
-                  // Sort results within heat by performance
-                  const heatResults = [...heat.results]
-                    .map((r) => {
-                      const athlete = allAthletes.find((a) => a.id === r.childId);
-                      return { ...r, athlete };
-                    })
-                    .sort((a, b) =>
-                      disciplineConfig.sortAscending
-                        ? a.value - b.value
-                        : b.value - a.value,
-                    );
+                  // Build a row for every participant: result if available, "—" otherwise
+                  const resultMap = new Map(heat.results.map((r) => [r.childId, r]));
+                  const rows = heat.participantIds.map((pid) => {
+                    const r = resultMap.get(pid);
+                    const athlete = allAthletes.find((a) => a.id === pid);
+                    return { childId: pid, athlete, result: r ?? null };
+                  });
+                  // Sort: athletes with results first (ranked by value), then unfinished
+                  rows.sort((a, b) => {
+                    if (a.result && !b.result) return -1;
+                    if (!a.result && b.result) return 1;
+                    if (a.result && b.result) {
+                      return disciplineConfig.sortAscending
+                        ? a.result.value - b.result.value
+                        : b.result.value - a.result.value;
+                    }
+                    return 0;
+                  });
 
                   const isCountHeat = mode === "count";
                   const teamA = isCountHeat ? heat.results.find((r) => r.childId === "team-a") : null;
@@ -710,6 +717,9 @@ export default function SessionPage() {
                       <div className="flex items-center justify-between bg-muted/40 px-4 py-2 border-b">
                         <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                           {t.pdfHeat} {heatIdx + 1}
+                          <span className="ml-2 font-normal">
+                            ({heat.results.length}/{heat.participantIds.length})
+                          </span>
                         </span>
                         <Button
                           variant="ghost"
@@ -736,16 +746,18 @@ export default function SessionPage() {
                           </div>
                         </div>
                       ) : (
-                        /* Timed / distance / custom: ranked table within heat */
+                        /* Timed / distance / custom: all participants within heat */
                         <div className="divide-y">
-                          {heatResults.map((r, ri) => {
-                            const rank = ri + 1;
-                            const medalStyle = getMedalStyle(rank);
-                            const isNoteOnly = r.value === 0 && r.note;
+                          {rows.map((row, ri) => {
+                            const hasResult = row.result !== null;
+                            const finishedCount = rows.filter((r) => r.result !== null).length;
+                            const rank = hasResult ? ri + 1 : null;
+                            const medalStyle = rank != null && finishedCount > 1 ? getMedalStyle(rank) : null;
+                            const isNoteOnly = hasResult && row.result!.value === 0 && row.result!.note;
                             return (
-                              <div key={r.childId} className="flex items-center gap-3 px-4 py-2">
+                              <div key={`${row.childId}-${ri}`} className={cn("flex items-center gap-3 px-4 py-2", !hasResult && "opacity-50")}>
                                 <div className="w-6 shrink-0 flex justify-center">
-                                  {isNoteOnly ? (
+                                  {!hasResult || isNoteOnly ? (
                                     <span className="text-xs text-muted-foreground">—</span>
                                   ) : medalStyle ? (
                                     <span className={cn("inline-flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold", medalStyle)}>
@@ -756,16 +768,16 @@ export default function SessionPage() {
                                   )}
                                 </div>
                                 <span className="flex-1 text-sm inline-flex items-center gap-1.5 min-w-0">
-                                  <span className="truncate font-medium">{r.athlete?.name ?? r.childId}</span>
-                                  <AgeGroupBadge yearOfBirth={r.athlete?.yearOfBirth} />
-                                  <GenderBadge gender={r.athlete?.gender} />
+                                  <span className="truncate font-medium">{row.athlete?.name ?? row.childId}</span>
+                                  <AgeGroupBadge yearOfBirth={row.athlete?.yearOfBirth} />
+                                  <GenderBadge gender={row.athlete?.gender} />
                                 </span>
                                 <span className="shrink-0 font-mono text-sm tabular-nums">
-                                  {isNoteOnly ? "—" : formatValue(r.value, r.unit)}
+                                  {!hasResult ? "—" : isNoteOnly ? "—" : formatValue(row.result!.value, row.result!.unit)}
                                 </span>
-                                {mode === "custom" && r.note && (
+                                {mode === "custom" && hasResult && row.result!.note && (
                                   <span className="shrink-0 text-xs text-muted-foreground max-w-24 truncate">
-                                    {r.note}
+                                    {row.result!.note}
                                   </span>
                                 )}
                               </div>
