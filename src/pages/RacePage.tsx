@@ -228,6 +228,7 @@ export default function RacePage() {
   }, [countdownRemaining, startCountdown]);
 
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [repeatDialogOpen, setRepeatDialogOpen] = useState(false);
 
   if (!session || !id) {
     return (
@@ -875,10 +876,28 @@ export default function RacePage() {
         <Button className="flex-1 h-12 text-base rounded-xl" onClick={handleSave}>
           {t.save}
         </Button>
-        <Button variant="outline" className="flex-1 h-12 text-base rounded-xl" onClick={handleReset}>
+        <Button variant="outline" className="flex-1 h-12 text-base rounded-xl" onClick={() => setRepeatDialogOpen(true)}>
           {t.repeat}
         </Button>
       </div>
+
+      {/* Repeat confirmation dialog (#19) */}
+      {repeatDialogOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="mx-4 w-full max-w-sm rounded-2xl border bg-background p-6 space-y-4 shadow-lg">
+            <h2 className="text-lg font-bold">{t.repeatConfirmTitle}</h2>
+            <p className="text-sm text-muted-foreground">{t.repeatConfirmDesc}</p>
+            <div className="flex flex-col gap-2">
+              <Button onClick={() => { setRepeatDialogOpen(false); handleReset(); }}>
+                {t.repeatConfirmAction}
+              </Button>
+              <Button variant="outline" onClick={() => setRepeatDialogOpen(false)}>
+                {t.cancel}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
