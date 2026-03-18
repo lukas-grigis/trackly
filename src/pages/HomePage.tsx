@@ -41,7 +41,7 @@ function exportSessionCsv(
     ...session.heats.flatMap((h) =>
       h.results.map((r) =>
         [
-          athleteName(r.childId),
+          athleteName(r.athleteId),
           disciplineLabel(h.disciplineType),
           formatValue(r.value, r.unit),
           r.unit,

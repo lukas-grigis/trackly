@@ -16,7 +16,7 @@ export interface Athlete {
 }
 
 export interface HeatResult {
-  childId: string;
+  athleteId: string;
   value: number;
   unit: "ms" | "s" | "cm" | "m" | "count";
   note?: string;
@@ -162,8 +162,8 @@ export const useSessionStore = create<StoreState>()(
                   ...s,
                   heats: s.heats.map((h) => {
                     if (h.id !== heatId) return h;
-                    // Reject if childId not in participantIds
-                    if (!h.participantIds.includes(result.childId)) return h;
+                    // Reject if athleteId not in participantIds
+                    if (!h.participantIds.includes(result.athleteId)) return h;
                     return { ...h, results: [...h.results, result] };
                   }),
                 }
@@ -184,7 +184,7 @@ export const useSessionStore = create<StoreState>()(
                     // Cascade-remove results when participantIds shrink
                     if (updates.participantIds) {
                       updated.results = updated.results.filter((r) =>
-                        updates.participantIds!.includes(r.childId),
+                        updates.participantIds!.includes(r.athleteId),
                       );
                     }
                     return updated;

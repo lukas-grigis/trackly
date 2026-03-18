@@ -60,7 +60,7 @@ export default function SessionPage() {
   const [athletesOpen, setAthletesOpen] = useState(true);
   const [discipline, setDiscipline] = useState("sprint_60");
   const [customDisciplineName, setCustomDisciplineName] = useState("");
-  const [selectedChildId, setSelectedChildId] = useState("");
+  const [selectedAthleteId, setSelectedAthleteId] = useState("");
   const [resultValue, setResultValue] = useState("");
   const [customUnit, setCustomUnit] = useState<typeof CUSTOM_UNITS[number]>("s");
   const [customNote, setCustomNote] = useState("");
@@ -110,18 +110,18 @@ export default function SessionPage() {
   }
 
   function handleAddResult() {
-    if (!selectedChildId || !resultValue || !id) return;
+    if (!selectedAthleteId || !resultValue || !id) return;
     const value = parseFloat(resultValue);
     if (isNaN(value)) return;
     const now = new Date().toISOString();
     const heatId = addHeat(id, {
       sessionId: id,
       disciplineType: discipline,
-      participantIds: [selectedChildId],
+      participantIds: [selectedAthleteId],
       startedAt: now,
     });
     addHeatResult(id, heatId, {
-      childId: selectedChildId,
+      athleteId: selectedAthleteId,
       value,
       unit: disciplineConfig.unit,
       recordedAt: now,
@@ -131,7 +131,7 @@ export default function SessionPage() {
   }
 
   function handleAddCustomResult() {
-    if (!selectedChildId || !id) return;
+    if (!selectedAthleteId || !id) return;
     const numValue = resultValue ? parseFloat(resultValue) : NaN;
     const hasNumeric = !isNaN(numValue) && resultValue !== "";
     const hasNote = customNote.trim() !== "";
@@ -142,11 +142,11 @@ export default function SessionPage() {
       sessionId: id,
       disciplineType: "custom",
       customDisciplineName,
-      participantIds: [selectedChildId],
+      participantIds: [selectedAthleteId],
       startedAt: now,
     });
     addHeatResult(id, heatId, {
-      childId: selectedChildId,
+      athleteId: selectedAthleteId,
       value: hasNumeric ? numValue : 0,
       unit: customUnit,
       note: hasNote ? customNote.trim() : undefined,
@@ -174,8 +174,8 @@ export default function SessionPage() {
       participantIds: [teamAId, teamBId],
       startedAt: now,
     });
-    addHeatResult(id, heatId, { childId: teamAId, value: score.a, unit: "count", note: nameA, recordedAt: now });
-    addHeatResult(id, heatId, { childId: teamBId, value: score.b, unit: "count", note: nameB, recordedAt: now });
+    addHeatResult(id, heatId, { athleteId: teamAId, value: score.a, unit: "count", note: nameA, recordedAt: now });
+    addHeatResult(id, heatId, { athleteId: teamBId, value: score.b, unit: "count", note: nameB, recordedAt: now });
     toast.success(t.resultsSaved);
     setScore({ a: 0, b: 0 });
   }
@@ -193,11 +193,11 @@ export default function SessionPage() {
   // Flatten all results across heats, sorted by performance (best first)
   const filteredResults = filteredHeats.flatMap((h) =>
     h.results.map((r) => {
-      const athlete = allAthletes.find((a) => a.id === r.childId);
+      const athlete = allAthletes.find((a) => a.id === r.athleteId);
       return {
         heatId: h.id,
-        childId: r.childId,
-        athleteName: athlete?.name ?? r.childId,
+        athleteId: r.athleteId,
+        athleteName: athlete?.name ?? r.athleteId,
         yearOfBirth: athlete?.yearOfBirth,
         gender: athlete?.gender,
         value: r.value,
@@ -257,7 +257,7 @@ export default function SessionPage() {
   const attemptCounts = useMemo(() => {
     const counts = new Map<string, number>();
     for (const r of filteredResults) {
-      counts.set(r.childId, (counts.get(r.childId) ?? 0) + 1);
+      counts.set(r.athleteId, (counts.get(r.athleteId) ?? 0) + 1);
     }
     return counts;
   }, [filteredResults]);
@@ -381,10 +381,10 @@ export default function SessionPage() {
                   <button
                     key={a.id}
                     type="button"
-                    onClick={() => setSelectedChildId(a.id)}
+                    onClick={() => setSelectedAthleteId(a.id)}
                     className={cn(
                       "inline-flex items-center gap-2 rounded-xl border-2 px-3 py-2 text-sm font-medium transition-all tap-target",
-                      selectedChildId === a.id
+                      selectedAthleteId === a.id
                         ? "border-primary bg-primary/10 text-primary"
                         : "border-border bg-muted/30 hover:border-primary/40 hover:bg-muted/50",
                     )}
@@ -395,7 +395,7 @@ export default function SessionPage() {
                       size="sm"
                       className={cn(
                         "h-6 w-6 text-[10px]",
-                        !a.avatarBase64 && (selectedChildId === a.id
+                        !a.avatarBase64 && (selectedAthleteId === a.id
                           ? "bg-primary text-primary-foreground"
                           : "bg-muted text-muted-foreground"),
                       )}
@@ -422,7 +422,7 @@ export default function SessionPage() {
                   {disciplineConfig.unit === "count" ? "#" : disciplineConfig.unit}
                 </span>
               </div>
-              <Button onClick={handleAddResult} disabled={!selectedChildId || !resultValue}>
+              <Button onClick={handleAddResult} disabled={!selectedAthleteId || !resultValue}>
                 {t.save}
               </Button>
             </div>
@@ -443,10 +443,10 @@ export default function SessionPage() {
                   <button
                     key={a.id}
                     type="button"
-                    onClick={() => setSelectedChildId(a.id)}
+                    onClick={() => setSelectedAthleteId(a.id)}
                     className={cn(
                       "inline-flex items-center gap-2 rounded-xl border-2 px-3 py-2 text-sm font-medium transition-all tap-target",
-                      selectedChildId === a.id
+                      selectedAthleteId === a.id
                         ? "border-primary bg-primary/10 text-primary"
                         : "border-border bg-muted/30 hover:border-primary/40 hover:bg-muted/50",
                     )}
@@ -457,7 +457,7 @@ export default function SessionPage() {
                       size="sm"
                       className={cn(
                         "h-6 w-6 text-[10px]",
-                        !a.avatarBase64 && (selectedChildId === a.id
+                        !a.avatarBase64 && (selectedAthleteId === a.id
                           ? "bg-primary text-primary-foreground"
                           : "bg-muted text-muted-foreground"),
                       )}
@@ -502,7 +502,7 @@ export default function SessionPage() {
             <Button
               className="w-full"
               onClick={handleAddCustomResult}
-              disabled={!selectedChildId || (!resultValue && !customNote.trim())}
+              disabled={!selectedAthleteId || (!resultValue && !customNote.trim())}
             >
               {t.save}
             </Button>
@@ -649,7 +649,7 @@ export default function SessionPage() {
                     {rankedResults.map((result, i) => {
                       const rank = result.rank;
                       return (
-                        <tr key={`${result.heatId}-${result.childId}-${i}`} className={cn("border-b last:border-0", i % 2 === 1 && "bg-muted/30")}>
+                        <tr key={`${result.heatId}-${result.athleteId}-${i}`} className={cn("border-b last:border-0", i % 2 === 1 && "bg-muted/30")}>
                           <td className="py-2 pr-4 font-medium">
                             {rank == null ? "—" : getMedalStyle(rank) ? (
                               <span className={cn("inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold", getMedalStyle(rank))}>
@@ -696,11 +696,11 @@ export default function SessionPage() {
               <div className="space-y-3">
                 {filteredHeats.map((heat, heatIdx) => {
                   // Build a row for every participant: result if available, "—" otherwise
-                  const resultMap = new Map(heat.results.map((r) => [r.childId, r]));
+                  const resultMap = new Map(heat.results.map((r) => [r.athleteId, r]));
                   const rows = heat.participantIds.map((pid) => {
                     const r = resultMap.get(pid);
                     const athlete = allAthletes.find((a) => a.id === pid);
-                    return { childId: pid, athlete, result: r ?? null };
+                    return { athleteId: pid, athlete, result: r ?? null };
                   });
                   // Sort: athletes with results first (ranked by value), then unfinished
                   rows.sort((a, b) => {
@@ -715,8 +715,8 @@ export default function SessionPage() {
                   });
 
                   const isCountHeat = mode === "count";
-                  const teamA = isCountHeat ? heat.results.find((r) => r.childId === "team-a") : null;
-                  const teamB = isCountHeat ? heat.results.find((r) => r.childId === "team-b") : null;
+                  const teamA = isCountHeat ? heat.results.find((r) => r.athleteId === "team-a") : null;
+                  const teamB = isCountHeat ? heat.results.find((r) => r.athleteId === "team-b") : null;
 
                   return (
                     <div key={heat.id} className="rounded-xl border bg-card overflow-hidden">
@@ -762,7 +762,7 @@ export default function SessionPage() {
                             const medalStyle = rank != null && finishedCount > 1 ? getMedalStyle(rank) : null;
                             const isNoteOnly = hasResult && row.result!.value === 0 && row.result!.note;
                             return (
-                              <div key={`${row.childId}-${ri}`} className={cn("flex items-center gap-3 px-4 py-2", !hasResult && "opacity-50")}>
+                              <div key={`${row.athleteId}-${ri}`} className={cn("flex items-center gap-3 px-4 py-2", !hasResult && "opacity-50")}>
                                 <div className="w-6 shrink-0 flex justify-center">
                                   {!hasResult || isNoteOnly ? (
                                     <span className="text-xs text-muted-foreground">—</span>
@@ -775,7 +775,7 @@ export default function SessionPage() {
                                   )}
                                 </div>
                                 <span className="flex-1 text-sm inline-flex items-center gap-1.5 min-w-0">
-                                  <span className="truncate font-medium">{row.athlete?.name ?? row.childId}</span>
+                                  <span className="truncate font-medium">{row.athlete?.name ?? row.athleteId}</span>
                                   <AgeGroupBadge yearOfBirth={row.athlete?.yearOfBirth} />
                                   <GenderBadge gender={row.athlete?.gender} />
                                 </span>

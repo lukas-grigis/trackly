@@ -66,13 +66,13 @@ export function computeLeaderboard(
 
   for (const heat of heats) {
     for (const result of heat.results) {
-      if (!allowedAthleteIds.has(result.childId)) continue;
-      const current = bestByAthlete.get(result.childId);
+      if (!allowedAthleteIds.has(result.athleteId)) continue;
+      const current = bestByAthlete.get(result.athleteId);
       if (current === undefined) {
-        bestByAthlete.set(result.childId, result.value);
+        bestByAthlete.set(result.athleteId, result.value);
       } else {
         const isBetter = config.sortAscending ? result.value < current : result.value > current;
-        if (isBetter) bestByAthlete.set(result.childId, result.value);
+        if (isBetter) bestByAthlete.set(result.athleteId, result.value);
       }
     }
   }
@@ -132,13 +132,13 @@ export function useLeaderboard(
     const bestByAthlete = new Map<string, number>();
     for (const heat of heats) {
       for (const result of heat.results) {
-        if (!allowedAthleteIds.has(result.childId)) continue;
-        const current = bestByAthlete.get(result.childId);
+        if (!allowedAthleteIds.has(result.athleteId)) continue;
+        const current = bestByAthlete.get(result.athleteId);
         if (current === undefined) {
-          bestByAthlete.set(result.childId, result.value);
+          bestByAthlete.set(result.athleteId, result.value);
         } else {
           const isBetter = config.sortAscending ? result.value < current : result.value > current;
-          if (isBetter) bestByAthlete.set(result.childId, result.value);
+          if (isBetter) bestByAthlete.set(result.athleteId, result.value);
         }
       }
     }

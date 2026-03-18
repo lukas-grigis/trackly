@@ -69,7 +69,7 @@ export default function AthletePage() {
         if (heat.disciplineType === "custom") continue;
         const config = DISCIPLINES[heat.disciplineType];
         if (!config) continue;
-        const result = heat.results.find((r) => r.childId === id);
+        const result = heat.results.find((r) => r.athleteId === id);
         if (!result) continue;
 
         const existing = disciplineHistory.get(heat.disciplineType) ?? [];
@@ -114,7 +114,7 @@ export default function AthletePage() {
       const disciplinesInSession = [...new Set(
         session.heats
           .filter((h) => h.disciplineType !== "custom" && DISCIPLINES[h.disciplineType])
-          .filter((h) => h.results.some((r) => r.childId === id))
+          .filter((h) => h.results.some((r) => r.athleteId === id))
           .map((h) => h.disciplineType)
       )];
 
@@ -125,10 +125,10 @@ export default function AthletePage() {
         // Best result for this athlete in this session/discipline
         const heat = session.heats
           .filter((h) => h.disciplineType === discipline)
-          .find((h) => h.results.some((r) => r.childId === id));
+          .find((h) => h.results.some((r) => r.athleteId === id));
         if (!heat) continue;
 
-        const result = heat.results.find((r) => r.childId === id);
+        const result = heat.results.find((r) => r.athleteId === id);
         if (!result) continue;
 
         // Rank within this session

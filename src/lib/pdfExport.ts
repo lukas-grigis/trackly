@@ -76,9 +76,9 @@ export function exportSessionPdf(
 
     for (const heat of heats) {
       for (const result of heat.results) {
-        const current = bestByAthlete.get(result.childId);
+        const current = bestByAthlete.get(result.athleteId);
         if (!current) {
-          bestByAthlete.set(result.childId, {
+          bestByAthlete.set(result.athleteId, {
             value: result.value,
             unit: result.unit,
             heatId: heat.id,
@@ -88,7 +88,7 @@ export function exportSessionPdf(
             ? result.value < current.value
             : result.value > current.value;
           if (isBetter) {
-            bestByAthlete.set(result.childId, {
+            bestByAthlete.set(result.athleteId, {
               value: result.value,
               unit: result.unit,
               heatId: heat.id,
