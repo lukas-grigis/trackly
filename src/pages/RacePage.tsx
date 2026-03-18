@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { toast } from "sonner";
 import { useSessionStore } from "@/store/session-store";
 import { DISCIPLINES, isTimedDiscipline, getMedalStyle } from "@/lib/constants";
 import { formatTime, formatStopwatch, cn, getAgeGroup } from "@/lib/utils";
@@ -31,10 +30,27 @@ function saveCountdownPref(val: CountdownDuration) {
   try { localStorage.setItem(COUNTDOWN_STORAGE_KEY, String(val)); } catch { /* ignore */ }
 }
 
+/** M12: Reuse AudioContext per countdown */
+let _sharedAudioCtx: AudioContext | null = null;
+function getAudioCtx(): AudioContext | null {
+  try {
+    if (!_sharedAudioCtx || _sharedAudioCtx.state === "closed") {
+      _sharedAudioCtx = new AudioContext();
+    }
+    return _sharedAudioCtx;
+  } catch { return null; }
+}
+
+function closeAudioCtx() {
+  try { _sharedAudioCtx?.close(); } catch { /* ignore */ }
+  _sharedAudioCtx = null;
+}
+
 /** Play a short beep tone using AudioContext */
 function playBeep(frequency: number, duration: number) {
   try {
-    const ctx = new AudioContext();
+    const ctx = getAudioCtx();
+    if (!ctx) return;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain);
@@ -44,8 +60,6 @@ function playBeep(frequency: number, duration: number) {
     gain.gain.value = 0.3;
     osc.start();
     osc.stop(ctx.currentTime + duration / 1000);
-    // Clean up after done
-    osc.onended = () => { ctx.close(); };
   } catch { /* AudioContext not available */ }
 }
 
@@ -116,8 +130,18 @@ export default function RacePage() {
   }, []);
 
   useEffect(() => {
-    return () => stopTimer();
+    return () => { stopTimer(); closeAudioCtx(); };
   }, [stopTimer]);
+
+  // C4: beforeunload warning during active race
+  useEffect(() => {
+    if (phase !== "running" && phase !== "field-entry" && phase !== "countdown") return;
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      e.preventDefault();
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [phase]);
 
   // Visibility change handler for countdown pause/resume
   useEffect(() => {
@@ -147,16 +171,21 @@ export default function RacePage() {
     }, 100);
   }, []);
 
-  const startCountdown = useCallback((seconds: number) => {
+  // I13: Track total ticks for correct frequency on resume
+  const totalCountdownRef = useRef<number>(0);
+
+  const startCountdown = useCallback((seconds: number, isResume = false) => {
     setCountdownRemaining(seconds);
     setCountdownPaused(false);
     setShowGo(false);
 
-    // Play initial beep for the first tick
+    const totalTicks = isResume ? totalCountdownRef.current : seconds;
+    if (!isResume) totalCountdownRef.current = seconds;
+
     const baseFreq = 440;
-    const totalTicks = seconds;
-    const tickIndex = 0;
-    playBeep(baseFreq + (tickIndex / totalTicks) * 440, 100);
+    // Play initial beep for current tick
+    const freq = baseFreq + ((totalTicks - seconds) / totalTicks) * 440;
+    playBeep(freq, 100);
     vibrate(50);
 
     let remaining = seconds;
@@ -164,29 +193,24 @@ export default function RacePage() {
       remaining -= 1;
       if (remaining > 0) {
         setCountdownRemaining(remaining);
-        // Rising pitch: higher as we approach zero
-        const freq = baseFreq + ((totalTicks - remaining) / totalTicks) * 440;
-        playBeep(freq, 100);
+        const f = baseFreq + ((totalTicks - remaining) / totalTicks) * 440;
+        playBeep(f, 100);
         vibrate(50);
       } else {
-        // Zero! Start the timer precisely now
         if (countdownRef.current) {
           clearInterval(countdownRef.current);
           countdownRef.current = null;
         }
         setCountdownRemaining(0);
-        // "Go!" beep - distinct higher pitch + strong vibration
         playBeep(1200, 200);
         vibrate([100, 50, 100]);
 
-        // Start race timer at this precise moment
         const raceStart = performance.now();
         setStartTime(raceStart);
         setFinishTimes({});
         setElapsed(0);
         setShowGo(true);
 
-        // Show "Go!" briefly then transition to running
         setTimeout(() => {
           setShowGo(false);
           setPhase("running");
@@ -200,8 +224,10 @@ export default function RacePage() {
 
   const resumeCountdown = useCallback(() => {
     setCountdownPaused(false);
-    startCountdown(countdownRemaining);
+    startCountdown(countdownRemaining, true);
   }, [countdownRemaining, startCountdown]);
+
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 
   if (!session || !id) {
     return (
@@ -261,7 +287,7 @@ export default function RacePage() {
 
   function handleFinish(athleteId: string) {
     if (!startTime) return;
-    // eslint-disable-next-line react-hooks/purity -- event handler, not called during render
+    // eslint-disable-next-line react-hooks/purity -- event handler captures timestamp
     const time = performance.now() - startTime;
     setFinishTimes((prev) => {
       const next = { ...prev, [athleteId]: time };
@@ -273,9 +299,34 @@ export default function RacePage() {
     });
   }
 
-  function handleCancel() {
+  function handleCancelRequest() {
+    const hasPartial = Object.keys(finishTimes).length > 0;
+    if (hasPartial) {
+      setCancelDialogOpen(true);
+    } else {
+      // No results — just discard
+      handleDiscardHeat();
+    }
+  }
+
+  function handleSavePartial() {
+    setCancelDialogOpen(false);
     stopTimer();
     setPhase("finished");
+  }
+
+  function handleDiscardHeat() {
+    setCancelDialogOpen(false);
+    stopTimer();
+    // Delete the heat that was already created
+    if (id && heatId) {
+      useSessionStore.getState().deleteHeat(id, heatId);
+    }
+    handleReset();
+  }
+
+  function handleContinueRace() {
+    setCancelDialogOpen(false);
   }
 
   function handleSave() {
@@ -289,7 +340,7 @@ export default function RacePage() {
         recordedAt: now,
       });
     }
-    toast.success(t.resultsSaved);
+    // I11: Navbar handles toast via _heatJustSaved, no duplicate here
     navigate(ROUTES.SESSION(id));
   }
 
@@ -308,14 +359,23 @@ export default function RacePage() {
     stopTimer();
   }
 
-  const rankedResults = Object.entries(finishTimes)
-    .sort(([, a], [, b]) => a - b)
-    .map(([athleteId, time], i) => ({
-      rank: i + 1,
-      athleteId,
-      time,
-      name: allAthletes.find((a) => a.id === athleteId)?.name ?? "—",
-    }));
+  const rankedResults = (() => {
+    const sorted = Object.entries(finishTimes)
+      .sort(([, a], [, b]) => a - b)
+      .map(([athleteId, time]) => ({
+        rank: 0,
+        athleteId,
+        time,
+        name: allAthletes.find((a) => a.id === athleteId)?.name ?? "—",
+      }));
+    // C3: competition ranking (1,1,3 pattern)
+    for (let i = 0; i < sorted.length; i++) {
+      if (i === 0) sorted[i].rank = 1;
+      else if (Math.round(sorted[i].time) === Math.round(sorted[i - 1].time)) sorted[i].rank = sorted[i - 1].rank;
+      else sorted[i].rank = i + 1;
+    }
+    return sorted;
+  })();
 
   const disciplineLabel = t.disciplines[discipline] ?? discipline;
 
@@ -532,7 +592,7 @@ export default function RacePage() {
         });
       }
 
-      toast.success(t.resultsSaved);
+      // I11: Navbar handles toast via _heatJustSaved
       navigate(ROUTES.SESSION(id));
     }
 
@@ -713,10 +773,27 @@ export default function RacePage() {
           variant="outline"
           size="sm"
           className="w-full"
-          onClick={handleCancel}
+          onClick={handleCancelRequest}
         >
           {t.abort}
         </Button>
+
+        {/* I14: Partial results dialog */}
+        {cancelDialogOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="mx-4 w-full max-w-sm rounded-2xl border bg-background p-6 space-y-4 shadow-lg">
+              <h2 className="text-lg font-bold">{t.partialResultsTitle}</h2>
+              <p className="text-sm text-muted-foreground">
+                {Object.keys(finishTimes).length} / {selectedChildren.length}
+              </p>
+              <div className="flex flex-col gap-2">
+                <Button onClick={handleSavePartial}>{t.partialResultsSave}</Button>
+                <Button variant="destructive" onClick={handleDiscardHeat}>{t.partialResultsDiscard}</Button>
+                <Button variant="outline" onClick={handleContinueRace}>{t.partialResultsContinue}</Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

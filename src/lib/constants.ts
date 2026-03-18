@@ -50,7 +50,7 @@ export const DISCIPLINES: Record<string, DisciplineConfig> = {
   volleyball:   { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:volleyball" },
   dodgeball:    { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:bullseye" },
   brennball:    { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:fire" },
-  jump_rope:    { mode: "distance", unit: "count", sortAscending: false, category: "games", icon: "mdi:rotate-right" },
+  jump_rope:    { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:rotate-right" },
   capture_flag: { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:flag-variant" },
   tug_of_war:   { mode: "count", unit: "count", sortAscending: false, category: "games", icon: "mdi:link-variant" },
   obstacle_run: { mode: "timed", unit: "ms", sortAscending: true,  category: "games", icon: "mdi:forest" },

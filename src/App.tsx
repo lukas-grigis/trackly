@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import AppRoutes from "@/routes";
 import { Toaster } from "sonner";
 import { useTheme } from "@/hooks/use-theme";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 function ThemeInitializer() {
   const { isDark } = useTheme();
@@ -13,10 +14,10 @@ function ThemeInitializer() {
 
 export default function App() {
   return (
-    <>
+    <ErrorBoundary>
       <ThemeInitializer />
       <AppRoutes />
-      <Toaster />
-    </>
+      <Toaster theme="system" />
+    </ErrorBoundary>
   );
 }

@@ -71,21 +71,14 @@ export default function SessionPage() {
   const [deleteHeatTarget, setDeleteHeatTarget] = useState<string | null>(null);
   const [resultsView, setResultsView] = useState<"rankings" | "all" | "heats">("rankings");
 
-  if (!session || !id) {
-    return (
-      <div className="py-12 text-center text-muted-foreground">
-        {t.sessionNotFound}
-      </div>
-    );
-  }
-
-  const sessionAthletes = allAthletes.filter((a) => session.athleteIds.includes(a.id));
+  const sessionAthletes = session ? allAthletes.filter((a) => session.athleteIds.includes(a.id)) : [];
   const disciplineConfig = DISCIPLINES[discipline] ?? DISCIPLINES["sprint_60"];
   const mode = disciplineConfig.mode;
 
   function handleDisciplineChange(newDiscipline: string, newCustomName?: string) {
     setDiscipline(newDiscipline);
-    if (newCustomName !== undefined) setCustomDisciplineName(newCustomName);
+    // I8: normalize custom discipline name
+    if (newCustomName !== undefined) setCustomDisciplineName(newCustomName.trim());
     setScore({ a: 0, b: 0 });
     const newMode = DISCIPLINES[newDiscipline]?.mode ?? "timed";
     setResultsView(newMode === "count" || newMode === "custom" ? "heats" : "rankings");
@@ -109,10 +102,17 @@ export default function SessionPage() {
     setPickerOpen(false);
   }
 
+  // I10: for cm-stored disciplines (except high_jump, pole_vault), show input in meters
+  const distanceDisplayUnit = disciplineConfig.unit === "cm" && discipline !== "high_jump" && discipline !== "pole_vault" ? "m" : disciplineConfig.unit;
+
   function handleAddResult() {
     if (!selectedAthleteId || !resultValue || !id) return;
-    const value = parseFloat(resultValue);
+    let value = parseFloat(resultValue);
     if (isNaN(value)) return;
+    // I10: convert m input to cm for storage
+    if (distanceDisplayUnit === "m" && disciplineConfig.unit === "cm") {
+      value = Math.round(value * 100);
+    }
     const now = new Date().toISOString();
     const heatId = addHeat(id, {
       sessionId: id,
@@ -141,7 +141,7 @@ export default function SessionPage() {
     const heatId = addHeat(id, {
       sessionId: id,
       disciplineType: "custom",
-      customDisciplineName,
+      customDisciplineName: customDisciplineName.trim(),
       participantIds: [selectedAthleteId],
       startedAt: now,
     });
@@ -180,7 +180,7 @@ export default function SessionPage() {
     setScore({ a: 0, b: 0 });
   }
 
-  const filteredHeats = session.heats
+  const filteredHeats = (session?.heats ?? [])
     .filter((h) => {
       if (discipline === "custom") {
         return h.disciplineType === "custom" &&
@@ -277,6 +277,14 @@ export default function SessionPage() {
   const disciplineDisplayName = discipline === "custom"
     ? (customDisciplineName || t.disciplines.custom)
     : (t.disciplines[discipline] ?? discipline);
+
+  if (!session || !id) {
+    return (
+      <div className="py-12 text-center text-muted-foreground">
+        {t.sessionNotFound}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -419,7 +427,7 @@ export default function SessionPage() {
                   className="pr-10"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono text-muted-foreground pointer-events-none">
-                  {disciplineConfig.unit === "count" ? "#" : disciplineConfig.unit}
+                  {distanceDisplayUnit === "count" ? "#" : distanceDisplayUnit}
                 </span>
               </div>
               <Button onClick={handleAddResult} disabled={!selectedAthleteId || !resultValue}>
@@ -529,7 +537,7 @@ export default function SessionPage() {
                     size="icon"
                     className="tap-target tap-press h-14 w-14 rounded-xl"
                     onClick={() => handleAdjustScore(team, 1)}
-                    aria-label="+"
+                    aria-label={`${t.scoreIncrement} ${team === "a" ? (teamNames.a || t.teamA) : (teamNames.b || t.teamB)}`}
                   >
                     <Plus className="h-6 w-6" />
                   </Button>
@@ -542,7 +550,7 @@ export default function SessionPage() {
                     className="tap-target tap-press h-14 w-14 rounded-xl"
                     onClick={() => handleAdjustScore(team, -1)}
                     disabled={score[team] === 0}
-                    aria-label="-"
+                    aria-label={`${t.scoreDecrement} ${team === "a" ? (teamNames.a || t.teamA) : (teamNames.b || t.teamB)}`}
                   >
                     <Minus className="h-6 w-6" />
                   </Button>
@@ -755,10 +763,19 @@ export default function SessionPage() {
                       ) : (
                         /* Timed / distance / custom: all participants within heat */
                         <div className="divide-y">
-                          {rows.map((row, ri) => {
-                            const hasResult = row.result !== null;
+                          {(() => {
+                            // I4: pre-compute competition ranks (1,1,3)
                             const finishedCount = rows.filter((r) => r.result !== null).length;
-                            const rank = hasResult ? ri + 1 : null;
+                            const heatRanks: (number | null)[] = [];
+                            for (let ri = 0; ri < rows.length; ri++) {
+                              if (!rows[ri].result) { heatRanks.push(null); continue; }
+                              if (ri === 0 || !rows[ri - 1].result) heatRanks.push(1);
+                              else if (rows[ri].result!.value === rows[ri - 1].result!.value) heatRanks.push(heatRanks[ri - 1]);
+                              else heatRanks.push(ri + 1);
+                            }
+                            return rows.map((row, ri) => {
+                            const hasResult = row.result !== null;
+                            const rank = heatRanks[ri];
                             const medalStyle = rank != null && finishedCount > 1 ? getMedalStyle(rank) : null;
                             const isNoteOnly = hasResult && row.result!.value === 0 && row.result!.note;
                             return (
@@ -789,7 +806,8 @@ export default function SessionPage() {
                                 )}
                               </div>
                             );
-                          })}
+                          });
+                          })()}
                         </div>
                       )}
                     </div>

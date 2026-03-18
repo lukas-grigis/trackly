@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { useSessionStore } from "@/store/session-store";
 import type { Session } from "@/store/session-store";
-import { formatValue, escapeCsvField } from "@/lib/utils";
+import { escapeCsvField } from "@/lib/utils";
 import { exportSessionPdf } from "@/lib/pdfExport";
 import { useTranslation } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
@@ -35,15 +35,16 @@ function exportSessionCsv(
   session: Session,
   disciplineLabel: (key: string) => string,
   athleteName: (id: string) => string,
+  headers: { athlete: string; discipline: string; value: string; unit: string; date: string },
 ) {
   const rows = [
-    ["Athlete", "Discipline", "Value", "Unit", "Date"].map(escapeCsvField),
+    [headers.athlete, headers.discipline, headers.value, headers.unit, headers.date].map(escapeCsvField),
     ...session.heats.flatMap((h) =>
       h.results.map((r) =>
         [
           athleteName(r.athleteId),
           disciplineLabel(h.disciplineType),
-          formatValue(r.value, r.unit),
+          String(r.value),
           r.unit,
           r.recordedAt,
         ].map(escapeCsvField),
@@ -51,7 +52,8 @@ function exportSessionCsv(
     ),
   ];
   const csv = rows.map((row) => row.join(",")).join("\n");
-  const blob = new Blob([csv], { type: "text/csv" });
+  const bom = "\uFEFF";
+  const blob = new Blob([bom + csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -226,8 +228,10 @@ export default function HomePage() {
                     variant="ghost"
                     size="sm"
                     className="text-muted-foreground"
+                    disabled={session.heats.length === 0}
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (session.heats.length === 0) { toast.warning(t.noExportData); return; }
                       exportSessionPdf(
                         session,
                         allAthletes,
@@ -254,6 +258,7 @@ export default function HomePage() {
                         (key) => t.disciplines[key] ?? key,
                         (id) =>
                           allAthletes.find((a) => a.id === id)?.name ?? id,
+                        { athlete: t.csvAthlete, discipline: t.csvDiscipline, value: t.csvValue, unit: t.csvUnit, date: t.csvDate },
                       );
                       toast.success(t.csvExported);
                     }}

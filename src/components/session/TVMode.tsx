@@ -1,8 +1,9 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { useTranslation } from "@/lib/i18n";
 import { formatValue } from "@/lib/utils";
 import { DISCIPLINES } from "@/lib/constants";
 import type { LeaderboardEntry } from "@/hooks/useLeaderboard";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const MEDAL_COLORS = [
   { bg: "bg-yellow-400", text: "text-yellow-900", label: "🥇" },
@@ -10,17 +11,41 @@ const MEDAL_COLORS = [
   { bg: "bg-amber-600", text: "text-amber-100", label: "🥉" },
 ] as const;
 
+const TV_ROTATION_MS = 8000;
+
+interface DisciplineData {
+  discipline: string;
+  entries: LeaderboardEntry[];
+  customDisciplineName?: string;
+}
+
 interface TVModeProps {
   entries: LeaderboardEntry[];
   discipline: string;
   customDisciplineName?: string;
   onExit: () => void;
+  allSections?: DisciplineData[];
 }
 
-export function TVMode({ entries, discipline, customDisciplineName, onExit }: TVModeProps) {
+export function TVMode({ entries: defaultEntries, discipline: defaultDiscipline, customDisciplineName: defaultCustomName, onExit, allSections }: TVModeProps) {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+
+  // I6: discipline rotation
+  const sections = allSections && allSections.length > 0 ? allSections : [{ discipline: defaultDiscipline, entries: defaultEntries, customDisciplineName: defaultCustomName }];
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const safeIdx = currentIdx % sections.length;
+  const { discipline, entries, customDisciplineName } = sections[safeIdx];
+
+  // Auto-rotate every 8 seconds when multiple disciplines
+  useEffect(() => {
+    if (sections.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentIdx((i) => (i + 1) % sections.length);
+    }, TV_ROTATION_MS);
+    return () => clearInterval(timer);
+  }, [sections.length]);
 
   const config = DISCIPLINES[discipline];
 
@@ -83,9 +108,15 @@ export function TVMode({ entries, discipline, customDisciplineName, onExit }: TV
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, [onExit]);
 
-  const handleClick = useCallback(() => {
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    // Don't exit when clicking nav arrows
+    if ((e.target as HTMLElement).closest("[data-tv-nav]")) return;
     onExit();
   }, [onExit]);
+
+  const sectionCount = sections.length;
+  const goPrev = () => setCurrentIdx((i) => (i - 1 + sectionCount) % sectionCount);
+  const goNext = () => setCurrentIdx((i) => (i + 1) % sectionCount);
 
   // Split entries into podium (top 3 ranks) and remaining
   const podiumEntries = entries.filter((e) => e.rank <= 3);
@@ -113,11 +144,26 @@ export function TVMode({ entries, discipline, customDisciplineName, onExit }: TV
       className="fixed inset-0 z-50 flex flex-col bg-slate-900 text-white cursor-pointer overflow-auto"
       onClick={handleClick}
     >
-      {/* Discipline title */}
-      <div className="shrink-0 px-6 pt-6 pb-2 text-center">
-        <h1 className="text-3xl font-bold text-slate-300 sm:text-4xl">
-          {discipline === "custom" && customDisciplineName ? customDisciplineName : (t.disciplines[discipline] ?? discipline)}
-        </h1>
+      {/* Discipline title + nav */}
+      <div className="shrink-0 px-6 pt-6 pb-2 text-center flex items-center justify-center gap-4">
+        {sections.length > 1 && (
+          <button data-tv-nav onClick={goPrev} className="text-slate-400 hover:text-white p-2 transition-colors">
+            <ChevronLeft className="h-8 w-8" />
+          </button>
+        )}
+        <div>
+          <h1 className="text-3xl font-bold text-slate-300 sm:text-4xl">
+            {discipline === "custom" && customDisciplineName ? customDisciplineName : (t.disciplines[discipline] ?? discipline)}
+          </h1>
+          {sections.length > 1 && (
+            <p className="text-xs text-slate-500 mt-1">{safeIdx + 1} / {sections.length}</p>
+          )}
+        </div>
+        {sections.length > 1 && (
+          <button data-tv-nav onClick={goNext} className="text-slate-400 hover:text-white p-2 transition-colors">
+            <ChevronRight className="h-8 w-8" />
+          </button>
+        )}
       </div>
 
       {/* Podium section */}

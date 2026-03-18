@@ -61,12 +61,16 @@ export function computeLeaderboard(
     }
   }
 
+  // I1: exclude team- prefixed IDs and IDs not in athletes array
+  const athleteIdSet = new Set(athletes.map((a) => a.id));
+
   const heats = session.heats.filter((h) => h.disciplineType === discipline);
   const bestByAthlete = new Map<string, number>();
 
   for (const heat of heats) {
     for (const result of heat.results) {
       if (!allowedAthleteIds.has(result.athleteId)) continue;
+      if (result.athleteId.startsWith("team-") || !athleteIdSet.has(result.athleteId)) continue;
       const current = bestByAthlete.get(result.athleteId);
       if (current === undefined) {
         bestByAthlete.set(result.athleteId, result.value);
@@ -116,6 +120,7 @@ export function useLeaderboard(
 
     const sessionAthletes = athletes.filter((a) => session.athleteIds.includes(a.id));
     const hasYobData = sessionAthletes.some((a) => a.yearOfBirth != null);
+    const athleteIdSet = new Set(athletes.map((a) => a.id));
 
     const allowedAthleteIds = new Set<string>();
     for (const athlete of sessionAthletes) {
@@ -133,6 +138,7 @@ export function useLeaderboard(
     for (const heat of heats) {
       for (const result of heat.results) {
         if (!allowedAthleteIds.has(result.athleteId)) continue;
+        if (result.athleteId.startsWith("team-") || !athleteIdSet.has(result.athleteId)) continue;
         const current = bestByAthlete.get(result.athleteId);
         if (current === undefined) {
           bestByAthlete.set(result.athleteId, result.value);

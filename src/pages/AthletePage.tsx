@@ -122,22 +122,27 @@ export default function AthletePage() {
         const config = DISCIPLINES[discipline];
         if (!config) continue;
 
-        // Best result for this athlete in this session/discipline
-        const heat = session.heats
-          .filter((h) => h.disciplineType === discipline)
-          .find((h) => h.results.some((r) => r.athleteId === id));
-        if (!heat) continue;
+        // I5: iterate ALL heats to find best result for this athlete/discipline
+        let bestValue: number | null = null;
+        for (const h of session.heats) {
+          if (h.disciplineType !== discipline) continue;
+          for (const r of h.results) {
+            if (r.athleteId !== id) continue;
+            if (bestValue === null) bestValue = r.value;
+            else {
+              const isBetter = config.sortAscending ? r.value < bestValue : r.value > bestValue;
+              if (isBetter) bestValue = r.value;
+            }
+          }
+        }
+        if (bestValue === null) continue;
 
-        const result = heat.results.find((r) => r.athleteId === id);
-        if (!result) continue;
-
-        // Rank within this session
         const { entries } = computeLeaderboard(session, discipline, allAthletes);
         const rankEntry = entries.find((e) => e.athleteId === id);
 
         results.push({
           discipline,
-          value: result.value,
+          value: bestValue,
           unit: config.unit,
           rank: rankEntry?.rank ?? null,
         });

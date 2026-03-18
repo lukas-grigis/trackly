@@ -45,12 +45,56 @@ export interface Session {
 // Store
 // ---------------------------------------------------------------------------
 
+/** Estimate localStorage usage in bytes */
+function estimateStorageUsage(): number {
+  try {
+    let total = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key) {
+        total += key.length + (localStorage.getItem(key)?.length ?? 0);
+      }
+    }
+    return total * 2; // UTF-16 = 2 bytes per char
+  } catch {
+    return 0;
+  }
+}
+
+/** Returns true if storage usage is above ~4MB */
+export function isStorageNearQuota(): boolean {
+  return estimateStorageUsage() > 4 * 1024 * 1024;
+}
+
+/** Compress an avatar image to max 200x200 at JPEG quality 60% */
+export function compressAvatar(dataUrl: string): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const size = Math.min(img.width, img.height);
+      const sx = (img.width - size) / 2;
+      const sy = (img.height - size) / 2;
+      const canvas = document.createElement("canvas");
+      const dim = Math.min(size, 200);
+      canvas.width = dim;
+      canvas.height = dim;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { resolve(dataUrl); return; }
+      ctx.drawImage(img, sx, sy, size, size, 0, 0, dim, dim);
+      resolve(canvas.toDataURL("image/jpeg", 0.6));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
 interface StoreState {
   athletes: Athlete[];
   sessions: Session[];
   lastSavedAt: number | null;
   _heatJustSaved: boolean;
   _saveError: boolean;
+  _quotaWarning: boolean;
 
   // Global athlete roster
   addAthlete: (name: string, yearOfBirth?: number, gender?: Gender, avatarBase64?: string) => string;
@@ -80,6 +124,7 @@ export const useSessionStore = create<StoreState>()(
       lastSavedAt: null,
       _heatJustSaved: false,
       _saveError: false,
+      _quotaWarning: false,
 
       addAthlete(name, yearOfBirth, gender, avatarBase64) {
         const id = crypto.randomUUID();
@@ -212,7 +257,7 @@ export const useSessionStore = create<StoreState>()(
 
       clearAllData() {
         try { localStorage.removeItem("trackly-save-tooltip-dismissed"); } catch { /* ignore */ }
-        set({ athletes: [], sessions: [], lastSavedAt: null, _heatJustSaved: false, _saveError: false });
+        set({ athletes: [], sessions: [], lastSavedAt: null, _heatJustSaved: false, _saveError: false, _quotaWarning: false });
       },
     }),
     {
@@ -235,14 +280,17 @@ export const useSessionStore = create<StoreState>()(
             if (_writing) return;
             _writing = true;
             try {
-              localStorage.setItem(name, JSON.stringify(value));
+              const json = JSON.stringify(value);
+              localStorage.setItem(name, json);
+              const nearQuota = isStorageNearQuota();
               queueMicrotask(() => {
-                useSessionStore.setState({ lastSavedAt: Date.now(), _saveError: false });
+                useSessionStore.setState({ lastSavedAt: Date.now(), _saveError: false, _quotaWarning: nearQuota });
                 _writing = false;
               });
-            } catch {
+            } catch (e) {
+              const isQuota = e instanceof DOMException && (e.name === "QuotaExceededError" || e.code === 22);
               queueMicrotask(() => {
-                useSessionStore.setState({ _saveError: true });
+                useSessionStore.setState({ _saveError: true, _quotaWarning: isQuota });
                 _writing = false;
               });
             }
@@ -263,3 +311,21 @@ export const useSessionStore = create<StoreState>()(
     },
   ),
 );
+
+// M5: Cross-tab sync — reload store when another tab writes to localStorage
+if (typeof window !== "undefined") {
+  window.addEventListener("storage", (e) => {
+    if (e.key === "trackly-storage" && e.newValue) {
+      try {
+        const parsed = JSON.parse(e.newValue);
+        if (parsed?.state) {
+          useSessionStore.setState({
+            athletes: parsed.state.athletes ?? [],
+            sessions: parsed.state.sessions ?? [],
+            lastSavedAt: Date.now(),
+          });
+        }
+      } catch { /* ignore parse errors */ }
+    }
+  });
+}

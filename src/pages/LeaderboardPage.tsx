@@ -84,9 +84,15 @@ export default function LeaderboardPage() {
 
   const hasYobData = sections.some((s) => s.hasYobData);
 
-  // For TV mode, pass the first discipline's entries (legacy behaviour)
-  const tvEntries = sections[0]?.entries ?? [];
-  const tvDiscipline = availableDisciplines[0] ?? "sprint_60";
+  // I7: count athletes without birth year (hidden by age group filter)
+  const athletesWithoutYob = useMemo(() => {
+    if (!session || ageGroupFilter === "All") return 0;
+    const sessionAthletes = allAthletes.filter((a) => session.athleteIds.includes(a.id));
+    return sessionAthletes.filter((a) => a.yearOfBirth == null).length;
+  }, [session, allAthletes, ageGroupFilter]);
+
+  // I6: pass all sections to TV mode for auto-rotation
+  const tvSections = sections.map(({ discipline, entries }) => ({ discipline, entries }));
 
   if (!session || !id) {
     return (
@@ -98,7 +104,12 @@ export default function LeaderboardPage() {
 
   if (tvMode) {
     return (
-      <TVMode entries={tvEntries} discipline={tvDiscipline} onExit={exitTvMode} />
+      <TVMode
+        entries={tvSections[0]?.entries ?? []}
+        discipline={tvSections[0]?.discipline ?? "sprint_60"}
+        onExit={exitTvMode}
+        allSections={tvSections}
+      />
     );
   }
 
@@ -138,6 +149,11 @@ export default function LeaderboardPage() {
               ))}
             </SelectContent>
           </Select>
+          {athletesWithoutYob > 0 && (
+            <span className="text-xs text-amber-600 dark:text-amber-400">
+              {t.athletesWithoutYob.replace("{count}", String(athletesWithoutYob))}
+            </span>
+          )}
         </div>
       )}
 

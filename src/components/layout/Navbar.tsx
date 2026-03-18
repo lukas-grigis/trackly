@@ -44,8 +44,15 @@ export default function Navbar() {
     { to: ROUTES.ATHLETES, label: t.athletesNav, icon: Users },
   ];
 
+  const quotaWarning = useSessionStore((s) => s._quotaWarning);
+
   return (
     <header className="sticky top-0 z-50 navbar-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      {quotaWarning && (
+        <div className="bg-destructive text-destructive-foreground text-center text-xs font-medium py-1.5 px-4">
+          {t.storageQuotaBanner}
+        </div>
+      )}
       <div className="mx-auto flex h-14 max-w-2xl lg:max-w-5xl items-center gap-1 px-4">
         {/* Back button on deep pages */}
         {isDeepPage && (
@@ -122,7 +129,7 @@ export default function Navbar() {
             <button
               key={l}
               onClick={() => setLang(l)}
-              aria-label={l === "de" ? "Deutsch" : "English"}
+              aria-label={t.switchToLanguage.replace("{lang}", l === "de" ? "Deutsch" : "English")}
               className={cn(
                 "rounded-full px-2 py-0.5 transition-colors uppercase tracking-wide",
                 lang === l
