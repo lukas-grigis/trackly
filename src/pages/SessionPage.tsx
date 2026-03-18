@@ -65,6 +65,7 @@ export default function SessionPage() {
   const [customUnit, setCustomUnit] = useState<typeof CUSTOM_UNITS[number]>("s");
   const [customNote, setCustomNote] = useState("");
   const [score, setScore] = useState({ a: 0, b: 0 });
+  const [teamNames, setTeamNames] = useState({ a: "", b: "" });
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerSelection, setPickerSelection] = useState<string[]>([]);
   const [deleteHeatTarget, setDeleteHeatTarget] = useState<string | null>(null);
@@ -165,14 +166,16 @@ export default function SessionPage() {
     const now = new Date().toISOString();
     const teamAId = "team-a";
     const teamBId = "team-b";
+    const nameA = teamNames.a.trim() || t.teamA;
+    const nameB = teamNames.b.trim() || t.teamB;
     const heatId = addHeat(id, {
       sessionId: id,
       disciplineType: discipline,
       participantIds: [teamAId, teamBId],
       startedAt: now,
     });
-    addHeatResult(id, heatId, { childId: teamAId, value: score.a, unit: "count", recordedAt: now });
-    addHeatResult(id, heatId, { childId: teamBId, value: score.b, unit: "count", recordedAt: now });
+    addHeatResult(id, heatId, { childId: teamAId, value: score.a, unit: "count", note: nameA, recordedAt: now });
+    addHeatResult(id, heatId, { childId: teamBId, value: score.b, unit: "count", note: nameB, recordedAt: now });
     toast.success(t.resultsSaved);
     setScore({ a: 0, b: 0 });
   }
@@ -514,9 +517,13 @@ export default function SessionPage() {
                   key={team}
                   className="flex flex-col items-center gap-2 rounded-xl border p-3"
                 >
-                  <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                    {team === "a" ? t.teamA : t.teamB}
-                  </span>
+                  <input
+                    type="text"
+                    value={teamNames[team]}
+                    placeholder={team === "a" ? t.teamA : t.teamB}
+                    onChange={(e) => setTeamNames((prev) => ({ ...prev, [team]: e.target.value }))}
+                    className="w-full text-center text-sm font-semibold uppercase tracking-wide bg-transparent text-muted-foreground placeholder:text-muted-foreground/60 border-b border-transparent focus:border-primary focus:text-foreground focus:outline-none transition-colors"
+                  />
                   <Button
                     variant="outline"
                     size="icon"
@@ -736,12 +743,12 @@ export default function SessionPage() {
                       {isCountHeat ? (
                         <div className="flex items-center justify-center gap-6 px-4 py-4">
                           <div className="text-center">
-                            <p className="text-xs text-muted-foreground">{t.teamA}</p>
+                            <p className="text-xs text-muted-foreground">{teamA?.note || t.teamA}</p>
                             <p className="text-3xl font-bold tabular-nums">{teamA?.value ?? 0}</p>
                           </div>
                           <span className="text-lg text-muted-foreground font-bold">:</span>
                           <div className="text-center">
-                            <p className="text-xs text-muted-foreground">{t.teamB}</p>
+                            <p className="text-xs text-muted-foreground">{teamB?.note || t.teamB}</p>
                             <p className="text-3xl font-bold tabular-nums">{teamB?.value ?? 0}</p>
                           </div>
                         </div>
