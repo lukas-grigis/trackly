@@ -343,7 +343,7 @@ export default function SessionPage() {
                   >
                     <AthleteAvatar name={athlete.name} avatarBase64={athlete.avatarBase64} size="sm" className="h-5 w-5 text-[8px]" />
                     {athlete.name}
-                    <AgeGroupBadge yearOfBirth={athlete.yearOfBirth} />
+                    <AgeGroupBadge yearOfBirth={athlete.yearOfBirth} referenceYear={new Date(session.date).getFullYear()} />
                     <GenderBadge gender={athlete.gender} />
                   </Link>
                 ))}
@@ -409,7 +409,7 @@ export default function SessionPage() {
                       )}
                     />
                     {a.name}
-                    <AgeGroupBadge yearOfBirth={a.yearOfBirth} />
+                    <AgeGroupBadge yearOfBirth={a.yearOfBirth} referenceYear={new Date(session.date).getFullYear()} />
                   </button>
                 ))}
               </div>
@@ -471,7 +471,7 @@ export default function SessionPage() {
                       )}
                     />
                     {a.name}
-                    <AgeGroupBadge yearOfBirth={a.yearOfBirth} />
+                    <AgeGroupBadge yearOfBirth={a.yearOfBirth} referenceYear={new Date(session.date).getFullYear()} />
                   </button>
                 ))}
               </div>
@@ -620,7 +620,7 @@ export default function SessionPage() {
                           <td className="py-2 pr-4">
                             <span className="inline-flex items-center gap-1.5">
                               {entry.athlete?.name ?? entry.athleteId}
-                              <AgeGroupBadge yearOfBirth={entry.athlete?.yearOfBirth} />
+                              <AgeGroupBadge yearOfBirth={entry.athlete?.yearOfBirth} referenceYear={new Date(session.date).getFullYear()} />
                               <GenderBadge gender={entry.athlete?.gender} />
                               {attempts > 1 && (
                                 <span className="text-[10px] text-muted-foreground">×{attempts}</span>
@@ -668,7 +668,7 @@ export default function SessionPage() {
                           <td className="py-2 pr-4">
                             <span className="inline-flex items-center gap-1.5">
                               {result.athleteName || "—"}
-                              <AgeGroupBadge yearOfBirth={result.yearOfBirth} />
+                              <AgeGroupBadge yearOfBirth={result.yearOfBirth} referenceYear={new Date(session.date).getFullYear()} />
                               <GenderBadge gender={result.gender} />
                             </span>
                           </td>
@@ -799,7 +799,7 @@ export default function SessionPage() {
                                 </div>
                                 <span className="flex-1 text-sm inline-flex items-center gap-1.5 min-w-0">
                                   <span className="truncate font-medium">{row.athlete?.name ?? row.athleteId}</span>
-                                  <AgeGroupBadge yearOfBirth={row.athlete?.yearOfBirth} />
+                                  <AgeGroupBadge yearOfBirth={row.athlete?.yearOfBirth} referenceYear={new Date(session.date).getFullYear()} />
                                   <GenderBadge gender={row.athlete?.gender} />
                                 </span>
                                 <span className="shrink-0 font-mono text-sm tabular-nums">
