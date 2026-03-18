@@ -530,7 +530,7 @@ export default function SessionPage() {
                     value={teamNames[team]}
                     placeholder={team === "a" ? t.teamA : t.teamB}
                     onChange={(e) => setTeamNames((prev) => ({ ...prev, [team]: e.target.value }))}
-                    className="w-full text-center text-sm font-semibold uppercase tracking-wide bg-transparent text-muted-foreground placeholder:text-muted-foreground/60 border-b border-transparent focus:border-primary focus:text-foreground focus:outline-none transition-colors"
+                    className="w-full text-center text-base md:text-sm font-semibold uppercase tracking-wide bg-transparent text-muted-foreground placeholder:text-muted-foreground/60 border-b border-transparent focus:border-primary focus:text-foreground focus:outline-none transition-colors"
                   />
                   <Button
                     variant="outline"

@@ -647,7 +647,7 @@ export default function RacePage() {
                           inputMode="decimal"
                           step="any"
                           min="0"
-                          className="flex-1 rounded border bg-background px-2 py-1 text-sm"
+                          className="flex-1 rounded border bg-background px-2 py-1 text-base md:text-sm"
                           placeholder="0.00"
                           value={attempt.value}
                           onChange={(e) => updateAttempt(athleteId, idx, { value: e.target.value })}
