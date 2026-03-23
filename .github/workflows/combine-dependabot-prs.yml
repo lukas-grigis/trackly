@@ -1,0 +1,88 @@
+name: Combine Dependabot PRs
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 8 * * 1" # Monday 08:00 UTC, after dependabot runs
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  combine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - uses: pnpm/action-setup@v5
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Combine dependabot PRs
+        run: |
+          set -euo pipefail
+
+          mapfile -t numbers < <(gh pr list --author "app/dependabot" --state open --json number --jq '.[].number')
+          mapfile -t titles  < <(gh pr list --author "app/dependabot" --state open --json title  --jq '.[].title')
+          mapfile -t heads   < <(gh pr list --author "app/dependabot" --state open --json headRefName --jq '.[].headRefName')
+
+          count=${#numbers[@]}
+          if [ "$count" -eq 0 ]; then
+            echo "No open dependabot PRs found"
+            exit 0
+          fi
+          echo "Found $count dependabot PR(s)"
+
+          branch="chore/deps-$(date +%Y-%m-%d)"
+          git checkout -b "$branch"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          for i in "${!numbers[@]}"; do
+            echo "Processing #${numbers[$i]}: ${titles[$i]}"
+            git fetch origin "${heads[$i]}"
+
+            if git merge --squash "origin/${heads[$i]}" 2>/dev/null; then
+              git commit -m "${titles[$i]}"
+            else
+              # Resolve lockfile conflicts by regenerating
+              git checkout --theirs pnpm-lock.yaml 2>/dev/null || true
+              pnpm install --no-frozen-lockfile
+              git add -A
+              git commit -m "${titles[$i]}"
+            fi
+          done
+
+          git push origin "$branch"
+
+          # Build PR body
+          body="## Dependency Updates"$'\n\n'
+          for i in "${!numbers[@]}"; do
+            body+="- ${titles[$i]} (#${numbers[$i]})"$'\n'
+          done
+
+          pr_url=$(gh pr create \
+            --title "build(deps): dependency updates $(date +%Y-%m-%d)" \
+            --body "$body" \
+            --base main \
+            --head "$branch")
+
+          echo "Created PR: $pr_url"
+
+          # Enable auto-merge
+          gh pr merge "$branch" --auto --merge
+
+          # Close individual dependabot PRs
+          for number in "${numbers[@]}"; do
+            gh pr close "$number" --comment "Combined into $pr_url"
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
