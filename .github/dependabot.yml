@@ -6,10 +6,19 @@ updates:
     schedule:
       interval: weekly
       day: monday
-    open-pull-requests-limit: 20
+    open-pull-requests-limit: 10
+    groups:
+      all-dependencies:
+        update-types:
+          - minor
+          - patch
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
       day: monday
+    groups:
+      all-actions:
+        patterns:
+          - "*"
