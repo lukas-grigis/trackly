@@ -64,6 +64,8 @@ export interface Translations {
   enterTimeManually: string;
   deleteResult: string;
   deleteResultDesc: string;
+  deleteHeat: string;
+  deleteHeatDesc: string;
   teamA: string;
   teamB: string;
   saveScore: string;
@@ -325,6 +327,8 @@ const de: Translations = {
   enterTimeManually: 'Zeit manuell eintragen',
   deleteResult: 'Ergebnis löschen',
   deleteResultDesc: 'Dieses Ergebnis wird unwiderruflich gelöscht.',
+  deleteHeat: 'Lauf löschen',
+  deleteHeatDesc: 'Dieser gesamte Lauf mit allen Ergebnissen wird unwiderruflich gelöscht.',
   teamA: 'Team A',
   teamB: 'Team B',
   saveScore: 'Ergebnis speichern',
@@ -632,6 +636,8 @@ const en: Translations = {
   enterTimeManually: 'Enter time manually',
   deleteResult: 'Delete result',
   deleteResultDesc: 'This result will be permanently deleted.',
+  deleteHeat: 'Delete heat',
+  deleteHeatDesc: 'This entire heat and all its results will be permanently deleted.',
   teamA: 'Team A',
   teamB: 'Team B',
   saveScore: 'Save score',
