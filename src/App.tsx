@@ -12,12 +12,17 @@ function ThemeInitializer() {
   return null;
 }
 
+function ThemedToaster() {
+  const { isDark } = useTheme();
+  return <Toaster theme={isDark ? 'dark' : 'light'} />;
+}
+
 export default function App() {
   return (
     <ErrorBoundary>
       <ThemeInitializer />
       <AppRoutes />
-      <Toaster theme="system" />
+      <ThemedToaster />
     </ErrorBoundary>
   );
 }
