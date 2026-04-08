@@ -36,7 +36,7 @@ test.describe('Navigation', () => {
   });
 
   test('language toggle switches between DE and EN', async ({ page }) => {
-    await expect(page.getByText('Sessions').first()).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Sessions' })).toBeVisible();
     await page.locator('button').filter({ hasText: /^de$/i }).click();
     await expect(page.getByText('Neue Session').first()).toBeVisible();
     await page.locator('button').filter({ hasText: /^en$/i }).click();

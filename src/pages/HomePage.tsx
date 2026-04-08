@@ -44,7 +44,7 @@ function exportSessionCsv(
     ...session.heats.flatMap((h) =>
       h.results.map((r) =>
         [
-          athleteName(r.athleteId),
+          r.athleteId.startsWith('team-') ? r.note || r.athleteId : athleteName(r.athleteId),
           disciplineLabel(h.disciplineType),
           formatValue(r.value, r.unit),
           r.unit,
@@ -59,7 +59,8 @@ function exportSessionCsv(
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${session.name.replace(/\s+/g, '_')}_results.csv`;
+  const csvSanitized = session.name.replace(/[/\\:*?"<>|]/g, '').replace(/\s+/g, '_');
+  a.download = `${csvSanitized || 'session'}_results.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
