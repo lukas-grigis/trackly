@@ -210,7 +210,7 @@ export default function HomePage() {
           {sessions.map((session) => (
             <div key={session.id} className="relative animate-card-enter">
               <SessionCard session={session} onDelete={handleDelete} />
-              <div className="absolute right-2 bottom-2 flex gap-1">
+              <div className="absolute right-1.5 bottom-1.5 flex gap-0.5 sm:right-2 sm:bottom-2 sm:gap-1">
                 {session.athleteIds.length > 0 && (
                   <Button
                     variant="ghost"

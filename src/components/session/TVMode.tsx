@@ -20,38 +20,24 @@ interface DisciplineData {
 }
 
 interface TVModeProps {
-  entries: LeaderboardEntry[];
-  discipline: string;
-  customDisciplineName?: string;
   onExit: () => void;
-  allSections?: DisciplineData[];
+  allSections: DisciplineData[];
 }
 
-export function TVMode({
-  entries: defaultEntries,
-  discipline: defaultDiscipline,
-  customDisciplineName: defaultCustomName,
-  onExit,
-  allSections,
-}: TVModeProps) {
+export function TVMode({ onExit, allSections }: TVModeProps) {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
 
   // I6: discipline rotation
-  const sections =
-    allSections && allSections.length > 0
-      ? allSections
-      : [
-          {
-            discipline: defaultDiscipline,
-            entries: defaultEntries,
-            customDisciplineName: defaultCustomName,
-          },
-        ];
+  const sections = allSections;
   const [currentIdx, setCurrentIdx] = useState(0);
-  const safeIdx = currentIdx % sections.length;
-  const { discipline, entries, customDisciplineName } = sections[safeIdx];
+  const hasSections = sections.length > 0;
+  const safeIdx = hasSections ? currentIdx % sections.length : 0;
+  const currentSection = hasSections ? sections[safeIdx] : null;
+  const discipline = currentSection?.discipline ?? '';
+  const entries = currentSection?.entries ?? [];
+  const customDisciplineName = currentSection?.customDisciplineName;
 
   // Auto-rotate every 8 seconds when multiple disciplines
   useEffect(() => {
@@ -102,7 +88,7 @@ export function TVMode({
   // Re-acquire wake lock when page becomes visible again (e.g. tab switch)
   useEffect(() => {
     function handleVisibilityChange() {
-      if (document.visibilityState === 'visible' && !wakeLockRef.current) {
+      if (document.visibilityState === 'visible' && (!wakeLockRef.current || wakeLockRef.current.released)) {
         navigator.wakeLock
           ?.request('screen')
           .then((lock) => {

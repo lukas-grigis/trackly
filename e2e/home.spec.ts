@@ -50,4 +50,35 @@ test.describe('Home page', () => {
     await goHome(page);
     await expect(page.getByText('Card Display Test')).toBeVisible();
   });
+
+  test('export PDF button is disabled when session has no heats', async ({ page }) => {
+    // First add an athlete so the PDF button appears (it requires athleteIds.length > 0)
+    await page.goto('/#/athletes');
+    await page.waitForLoadState('domcontentloaded');
+    await page.getByPlaceholder('Name').fill('TestAthlete');
+    await page.getByRole('button', { name: 'Add athlete' }).click();
+    await expect(page.getByText('TestAthlete')).toBeVisible();
+
+    // Create a session (auto-selects all athletes)
+    await goHome(page);
+    await page
+      .getByRole('button', { name: /New Session/i })
+      .first()
+      .click();
+    await page.locator('#session-name').fill('Export Test');
+    await page.getByRole('button', { name: /Create Session/i }).click();
+    await expect(page).toHaveURL(/\/#\/session\//);
+
+    // Navigate back to home to see the session card
+    await goHome(page);
+    await expect(page.getByText('Export Test')).toBeVisible();
+
+    // PDF button should be visible but disabled (no heats yet)
+    const pdfButton = page.getByRole('button', { name: /^PDF$/i });
+    await expect(pdfButton).toBeVisible();
+    await expect(pdfButton).toBeDisabled();
+
+    // CSV button should NOT be visible (no results at all)
+    await expect(page.getByRole('button', { name: /^CSV$/i })).not.toBeVisible();
+  });
 });
