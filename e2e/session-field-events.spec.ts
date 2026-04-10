@@ -105,6 +105,63 @@ test.describe('Field events', () => {
     await expect(rankCells.nth(2)).toHaveText('3');
   });
 
+  test('custom discipline note has title tooltip in All Runs view', async ({ page }) => {
+    // Open discipline picker and select custom discipline
+    await page
+      .locator('button')
+      .filter({ hasText: /60m Sprint/i })
+      .click();
+
+    // Enter a custom discipline name in the custom input and confirm
+    const customInput = page.getByLabel('Enter discipline name');
+    await customInput.fill('Obstacle Run');
+    await page.getByRole('button', { name: /^Save$/i }).click();
+
+    // Wait for the discipline picker dialog to close and custom entry form to appear
+    await expect(page.getByPlaceholder('Optional note')).toBeVisible();
+
+    // Select an athlete using the entry form button (not the header chip)
+    await page.locator('button[type="button"]').filter({ hasText: 'Charlie' }).click();
+
+    // Fill in a value
+    await page.locator('input[type="number"]').fill('25');
+
+    // Fill in a note
+    await page.getByPlaceholder('Optional note').fill('Fastest attempt with wind');
+
+    // Save the result (click the Save button inside the entry form, not the dialog)
+    await page
+      .locator('.rounded-xl.border.bg-card')
+      .getByRole('button', { name: /^Save$/i })
+      .click();
+
+    // Switch to All Games view (custom disciplines use "Games" terminology)
+    await page.getByRole('button', { name: /All Games/i }).click();
+
+    // Verify the note cell has a title attribute with the note text
+    const noteCell = page.locator('td.truncate');
+    await expect(noteCell).toBeVisible();
+    await expect(noteCell).toHaveAttribute('title', 'Fastest attempt with wind');
+  });
+
+  test('custom discipline unit buttons have aria-labels on RacePage', async ({ page }) => {
+    // Navigate to RacePage with a custom discipline
+    const url = page.url();
+    const sessionId = url.match(/session\/([^/]+)/)?.[1];
+    await page.goto(`/#/session/${sessionId}/race/custom`);
+
+    // Select all athletes and start field entry
+    await page.getByRole('button', { name: /Select all/i }).click();
+    await page.getByRole('button', { name: /^Start$/i }).click();
+
+    // Verify unit selection buttons are visible and have aria-labels
+    for (const unit of ['m', 'cm', 's', 'ms']) {
+      const button = page.getByRole('button', { name: unit, exact: true });
+      await expect(button).toBeVisible();
+      await expect(button).toHaveAttribute('aria-label', unit);
+    }
+  });
+
   test('field entry UI: enter attempt and mark foul, best highlighted', async ({ page }) => {
     await page
       .locator('button')

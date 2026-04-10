@@ -642,6 +642,7 @@ export default function RacePage() {
                 size="sm"
                 variant={fieldUnit === u ? 'default' : 'outline'}
                 onClick={() => setFieldUnit(u)}
+                aria-label={u}
               >
                 {u}
               </Button>

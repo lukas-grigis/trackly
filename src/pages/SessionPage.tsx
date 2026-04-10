@@ -315,6 +315,7 @@ export default function SessionPage() {
             className="flex flex-1 items-center gap-2 text-left"
             onClick={() => setAthletesOpen((v) => !v)}
             aria-expanded={athletesOpen}
+            aria-label={t.childrenTab}
           >
             {athletesOpen ? (
               <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -699,7 +700,10 @@ export default function SessionPage() {
                             {rank == null ? '—' : formatValue(result.value, result.unit)}
                           </td>
                           {mode === 'custom' && (
-                            <td className="py-2 pl-2 text-right text-muted-foreground text-xs max-w-32 truncate">
+                            <td
+                              className="py-2 pl-2 text-right text-muted-foreground text-xs max-w-32 truncate"
+                              title={result.note ?? ''}
+                            >
                               {result.note ?? ''}
                             </td>
                           )}
@@ -848,7 +852,10 @@ export default function SessionPage() {
                                         : formatValue(row.result!.value, row.result!.unit)}
                                   </span>
                                   {mode === 'custom' && hasResult && row.result!.note && (
-                                    <span className="shrink-0 text-xs text-muted-foreground max-w-24 truncate">
+                                    <span
+                                      className="shrink-0 text-xs text-muted-foreground max-w-24 truncate"
+                                      title={row.result!.note}
+                                    >
                                       {row.result!.note}
                                     </span>
                                   )}
