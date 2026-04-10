@@ -89,4 +89,83 @@ test.describe('Leaderboard TV mode rotation', () => {
     // Wait for the 8s rotation interval to elapse and check the counter changed
     await expect(page.getByText('2 / 2')).toBeVisible({ timeout: 10000 });
   });
+
+  test('TV mode nav buttons have aria-label attributes', { timeout: 60000 }, async ({ page }) => {
+    await resetApp(page);
+    await createSessionWithAthletes(page, 'TV Aria', ['Alice', 'Bob']);
+    await runSprintRace(page);
+
+    const raceUrl = page.url();
+    const sessionId = raceUrl.match(/session\/([^/]+)/)?.[1];
+    await page.goto(`/#/session/${sessionId}`);
+    await page.waitForLoadState('domcontentloaded');
+
+    await page
+      .locator('button')
+      .filter({ hasText: /60m Sprint/i })
+      .click();
+    await page.getByRole('tab').nth(2).click();
+    await page.getByRole('button', { name: 'Long Jump' }).click();
+    await page.getByRole('button', { name: /Alice/ }).click();
+    await page.locator('input[type="number"]').fill('4.50');
+    await page.getByRole('button', { name: /^Save$/i }).click();
+
+    await navigateToLeaderboard(page);
+    await page.getByRole('button', { name: /TV Mode/i }).click();
+    await expect(page.getByText('1 / 2')).toBeVisible({ timeout: 3000 });
+
+    // Verify nav buttons have accessible aria-labels
+    await expect(page.getByRole('button', { name: 'Previous discipline' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Next discipline' })).toBeVisible();
+  });
+
+  test('TV mode arrow keys change discipline', { timeout: 60000 }, async ({ page }) => {
+    await resetApp(page);
+    await createSessionWithAthletes(page, 'TV Keys', ['Alice', 'Bob']);
+    await runSprintRace(page);
+
+    const raceUrl = page.url();
+    const sessionId = raceUrl.match(/session\/([^/]+)/)?.[1];
+    await page.goto(`/#/session/${sessionId}`);
+    await page.waitForLoadState('domcontentloaded');
+
+    await page
+      .locator('button')
+      .filter({ hasText: /60m Sprint/i })
+      .click();
+    await page.getByRole('tab').nth(2).click();
+    await page.getByRole('button', { name: 'Long Jump' }).click();
+    await page.getByRole('button', { name: /Alice/ }).click();
+    await page.locator('input[type="number"]').fill('4.50');
+    await page.getByRole('button', { name: /^Save$/i }).click();
+
+    await navigateToLeaderboard(page);
+    await page.getByRole('button', { name: /TV Mode/i }).click();
+    await expect(page.getByText('1 / 2')).toBeVisible({ timeout: 3000 });
+
+    // Press ArrowRight to advance to next discipline
+    await page.keyboard.press('ArrowRight');
+    await expect(page.getByText('2 / 2')).toBeVisible({ timeout: 3000 });
+
+    // Press ArrowLeft to go back to previous discipline
+    await page.keyboard.press('ArrowLeft');
+    await expect(page.getByText('1 / 2')).toBeVisible({ timeout: 3000 });
+  });
+
+  test('TV mode Escape key exits TV mode', { timeout: 60000 }, async ({ page }) => {
+    await resetApp(page);
+    await createSessionWithAthletes(page, 'TV Escape', ['Alice', 'Bob']);
+    await runSprintRace(page);
+    await navigateToLeaderboard(page);
+
+    // Enter TV mode
+    await page.getByRole('button', { name: /TV Mode/i }).click();
+    await expect(page.getByText('Tap anywhere to exit')).toBeVisible({ timeout: 3000 });
+
+    // Press Escape to exit TV mode
+    await page.keyboard.press('Escape');
+
+    // Should be back on the leaderboard page
+    await expect(page.getByRole('button', { name: /TV Mode/i })).toBeVisible({ timeout: 5000 });
+  });
 });
