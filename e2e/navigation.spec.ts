@@ -67,6 +67,18 @@ test.describe('Navigation', () => {
     expect(hasDarkReloaded).toBe(hasDarkAfter);
   });
 
+  test('landing page tagline switches language', async ({ page }) => {
+    await page.goto('/#/');
+    // English tagline is visible by default
+    await expect(page.getByText('Free · Offline · Open Source')).toBeVisible();
+    // Switch to German
+    await page.locator('button').filter({ hasText: /^de$/i }).click();
+    await expect(page.getByText('Kostenlos · Offline · Open Source')).toBeVisible();
+    // Switch back to English
+    await page.locator('button').filter({ hasText: /^en$/i }).click();
+    await expect(page.getByText('Free · Offline · Open Source')).toBeVisible();
+  });
+
   test('back button from RacePage returns to SessionPage', async ({ page }) => {
     await createSessionWithAthletes(page, 'Back Nav Session', ['Alice', 'Bob']);
     // We're now on the session page — capture its URL
