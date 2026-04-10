@@ -213,7 +213,9 @@ export default function AthletesPage() {
                   to={ROUTES.ATHLETE(athlete.id)}
                   className="flex flex-wrap items-center gap-x-2 gap-y-0.5 min-w-0 hover:underline underline-offset-2"
                 >
-                  <span className="font-medium truncate">{athlete.name}</span>
+                  <span className="font-medium truncate" title={athlete.name}>
+                    {athlete.name}
+                  </span>
                   <AgeGroupBadge yearOfBirth={athlete.yearOfBirth} />
                   <GenderBadge gender={athlete.gender} />
                   {athlete.yearOfBirth && <span className="text-sm text-muted-foreground">*{athlete.yearOfBirth}</span>}
@@ -317,11 +319,11 @@ export default function AthletesPage() {
             <Input
               autoFocus
               type="number"
-              placeholder="e.g. 1998"
+              placeholder={t.birthYearExample}
               value={customInput}
               onChange={(e) => setCustomInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleCustomConfirm()}
-              className="w-32 text-base md:text-sm"
+              className="w-full max-w-32 text-base md:text-sm"
             />
             <Button size="sm" onClick={handleCustomConfirm}>
               {t.done}
@@ -472,11 +474,11 @@ export default function AthletesPage() {
                 <Input
                   autoFocus
                   type="number"
-                  placeholder="e.g. 1998"
+                  placeholder={t.birthYearExample}
                   value={editCustomInput}
                   onChange={(e) => setEditCustomInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleEditCustomConfirm()}
-                  className="w-32 text-base md:text-sm"
+                  className="w-full max-w-32 text-base md:text-sm"
                 />
                 <Button size="sm" onClick={handleEditCustomConfirm}>
                   {t.done}

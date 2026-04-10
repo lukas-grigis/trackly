@@ -109,6 +109,24 @@ test.describe('Athlete management', () => {
     await expect(page.locator('ul img[src^="data:image"]')).toBeVisible();
   });
 
+  test('long athlete name has title tooltip when truncated', async ({ page }) => {
+    const longName = 'Alexander Maximilian von Brandenburg';
+    await addAthlete(page, longName);
+    const nameSpan = page.locator('ul span.truncate', { hasText: longName });
+    await expect(nameSpan).toBeVisible();
+    await expect(nameSpan).toHaveAttribute('title', longName);
+  });
+
+  test('no horizontal overflow on mobile viewport', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
+    await addAthlete(page, 'Mobile Test Athlete');
+    await page.goto('/#/athletes');
+    await page.waitForLoadState('domcontentloaded');
+    const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+    const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
+    expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
+  });
+
   test('athlete page shows best result from multiple heats, not first', async ({ page }) => {
     // Create session with one athlete
     await createSessionWithAthletes(page, 'Multi-Heat Session', ['Mia']);
