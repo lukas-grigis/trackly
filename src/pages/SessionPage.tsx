@@ -315,6 +315,7 @@ export default function SessionPage() {
             className="flex flex-1 items-center gap-2 text-left"
             onClick={() => setAthletesOpen((v) => !v)}
             aria-expanded={athletesOpen}
+            aria-label={t.childrenTab}
           >
             {athletesOpen ? (
               <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -530,7 +531,8 @@ export default function SessionPage() {
                     value={teamNames[team]}
                     placeholder={team === 'a' ? t.teamA : t.teamB}
                     onChange={(e) => setTeamNames((prev) => ({ ...prev, [team]: e.target.value }))}
-                    className="w-full text-center text-base md:text-sm font-semibold uppercase tracking-wide bg-transparent text-muted-foreground placeholder:text-muted-foreground/60 border-b border-transparent focus:border-primary focus:text-foreground focus:outline-none transition-colors"
+                    aria-label={team === 'a' ? t.teamA : t.teamB}
+                    className="w-full truncate text-center text-base md:text-sm font-semibold uppercase tracking-wide bg-transparent text-muted-foreground placeholder:text-muted-foreground/60 border-b border-transparent focus:border-primary focus:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:rounded-sm transition-colors"
                   />
                   <Button
                     variant="outline"
@@ -698,7 +700,10 @@ export default function SessionPage() {
                             {rank == null ? '—' : formatValue(result.value, result.unit)}
                           </td>
                           {mode === 'custom' && (
-                            <td className="py-2 pl-2 text-right text-muted-foreground text-xs max-w-32 truncate">
+                            <td
+                              className="py-2 pl-2 text-right text-muted-foreground text-xs max-w-32 truncate"
+                              title={result.note ?? ''}
+                            >
                               {result.note ?? ''}
                             </td>
                           )}
@@ -847,7 +852,10 @@ export default function SessionPage() {
                                         : formatValue(row.result!.value, row.result!.unit)}
                                   </span>
                                   {mode === 'custom' && hasResult && row.result!.note && (
-                                    <span className="shrink-0 text-xs text-muted-foreground max-w-24 truncate">
+                                    <span
+                                      className="shrink-0 text-xs text-muted-foreground max-w-24 truncate"
+                                      title={row.result!.note}
+                                    >
                                       {row.result!.note}
                                     </span>
                                   )}
@@ -867,28 +875,34 @@ export default function SessionPage() {
       </div>
 
       {/* Delete result confirmation */}
-      <AlertDialog open={deleteHeatTarget !== null} onOpenChange={(open) => !open && setDeleteHeatTarget(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t.deleteResult}?</AlertDialogTitle>
-            <AlertDialogDescription>{t.deleteResultDesc}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => {
-                if (deleteHeatTarget) {
-                  deleteHeat(id, deleteHeatTarget);
-                  setDeleteHeatTarget(null);
-                }
-              }}
-            >
-              {t.deleteResult}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {(() => {
+        const targetHeat = deleteHeatTarget ? session.heats.find((h) => h.id === deleteHeatTarget) : null;
+        const isMultiResult = targetHeat ? targetHeat.results.length > 1 : false;
+        return (
+          <AlertDialog open={deleteHeatTarget !== null} onOpenChange={(open) => !open && setDeleteHeatTarget(null)}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{isMultiResult ? t.deleteHeat : t.deleteResult}?</AlertDialogTitle>
+                <AlertDialogDescription>{isMultiResult ? t.deleteHeatDesc : t.deleteResultDesc}</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  onClick={() => {
+                    if (deleteHeatTarget) {
+                      deleteHeat(id, deleteHeatTarget);
+                      setDeleteHeatTarget(null);
+                    }
+                  }}
+                >
+                  {isMultiResult ? t.deleteHeat : t.deleteResult}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        );
+      })()}
 
       {/* Athlete picker dialog */}
       <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>

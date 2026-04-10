@@ -196,6 +196,7 @@ export default function DisciplinePicker({ value, customName, onChange }: Discip
             <div className="flex gap-2">
               <Input
                 placeholder={t.customDisciplinePlaceholder}
+                aria-label={t.customDisciplinePlaceholder}
                 value={customInput}
                 onChange={(e) => setCustomInput(e.target.value)}
                 onKeyDown={(e) => {

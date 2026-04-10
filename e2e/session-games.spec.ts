@@ -19,6 +19,38 @@ test.describe('Games (count mode)', () => {
     await expect(page.getByRole('button', { name: /Start race/i })).not.toBeVisible();
   });
 
+  test('football, basketball, and jump_rope all render same scoring layout', async ({ page }) => {
+    const disciplines = [
+      { tab: 4, name: 'Football' },
+      { tab: 4, name: 'Basketball' },
+      { tab: 4, name: 'Jump Rope' },
+    ];
+
+    for (const disc of disciplines) {
+      await page
+        .locator('button')
+        .filter({ hasText: /60m Sprint|Football|Basketball|Jump Rope/i })
+        .first()
+        .click();
+      await page.getByRole('tab').nth(disc.tab).click();
+      await page.getByRole('button', { name: disc.name }).click();
+
+      // All game disciplines must have Team A/B inputs
+      await expect(page.getByPlaceholder('Team A')).toBeVisible();
+      await expect(page.getByPlaceholder('Team B')).toBeVisible();
+
+      // All must have +/- buttons
+      await expect(page.getByRole('button', { name: /Add point/i }).first()).toBeVisible();
+      await expect(page.getByRole('button', { name: /Remove point/i }).first()).toBeVisible();
+
+      // All must show score 0 indicators
+      const scores = page.locator('.text-6xl');
+      await expect(scores).toHaveCount(2);
+      await expect(scores.first()).toHaveText('0');
+      await expect(scores.last()).toHaveText('0');
+    }
+  });
+
   test('adjust scores and save as X:Y format', async ({ page }) => {
     await page
       .locator('button')

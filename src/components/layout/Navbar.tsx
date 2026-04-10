@@ -86,6 +86,7 @@ export default function Navbar() {
                 <Link
                   key={to}
                   to={to}
+                  aria-label={label}
                   className={cn(
                     'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors',
                     isActive

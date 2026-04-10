@@ -44,7 +44,7 @@ function exportSessionCsv(
     ...session.heats.flatMap((h) =>
       h.results.map((r) =>
         [
-          athleteName(r.athleteId),
+          r.athleteId.startsWith('team-') ? r.note || r.athleteId : athleteName(r.athleteId),
           disciplineLabel(h.disciplineType),
           formatValue(r.value, r.unit),
           r.unit,
@@ -59,7 +59,8 @@ function exportSessionCsv(
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${session.name.replace(/\s+/g, '_')}_results.csv`;
+  const csvSanitized = session.name.replace(/[/\\:*?"<>|]/g, '').replace(/\s+/g, '_');
+  a.download = `${csvSanitized || 'session'}_results.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -210,7 +211,7 @@ export default function HomePage() {
           {sessions.map((session) => (
             <div key={session.id} className="relative animate-card-enter">
               <SessionCard session={session} onDelete={handleDelete} />
-              <div className="absolute right-2 bottom-2 flex gap-1">
+              <div className="absolute right-1.5 bottom-1.5 flex gap-0.5 sm:right-2 sm:bottom-2 sm:gap-1">
                 {session.athleteIds.length > 0 && (
                   <Button
                     variant="ghost"

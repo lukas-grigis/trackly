@@ -111,14 +111,7 @@ export default function LeaderboardPage() {
   }
 
   if (tvMode) {
-    return (
-      <TVMode
-        entries={tvSections[0]?.entries ?? []}
-        discipline={tvSections[0]?.discipline ?? 'sprint_60'}
-        onExit={exitTvMode}
-        allSections={tvSections}
-      />
-    );
+    return <TVMode onExit={exitTvMode} allSections={tvSections} />;
   }
 
   return (

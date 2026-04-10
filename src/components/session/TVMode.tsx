@@ -20,38 +20,24 @@ interface DisciplineData {
 }
 
 interface TVModeProps {
-  entries: LeaderboardEntry[];
-  discipline: string;
-  customDisciplineName?: string;
   onExit: () => void;
-  allSections?: DisciplineData[];
+  allSections: DisciplineData[];
 }
 
-export function TVMode({
-  entries: defaultEntries,
-  discipline: defaultDiscipline,
-  customDisciplineName: defaultCustomName,
-  onExit,
-  allSections,
-}: TVModeProps) {
+export function TVMode({ onExit, allSections }: TVModeProps) {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
 
   // I6: discipline rotation
-  const sections =
-    allSections && allSections.length > 0
-      ? allSections
-      : [
-          {
-            discipline: defaultDiscipline,
-            entries: defaultEntries,
-            customDisciplineName: defaultCustomName,
-          },
-        ];
+  const sections = allSections;
   const [currentIdx, setCurrentIdx] = useState(0);
-  const safeIdx = currentIdx % sections.length;
-  const { discipline, entries, customDisciplineName } = sections[safeIdx];
+  const hasSections = sections.length > 0;
+  const safeIdx = hasSections ? currentIdx % sections.length : 0;
+  const currentSection = hasSections ? sections[safeIdx] : null;
+  const discipline = currentSection?.discipline ?? '';
+  const entries = currentSection?.entries ?? [];
+  const customDisciplineName = currentSection?.customDisciplineName;
 
   // Auto-rotate every 8 seconds when multiple disciplines
   useEffect(() => {
@@ -102,7 +88,7 @@ export function TVMode({
   // Re-acquire wake lock when page becomes visible again (e.g. tab switch)
   useEffect(() => {
     function handleVisibilityChange() {
-      if (document.visibilityState === 'visible' && !wakeLockRef.current) {
+      if (document.visibilityState === 'visible' && (!wakeLockRef.current || wakeLockRef.current.released)) {
         navigator.wakeLock
           ?.request('screen')
           .then((lock) => {
@@ -126,6 +112,11 @@ export function TVMode({
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, [onExit]);
 
+  // Auto-focus container for keyboard navigation
+  useEffect(() => {
+    containerRef.current?.focus();
+  }, []);
+
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
       // Don't exit when clicking nav arrows
@@ -139,6 +130,12 @@ export function TVMode({
   const goPrev = () => setCurrentIdx((i) => (i - 1 + sectionCount) % sectionCount);
   const goNext = () => setCurrentIdx((i) => (i + 1) % sectionCount);
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowLeft') goPrev();
+    else if (e.key === 'ArrowRight') goNext();
+    else if (e.key === 'Escape') onExit();
+  };
+
   // Split entries into podium (top 3 ranks) and remaining
   const podiumEntries = entries.filter((e) => e.rank <= 3);
   const remainingEntries = entries.filter((e) => e.rank > 3);
@@ -148,12 +145,14 @@ export function TVMode({
     return (
       <div
         ref={containerRef}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900 text-white cursor-pointer"
+        className="dark fixed inset-0 z-[60] flex items-center justify-center bg-background text-foreground cursor-pointer"
+        tabIndex={0}
+        onKeyDown={handleKeyDown}
         onClick={handleClick}
       >
         <div className="text-center">
           <p className="text-4xl font-bold animate-pulse">{t.tvWaiting}</p>
-          <p className="mt-6 text-lg text-slate-400">{t.tvExitHint}</p>
+          <p className="mt-6 text-lg text-muted-foreground">{t.tvExitHint}</p>
         </div>
       </div>
     );
@@ -162,30 +161,42 @@ export function TVMode({
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-50 flex flex-col bg-slate-900 text-white cursor-pointer overflow-auto"
+      className="dark fixed inset-0 z-[60] flex flex-col bg-background text-foreground cursor-pointer overflow-auto"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
       onClick={handleClick}
     >
       {/* Discipline title + nav */}
       <div className="shrink-0 px-6 pt-6 pb-2 text-center flex items-center justify-center gap-4">
         {sections.length > 1 && (
-          <button data-tv-nav onClick={goPrev} className="text-slate-400 hover:text-white p-2 transition-colors">
+          <button
+            data-tv-nav
+            onClick={goPrev}
+            aria-label={t.tvPreviousDiscipline}
+            className="text-muted-foreground hover:text-foreground p-2 transition-colors"
+          >
             <ChevronLeft className="h-8 w-8" />
           </button>
         )}
         <div>
-          <h1 className="text-3xl font-bold text-slate-300 sm:text-4xl">
+          <h1 className="text-3xl font-bold text-muted-foreground sm:text-4xl">
             {discipline === 'custom' && customDisciplineName
               ? customDisciplineName
               : (t.disciplines[discipline] ?? discipline)}
           </h1>
           {sections.length > 1 && (
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-muted-foreground/70 mt-1">
               {safeIdx + 1} / {sections.length}
             </p>
           )}
         </div>
         {sections.length > 1 && (
-          <button data-tv-nav onClick={goNext} className="text-slate-400 hover:text-white p-2 transition-colors">
+          <button
+            data-tv-nav
+            onClick={goNext}
+            aria-label={t.tvNextDiscipline}
+            className="text-muted-foreground hover:text-foreground p-2 transition-colors"
+          >
             <ChevronRight className="h-8 w-8" />
           </button>
         )}
@@ -213,15 +224,17 @@ export function TVMode({
               </p>
               {/* Result */}
               <p
-                className={`font-mono mt-1 ${isFirst ? 'text-2xl sm:text-4xl' : 'text-xl sm:text-3xl'} text-slate-300`}
+                className={`font-mono mt-1 ${isFirst ? 'text-2xl sm:text-4xl' : 'text-xl sm:text-3xl'} text-muted-foreground`}
               >
                 {config ? formatValue(entry.bestValue, config.unit) : entry.bestValue}
               </p>
               {/* Pedestal */}
               <div
-                className={`mt-3 rounded-t-lg w-24 sm:w-32 ${medal ? `${medal.bg}` : 'bg-slate-600'} ${isFirst ? 'h-20 sm:h-28' : entry.rank === 2 ? 'h-14 sm:h-20' : 'h-10 sm:h-16'}`}
+                className={`mt-3 rounded-t-lg w-24 sm:w-32 ${medal ? `${medal.bg}` : 'bg-muted'} ${isFirst ? 'h-20 sm:h-28' : entry.rank === 2 ? 'h-14 sm:h-20' : 'h-10 sm:h-16'}`}
               >
-                <p className={`text-center font-bold pt-2 text-xl sm:text-2xl ${medal ? medal.text : 'text-white'}`}>
+                <p
+                  className={`text-center font-bold pt-2 text-xl sm:text-2xl ${medal ? medal.text : 'text-foreground'}`}
+                >
                   {entry.rank}
                 </p>
               </div>
@@ -237,13 +250,15 @@ export function TVMode({
             {remainingEntries.map((entry) => (
               <div
                 key={entry.athleteId}
-                className="flex items-center justify-between rounded-lg bg-slate-800 px-4 py-3 sm:px-6 sm:py-4"
+                className="flex items-center justify-between rounded-lg bg-card px-4 py-3 sm:px-6 sm:py-4"
               >
                 <div className="flex items-center gap-4">
-                  <span className="text-xl font-bold text-slate-400 sm:text-2xl w-8 text-right">{entry.rank}</span>
+                  <span className="text-xl font-bold text-muted-foreground sm:text-2xl w-8 text-right">
+                    {entry.rank}
+                  </span>
                   <span className="text-xl font-semibold sm:text-2xl">{entry.athlete?.name ?? entry.athleteId}</span>
                 </div>
-                <span className="text-xl font-mono text-slate-300 sm:text-2xl">
+                <span className="text-xl font-mono text-muted-foreground sm:text-2xl">
                   {config ? formatValue(entry.bestValue, config.unit) : entry.bestValue}
                 </span>
               </div>
@@ -254,7 +269,7 @@ export function TVMode({
 
       {/* Exit hint */}
       <div className="shrink-0 pb-4 text-center">
-        <p className="text-sm text-slate-500">{t.tvExitHint}</p>
+        <p className="text-sm text-muted-foreground/70">{t.tvExitHint}</p>
       </div>
     </div>
   );

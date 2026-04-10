@@ -316,7 +316,14 @@ export const useSessionStore = create<StoreState>()(
               const json = JSON.stringify(value);
               localStorage.setItem(name, json);
               const nearQuota = isStorageNearQuota();
+              // Reset synchronously so back-to-back set() calls (e.g. addHeat
+              // followed by addHeatResult) are not silently dropped.
+              _writing = false;
               queueMicrotask(() => {
+                // Re-set the guard so the setState below does not trigger
+                // another persist cycle (lastSavedAt is not partialized, but
+                // the subscriber still fires).
+                _writing = true;
                 useSessionStore.setState({
                   lastSavedAt: Date.now(),
                   _saveError: false,
@@ -325,8 +332,10 @@ export const useSessionStore = create<StoreState>()(
                 _writing = false;
               });
             } catch (e) {
+              _writing = false;
               const isQuota = e instanceof DOMException && (e.name === 'QuotaExceededError' || e.code === 22);
               queueMicrotask(() => {
+                _writing = true;
                 useSessionStore.setState({ _saveError: true, _quotaWarning: isQuota });
                 _writing = false;
               });

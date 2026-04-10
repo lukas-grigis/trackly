@@ -126,6 +126,10 @@ export function exportSessionPdf(
       }
     }
 
+    // Skip disciplines where no session athlete has individual results (e.g. team games)
+    const hasIndividualResults = session.athleteIds.some((id) => bestByAthlete.has(id));
+    if (!hasIndividualResults && bestByAthlete.size > 0) continue;
+
     // Also include session athletes with no result for this discipline
     for (const athleteId of session.athleteIds) {
       const athlete = athleteMap.get(athleteId);
@@ -235,9 +239,9 @@ export function exportSessionPdf(
 
   // --- Download ---
   const sanitized = session.name
-    .replace(/[^a-zA-Z0-9\u00C0-\u024F _-]/g, '')
+    .replace(/[/\\:*?"<>|]/g, '')
     .replace(/\s+/g, '-')
     .toLowerCase();
-  const filename = `trackly-${sanitized}-${session.date}.pdf`;
+  const filename = `trackly-${sanitized || 'session'}-${session.date}.pdf`;
   doc.save(filename);
 }

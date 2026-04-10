@@ -194,10 +194,10 @@ export default function AthletesPage() {
               className="animate-card-enter-stagger flex items-center justify-between rounded-xl border bg-card px-4 py-3 transition-colors hover:bg-muted/30"
               style={{ animationDelay: `${Math.min(i, 5) * 40}ms` }}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
                 <button
                   type="button"
-                  className="relative group"
+                  className="relative group shrink-0"
                   onClick={() => {
                     setReplaceTarget(athlete.id);
                     replaceFileInputRef.current?.click();
@@ -211,15 +211,17 @@ export default function AthletesPage() {
                 </button>
                 <Link
                   to={ROUTES.ATHLETE(athlete.id)}
-                  className="flex items-center gap-2 hover:underline underline-offset-2"
+                  className="flex flex-wrap items-center gap-x-2 gap-y-0.5 min-w-0 hover:underline underline-offset-2"
                 >
-                  <span className="font-medium">{athlete.name}</span>
+                  <span className="font-medium truncate" title={athlete.name}>
+                    {athlete.name}
+                  </span>
                   <AgeGroupBadge yearOfBirth={athlete.yearOfBirth} />
                   <GenderBadge gender={athlete.gender} />
                   {athlete.yearOfBirth && <span className="text-sm text-muted-foreground">*{athlete.yearOfBirth}</span>}
                 </Link>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 shrink-0">
                 {athlete.avatarBase64 && (
                   <Button
                     variant="ghost"
@@ -317,11 +319,11 @@ export default function AthletesPage() {
             <Input
               autoFocus
               type="number"
-              placeholder="e.g. 1998"
+              placeholder={t.birthYearExample}
               value={customInput}
               onChange={(e) => setCustomInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleCustomConfirm()}
-              className="w-32 text-base md:text-sm"
+              className="w-full max-w-32 text-base md:text-sm"
             />
             <Button size="sm" onClick={handleCustomConfirm}>
               {t.done}
@@ -472,11 +474,11 @@ export default function AthletesPage() {
                 <Input
                   autoFocus
                   type="number"
-                  placeholder="e.g. 1998"
+                  placeholder={t.birthYearExample}
                   value={editCustomInput}
                   onChange={(e) => setEditCustomInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleEditCustomConfirm()}
-                  className="w-32 text-base md:text-sm"
+                  className="w-full max-w-32 text-base md:text-sm"
                 />
                 <Button size="sm" onClick={handleEditCustomConfirm}>
                   {t.done}

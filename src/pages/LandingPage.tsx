@@ -33,7 +33,7 @@ export default function LandingPage() {
       <section className="flex flex-col items-center text-center gap-6 py-16">
         <div className="flex items-center gap-2 rounded-full border bg-primary/5 px-4 py-1.5 text-xs font-medium text-primary">
           <Medal className="h-3.5 w-3.5" />
-          <span>Free &middot; Offline &middot; Open Source</span>
+          <span>{t.landingTagline}</span>
         </div>
         <h1 className="text-gradient text-5xl sm:text-6xl font-black tracking-tight leading-[1.1] max-w-lg">
           {t.landingHero.split('. ').map((part, i, arr) => (

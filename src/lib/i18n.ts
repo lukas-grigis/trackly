@@ -46,6 +46,7 @@ export interface Translations {
   noChildren: string;
   childNameLabel: string;
   childYearPlaceholder: string;
+  birthYearExample: string;
   removeChild: string;
   removeChildConfirm: string;
   removeChildDesc: string;
@@ -64,6 +65,8 @@ export interface Translations {
   enterTimeManually: string;
   deleteResult: string;
   deleteResultDesc: string;
+  deleteHeat: string;
+  deleteHeatDesc: string;
   teamA: string;
   teamB: string;
   saveScore: string;
@@ -181,6 +184,8 @@ export interface Translations {
   tvToggle: string;
   tvWaiting: string;
   tvExitHint: string;
+  tvPreviousDiscipline: string;
+  tvNextDiscipline: string;
   // Landing page
   landingHero: string;
   landingHeroSub: string;
@@ -200,6 +205,7 @@ export interface Translations {
   landingWhoDesc: string;
   landingViewGithub: string;
   landingOpenSourceBadge: string;
+  landingTagline: string;
   landingFooterPrivacy: string;
   // How-to guide
   howToTitle: string;
@@ -307,6 +313,7 @@ const de: Translations = {
   noChildren: 'Noch keine Athleten hinzugefügt.',
   childNameLabel: 'Name',
   childYearPlaceholder: 'Jahrgang',
+  birthYearExample: 'z.B. 1998',
   removeChild: 'Athlet entfernen',
   removeChildConfirm: 'Athlet entfernen?',
   removeChildDesc: 'Athlet aus der Athletenliste entfernen. Ergebnisse bleiben erhalten.',
@@ -325,6 +332,8 @@ const de: Translations = {
   enterTimeManually: 'Zeit manuell eintragen',
   deleteResult: 'Ergebnis löschen',
   deleteResultDesc: 'Dieses Ergebnis wird unwiderruflich gelöscht.',
+  deleteHeat: 'Lauf löschen',
+  deleteHeatDesc: 'Dieser gesamte Lauf mit allen Ergebnissen wird unwiderruflich gelöscht.',
   teamA: 'Team A',
   teamB: 'Team B',
   saveScore: 'Ergebnis speichern',
@@ -482,6 +491,8 @@ const de: Translations = {
   tvToggle: 'TV-Modus',
   tvWaiting: 'Warten auf Ergebnisse…',
   tvExitHint: 'Tippen zum Beenden',
+  tvPreviousDiscipline: 'Vorherige Disziplin',
+  tvNextDiscipline: 'Nächste Disziplin',
   // Landing page
   landingHero: 'Alle Ergebnisse. Kein Aufwand.',
   landingHeroSub: 'Zeit, Distanz, Punkte — alles in einer App. Rangliste und Export inklusive. Kostenlos und offline.',
@@ -502,6 +513,7 @@ const de: Translations = {
     'Ob Leichtathletikverein, Schulsporttag, Trainingslager oder Eltern am Sportfest — Trackly passt überall hin.',
   landingViewGithub: 'Auf GitHub ansehen',
   landingOpenSourceBadge: 'Open Source',
+  landingTagline: 'Kostenlos · Offline · Open Source',
   landingFooterPrivacy: 'Kein Tracking · Kein Konto nötig · Deine Daten bleiben auf deinem Gerät',
   // How-to guide
   howToTitle: 'Schnellstart',
@@ -614,6 +626,7 @@ const en: Translations = {
   noChildren: 'No athletes added yet.',
   childNameLabel: 'Name',
   childYearPlaceholder: 'Birth year',
+  birthYearExample: 'e.g. 1998',
   removeChild: 'Remove athlete',
   removeChildConfirm: 'Remove athlete?',
   removeChildDesc: 'Remove athlete from the roster. Their results are kept.',
@@ -632,6 +645,8 @@ const en: Translations = {
   enterTimeManually: 'Enter time manually',
   deleteResult: 'Delete result',
   deleteResultDesc: 'This result will be permanently deleted.',
+  deleteHeat: 'Delete heat',
+  deleteHeatDesc: 'This entire heat and all its results will be permanently deleted.',
   teamA: 'Team A',
   teamB: 'Team B',
   saveScore: 'Save score',
@@ -789,6 +804,8 @@ const en: Translations = {
   tvToggle: 'TV Mode',
   tvWaiting: 'Waiting for results…',
   tvExitHint: 'Tap anywhere to exit',
+  tvPreviousDiscipline: 'Previous discipline',
+  tvNextDiscipline: 'Next discipline',
   // Landing page
   landingHero: 'Every result. Zero effort.',
   landingHeroSub: 'Time, distance, score — all in one app. Leaderboard and export included. Free and offline.',
@@ -809,6 +826,7 @@ const en: Translations = {
     'Youth athletics clubs, school sports days, training sessions, or parents at the track — Trackly fits anywhere.',
   landingViewGithub: 'View on GitHub',
   landingOpenSourceBadge: 'Open Source',
+  landingTagline: 'Free · Offline · Open Source',
   landingFooterPrivacy: 'No tracking · No account needed · Your data stays on your device',
   // How-to guide
   howToTitle: 'Quick Start',
