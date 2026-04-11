@@ -9,8 +9,11 @@ test.describe('Athlete management', () => {
   test('add athlete with name', async ({ page }) => {
     await page.goto('/#/athletes');
     await page.waitForLoadState('networkidle');
-    await page.getByPlaceholder('Name').fill('Max Mustermann');
-    await page.getByRole('button', { name: 'Add athlete' }).click();
+    await page.getByRole('button', { name: /Add athlete/i }).first().click();
+    const dialog = page.getByRole('dialog');
+    await dialog.waitFor({ state: 'visible' });
+    await dialog.getByPlaceholder('Name').fill('Max Mustermann');
+    await dialog.getByRole('button', { name: /Add athlete/i }).click();
     await expect(page.getByText('Max Mustermann')).toBeVisible();
   });
 
@@ -87,18 +90,21 @@ test.describe('Athlete management', () => {
       'base64'
     );
 
-    // Fill name, then upload photo via the add-form file input
-    await page.getByPlaceholder('Name').fill('Photo Test');
-    const fileInput = page.locator('input[type="file"]').first();
+    // Open Add Athlete dialog
+    await page.getByRole('button', { name: /Add athlete/i }).first().click();
+    const dialog = page.getByRole('dialog');
+    await dialog.waitFor({ state: 'visible' });
+    await dialog.getByPlaceholder('Name').fill('Photo Test');
+    const fileInput = dialog.locator('input[type="file"]').first();
     await fileInput.setInputFiles({
       name: 'test-photo.png',
       mimeType: 'image/png',
       buffer: pngBuffer,
     });
 
-    // Wait for avatar preview to appear in the add form, then submit
-    await expect(page.locator('img[src^="data:image"]')).toBeVisible();
-    await page.getByRole('button', { name: 'Add athlete' }).click();
+    // Wait for avatar preview to appear in the dialog, then submit
+    await expect(dialog.locator('img[src^="data:image"]')).toBeVisible();
+    await dialog.getByRole('button', { name: /Add athlete/i }).click();
 
     // Verify athlete with photo appears in the list
     await expect(page.locator('ul img[src^="data:image"]')).toBeVisible();
