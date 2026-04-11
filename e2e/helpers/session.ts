@@ -30,8 +30,13 @@ export async function createSession(page: Page, name: string) {
 export async function addAthlete(page: Page, name: string) {
   await page.goto('/#/athletes');
   await page.waitForLoadState('domcontentloaded');
-  await page.getByPlaceholder('Name').fill(name);
-  await page.getByRole('button', { name: 'Add athlete' }).click();
+  // Open the Add Athlete dialog (button is next to the page heading)
+  await page.getByRole('button', { name: /Add athlete/i }).first().click();
+  const dialog = page.getByRole('dialog');
+  await dialog.waitFor({ state: 'visible' });
+  await dialog.getByPlaceholder('Name').fill(name);
+  // Submit button inside the dialog
+  await dialog.getByRole('button', { name: /Add athlete/i }).click();
   await expect(page.getByText(name)).toBeVisible();
 }
 
