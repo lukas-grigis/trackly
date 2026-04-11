@@ -55,8 +55,11 @@ test.describe('Home page', () => {
     // First add an athlete so the PDF button appears (it requires athleteIds.length > 0)
     await page.goto('/#/athletes');
     await page.waitForLoadState('domcontentloaded');
-    await page.getByPlaceholder('Name').fill('TestAthlete');
-    await page.getByRole('button', { name: 'Add athlete' }).click();
+    await page.getByRole('button', { name: /Add athlete/i }).first().click();
+    const addDialog = page.getByRole('dialog');
+    await addDialog.waitFor({ state: 'visible' });
+    await addDialog.getByPlaceholder('Name').fill('TestAthlete');
+    await addDialog.getByRole('button', { name: /Add athlete/i }).click();
     await expect(page.getByText('TestAthlete')).toBeVisible();
 
     // Create a session (auto-selects all athletes)

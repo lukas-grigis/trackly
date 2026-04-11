@@ -57,8 +57,11 @@ test.describe('Field events', () => {
     // Need a third athlete
     await page.goto('/#/athletes');
     await page.waitForLoadState('domcontentloaded');
-    await page.getByPlaceholder('Name').fill('Eve');
-    await page.getByRole('button', { name: 'Add athlete' }).click();
+    await page.getByRole('button', { name: /Add athlete/i }).first().click();
+    const addDialog = page.getByRole('dialog');
+    await addDialog.waitFor({ state: 'visible' });
+    await addDialog.getByPlaceholder('Name').fill('Eve');
+    await addDialog.getByRole('button', { name: /Add athlete/i }).click();
     await expect(page.getByText('Eve')).toBeVisible();
 
     // Navigate back to session and add Eve
