@@ -6,44 +6,6 @@ import { getLeaderboardHeatLabel } from '@/lib/i18n';
 import { DISCIPLINES } from '@/lib/constants';
 import { formatValue, getAgeGroup } from '@/lib/utils';
 
-/** Map MDI icon names to simple text/emoji fallbacks for PDF rendering. */
-function iconToText(icon: string): string {
-  const map: Record<string, string> = {
-    'mdi:lightning-bolt': '\u26A1',
-    'mdi:run-fast': '\uD83C\uDFC3',
-    'mdi:run': '\uD83C\uDFC3',
-    'mdi:fence': '\uD83D\uDEA7',
-    'mdi:account-switch': '\uD83D\uDD04',
-    'mdi:timer-sand': '\u23F3',
-    'mdi:heart-pulse': '\u2764',
-    'mdi:swap-horizontal': '\u21C4',
-    'mdi:arrow-right-bold': '\u27A1',
-    'mdi:arrow-up-bold': '\u2B06',
-    'mdi:debug-step-over': '\u2933',
-    'mdi:human-handsup': '\uD83D\uDE4C',
-    'mdi:arrow-up-bold-circle': '\u2B06',
-    'mdi:baseball': '\u26BE',
-    'mdi:circle': '\u26AB',
-    'mdi:baseball-bat': '\uD83C\uDFCF',
-    'mdi:disc': '\uD83D\uDCBF',
-    'mdi:arrow-top-right': '\u2197',
-    'mdi:rocket-launch': '\uD83D\uDE80',
-    'mdi:soccer': '\u26BD',
-    'mdi:basketball': '\uD83C\uDFC0',
-    'mdi:handball': '\uD83E\uDD3E',
-    'mdi:hockey-sticks': '\uD83C\uDFD2',
-    'mdi:volleyball': '\uD83C\uDFD0',
-    'mdi:bullseye': '\uD83C\uDFAF',
-    'mdi:fire': '\uD83D\uDD25',
-    'mdi:rotate-right': '\uD83D\uDD04',
-    'mdi:flag-variant': '\uD83C\uDFF4',
-    'mdi:link-variant': '\uD83D\uDD17',
-    'mdi:forest': '\uD83C\uDF32',
-    'mdi:pencil-outline': '\u270F',
-  };
-  return map[icon] ?? '\u2022';
-}
-
 /**
  * Generates and downloads a formatted A4 PDF results sheet for a session.
  * Entirely client-side — no network requests.
@@ -176,12 +138,6 @@ export function exportSessionPdf(
   };
 
   for (const [disciplineName, disciplineRows] of grouped) {
-    // Find the discipline key for the icon fallback text
-    const dKey = disciplineKeys.find((k) => disciplineLabel(k) === disciplineName);
-    const icon = dKey ? (DISCIPLINES[dKey]?.icon ?? '') : '';
-    // Use a text fallback for the icon (e.g. "mdi:lightning-bolt" → "⚡" mapped below)
-    const iconText = icon ? `${iconToText(icon)}  ` : '';
-
     // Section header
     const pageHeight = doc.internal.pageSize.getHeight();
     if (y > pageHeight - 40) {
@@ -191,10 +147,10 @@ export function exportSessionPdf(
     doc.setFontSize(13);
     doc.setTextColor(50, 50, 50);
     doc.setFont('helvetica', 'bold');
-    doc.text(`${iconText}${disciplineName}`, margin, y);
+    doc.text(disciplineName, margin, y);
     doc.setFont('helvetica', 'normal');
     // Underline
-    const textWidth = doc.getTextWidth(`${iconText}${disciplineName}`);
+    const textWidth = doc.getTextWidth(disciplineName);
     doc.setDrawColor(200);
     doc.line(margin, y + 1.5, margin + textWidth, y + 1.5);
     doc.setTextColor(0);
